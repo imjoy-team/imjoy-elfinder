@@ -1,0 +1,4 @@
+This is conector for elfinder file manager, written for pyramid framework.
+Based on original https://github.com/Studio-42/elfinder-python/blob/master/connector.py
+
+For work you also  need https://github.com/Studio-42/elfinder-python/blob/master/elFinder.py

@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 import json
-import admin.elFinder as elFinder
+import elFinder
 from pyramid.response import Response
 from cgi import FieldStorage
 
