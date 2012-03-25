@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <title>elfinder-pyramid-example</title>
+    <meta name="description" content="">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <% lib_ver='?0.1'%>
+    <link rel="stylesheet" href="${request.static_url('elfinder_pyramid_example:static/css/bootstrap.css')}${lib_ver}" media="all" />
+    <link rel="stylesheet" href="${request.static_url('elfinder_pyramid_example:static/css/style.css')}${lib_ver}">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="${request.static_url('elfinder_pyramid_example:static/elfinder-v2/jquery/jquery-ui-1.8.16.custom.min.js')}" type="text/javascript" charset="utf-8"></script>
+    <%block name="head"/>
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <div class="nav-collapse">
+           <ul class="nav nav-hovered">
+                <li>
+            	    <a href="${request.route_url('home')}">English</a>
+                </li>
+                <li>
+            	    <a href="${request.route_url('home-ru')}">Русский</a>
+                </li>
+           </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="content">
+        <div class="page-header">
+          <h1><%block name="pagename"/> <small><%block name="pageinfo"/></small></h1>
+        </div>
+        <div class="row">
+          <div class="span12">
+                <%block name="content"/>
+          </div>
+        </div>
+      </div>
+
+      <footer class=footer>
+        <p><a href="https://github.com/Studio-42/elFinder">elFinder: open-source file manager for web</a></p>
+      </footer>
+
+    </div>
+  </body>
+</html>
