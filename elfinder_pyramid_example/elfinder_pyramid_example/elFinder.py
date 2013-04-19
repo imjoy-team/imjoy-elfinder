@@ -42,7 +42,10 @@ class connector():
 		},
 		'perms': {},
 		'archiveMimes': {},
-		'archivers': {},
+		'archivers': {
+			'create': {},
+			'extract': {}
+		},
 		'disabled': [],
 		'debug': False
 	}
@@ -116,8 +119,9 @@ class connector():
 			self._options[opt] = opts.get(opt)
 
 		self._response['debug'] = {}
-
+		self._options['URL'] = self.__checkUtf8(self._options['URL'])
 		self._options['URL'] = self._options['URL'].rstrip('/')
+		self._options['root'] = self.__checkUtf8(self._options['root'])
 		self._options['root'] = self._options['root'].rstrip(os.sep)
 		self.__debug('URL', self._options['URL'])
 		self.__debug('root', self._options['root'])
@@ -191,7 +195,7 @@ class connector():
 				self._response['params'] = {
 					'dotFiles': self._options['dotFiles'],
 					'uplMaxSize': str(self._options['uploadMaxSize']) + 'M',
-					'archives': self._options['archiveMimes'],
+					'archives': self._options['archivers']['create'].keys(),
 					'extract': self._options['archivers']['extract'].keys(),
 					'url': url
 				}
@@ -272,11 +276,10 @@ class connector():
 		else:
 			path = self._options['root']
 
-			if 'target' in self._request:
+			if 'target' in self._request and self._request['target']:
 				target = self.__findDir(self._request['target'], None)
 				if not target:
-					#self._response['error'] = 'Invalid parameters1'
-                                        pass
+					self._response['error'] = 'Invalid parameters'
 				elif not self.__isAllowed(target, 'read'):
 					self._response['error'] = 'Access denied'
 				else:
@@ -322,13 +325,13 @@ class connector():
 		path = None
 		newDir = None
 		if 'name' in self._request and 'current' in self._request:
-			#name = self._request['name'].encode('utf-8')
-                        name = self._request['name']
+			name = self._request['name']
 			current = self._request['current']
 			path = self.__findDir(current, None)
 			newDir = os.path.join(path, name)
+
 		if not path:
-			self._response['error'] = 'Invalid parameters2'
+			self._response['error'] = 'Invalid parameters'
 		elif not self.__isAllowed(path, 'write'):
 			self._response['error'] = 'Access denied'
 		elif not self.__checkName(name):
@@ -350,23 +353,12 @@ class connector():
 		curDir = newFile = None
 		if 'name' in self._request and 'current' in self._request:
 			name = self._request['name']
-                        #print name
 			current = self._request['current']
-                        #print current
 			curDir = self.__findDir(current, None)
-                        #print curDir
-                        #print type(curDir)
-                        #print type(name)
-			#newFile = os.path.join(unicode(curDir,'utf-8'), name)
-                        newFile = os.path.join(curDir, name)
-                        #newFile = curDir +'/'+ str(name)
-                        #print 55555
+			newFile = os.path.join(curDir, name)
 
-                #print name
-                #print 222
-                #print current
 		if not curDir or not name:
-			self._response['error'] = 'Invalid parameters3'
+			self._response['error'] = 'Invalid parameters'
 		elif not self.__isAllowed(curDir, 'write'):
 			self._response['error'] = 'Access denied'
 		elif not self.__checkName(name):
@@ -375,13 +367,9 @@ class connector():
 			self._response['error'] = 'File or folder with the same name already exists'
 		else:
 			try:
-                                #print newFile
 				open(newFile, 'w').close()
-                                #print 111111
 				self._response['select'] = [self.__hash(newFile)]
-                                #print 222222
 				self.__content(curDir, False)
-                                #print 33333
 			except:
 				self._response['error'] = 'Unable to create file'
 
@@ -396,7 +384,7 @@ class connector():
 			curDir = self.__findDir(current, None)
 
 		if not rmList or not curDir:
-			self._response['error'] = 'Invalid parameters4'
+			self._response['error'] = 'Invalid parameters'
 			return False
 
 		if not isinstance(rmList, list):
@@ -420,10 +408,9 @@ class connector():
 			pass
 
 		if 'current' in self._request:
-                        
 			curDir = self.__findDir(self._request['current'], None)
 			if not curDir:
-				self._response['error'] = 'Invalid parameters5'
+				self._response['error'] = 'Invalid parameters'
 				return
 			if not self.__isAllowed(curDir, 'write'):
 				self._response['error'] = 'Access denied'
@@ -431,19 +418,18 @@ class connector():
 			if not 'upload[]' in self._request:
 				self._response['error'] = 'No file to upload'
 				return
-                        
+
 			upFiles = self._request['upload[]']
 			# invalid format
 			# must be dict('filename1': 'filedescriptor1', 'filename2': 'filedescriptor2', ...)
 			if not isinstance(upFiles, dict):
-				self._response['error'] = 'Invalid parameters6'
+				self._response['error'] = 'Invalid parameters'
 				return
 
 			self._response['select'] = []
 			total = 0
 			upSize = 0
 			maxSize = self._options['uploadMaxSize'] * 1024 * 1024
-                        
 			for name, data in upFiles.iteritems():
 				if name:
 					total += 1
@@ -496,7 +482,7 @@ class connector():
 			src = self.__findDir(self._request['src'], None)
 			dst = self.__findDir(self._request['dst'], None)
 			if not curDir or not src or not dst or not 'targets[]' in self._request:
-				self._response['error'] = 'Invalid parameters7'
+				self._response['error'] = 'Invalid parameters'
 				return
 			files = self._request['targets[]']
 			if not isinstance(files, list):
@@ -550,7 +536,7 @@ class connector():
 					continue
 			self.__content(curDir, True)
 		else:
-			self._response['error'] = 'Invalid parameters8'
+			self._response['error'] = 'Invalid parameters'
 
 		return
 
@@ -561,7 +547,7 @@ class connector():
 			curDir = self.__findDir(self._request['current'], None)
 			target = self.__find(self._request['target'], curDir)
 			if not curDir or not target:
-				self._response['error'] = 'Invalid parameters9'
+				self._response['error'] = 'Invalid parameters'
 				return
 			if not self.__isAllowed(target, 'read') or not self.__isAllowed(curDir, 'write'):
 				self._response['error'] = 'Access denied'
@@ -580,7 +566,7 @@ class connector():
 			'current' in self._request and 'target' in self._request
 			and 'width' in self._request and 'height' in self._request
 			):
-			self._response['error'] = 'Invalid parameters10'
+			self._response['error'] = 'Invalid parameters'
 			return
 
 		width = int(self._request['width'])
@@ -589,7 +575,7 @@ class connector():
 		curFile = self.__find(self._request['target'], curDir)
 
 		if width < 1 or height < 1 or not curDir or not curFile:
-			self._response['error'] = 'Invalid parameters11'
+			self._response['error'] = 'Invalid parameters'
 			return
 		if not self.__isAllowed(curFile, 'write'):
 			self._response['error'] = 'Access denied'
@@ -989,7 +975,7 @@ class connector():
 					self._response['error'] = 'Access denied'
 				return
 
-		self._response['error'] = 'Invalid parameters12'
+		self._response['error'] = 'Invalid parameters'
 		return
 
 
@@ -1013,7 +999,7 @@ class connector():
 					self._response['error'] = 'Access denied'
 			return
 
-		self._response['error'] = 'Invalid parameters13'
+		self._response['error'] = 'Invalid parameters'
 		return
 
 
@@ -1022,12 +1008,12 @@ class connector():
 		self.__checkArchivers()
 
 		if (
-			not self._options['archivers']['create'] or not 'type' in self._request
+			not self._options['archivers']['create']
+			or not 'type' in self._request
 			or not 'current' in self._request
 			or not 'targets[]' in self._request
-			or not 'name' in self._request
 			):
-			self._response['error'] = 'Invalid parameters14'
+			self._response['error'] = 'Invalid parameters'
 			return
 
 		curDir = self.__findDir(self._request['current'], None)
@@ -1055,7 +1041,7 @@ class connector():
 
 		arc = self._options['archivers']['create'][archiveType]
 		if len(realFiles) > 1:
-			archiveName = self._request['name']
+			archiveName = 'Archive'
 		else:
 			archiveName = realFiles[0]
 		archiveName += '.' + arc['ext']
@@ -1086,7 +1072,7 @@ class connector():
 	def __extract(self):
 		"""Uncompress archive"""
 		if not 'current' in self._request or not 'target' in self._request:
-			self._response['error'] = 'Invalid parameters15'
+			self._response['error'] = 'Invalid parameters'
 			return
 
 		curDir = self.__findDir(self._request['current'], None)
@@ -1100,7 +1086,7 @@ class connector():
 			or not curFile
 			or not self.__isAllowed(curDir, 'write')
 			):
-			self._response['error'] = 'Invalid parameters16'
+			self._response['error'] = 'Invalid parameters'
 			return
 
 		arc = self._options['archivers']['extract'][mime]
@@ -1108,7 +1094,7 @@ class connector():
 		cmd = [arc['cmd']]
 		for a in arc['argc'].split():
 			cmd.append(a)
-		cmd.append(curFile)
+		cmd.append(os.path.basename(curFile))
 
 		curCwd = os.getcwd()
 		os.chdir(curDir)
@@ -1333,7 +1319,7 @@ class connector():
 	def __path2url(self, path):
 		curDir = path
 		length = len(self._options['root'])
-		url = str(self._options['URL'] + curDir[length:]).replace(os.sep, '/')
+		url = self.__checkUtf8(self._options['URL'] + curDir[length:]).replace(os.sep, '/')
 
 		try:
 			import urllib
@@ -1388,8 +1374,11 @@ class connector():
 		# out, err = sp.communicate()
 		# print 'out:', out, '\nerr:', err, '\n'
 		archive = { 'create': {}, 'extract': {} }
-		c = archive['create']
-		e = archive['extract']
+
+		if 'archive' in self._options['disabled'] and 'extract' in self._options['disabled']:
+			self._options['archiveMimes'] = []
+			self._options['archivers'] = archive
+			return
 
 		tar = self.__runSubProcess(['tar', '--version'])
 		gzip = self.__runSubProcess(['gzip', '--version'])
@@ -1405,6 +1394,9 @@ class connector():
 		# tar = False
 		# tar = gzip = bzip2 = zipc = unzip = rar = unrar = False
 		# print tar, gzip, bzip2, zipc, unzip, rar, unrar, p7z, p7za, p7zr
+
+		c = archive['create']
+		e = archive['extract']
 
 		if tar:
 			mime = 'application/x-tar'
@@ -1500,7 +1492,6 @@ class connector():
 
 
 	def __checkUtf8(self, name):
-                #print "name="+name
 		try:
 			name.decode('utf-8')
 		except UnicodeDecodeError:

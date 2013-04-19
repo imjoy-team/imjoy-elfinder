@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 #orignal file https://github.com/Studio-42/elfinder-python/blob/master/connector.py
+#license https://raw.github.com/Studio-42/elfinder-python/master/README.md
 #changed by Alexandr Rakov 08-03-2012
 
 import json
