@@ -16,3 +16,8 @@ cd elfinder-pyramid/elfinder_pyramid_example/
 
 And open http://127.0.0.1:6543/ in your browser.
 Done!
+
+Notes:
+-------------
+- This connector support only v.1 protocol
+- requires PIL for thumbnail generator
