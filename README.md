@@ -1,8 +1,8 @@
 connector.py
 ------------
-| This is conector for elfinder file manager, written for pyramid framework.
-| Based on original https://github.com/Studio-42/elfinder-python/blob/master/connector.py
-| For work you also need https://github.com/Studio-42/elfinder-python/blob/master/elFinder.py
+This is conector for elfinder file manager, written for pyramid framework.<br />
+Based on original https://github.com/Studio-42/elfinder-python/blob/master/connector.py<br />
+For work you also need https://github.com/Studio-42/elfinder-python/blob/master/elFinder.py
 
 How to try it:
 --------------
@@ -17,7 +17,7 @@ pserve development.ini
 And open http://127.0.0.1:6543/ in your browser.
 Done!
 
-Install:
+Install to app:
 --------
 add to config:
 
@@ -28,13 +28,14 @@ goto http://localhost:6543/elfinder/
 TinyMCE:
 --------
 
+ ```html
     <script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>
     {% include 'elfinder/tinymce.jinja2' %}
     <script>
       tinymce.init({
         selector:'textarea.tinymce',
         browser_spellcheck : true,
-        content_css: ["/static_norm/css/tu.css", "/static_norm/css/mytiny.css"],
+        content_css: ["/static_extra/css/tu.css", "/static_extra/css/mytiny.css"],
         plugins: "image link code contextmenu fullpage fullscreen "+
                 "hr insertdatetime lists media paste preview "+
                 "print table textcolor "+
@@ -46,8 +47,9 @@ TinyMCE:
       });
     </script>
     <textarea class="tinymce"></textarea>
+```
 
 Notes:
--------------
+------
 - This connector support only v.1 protocol
 - requires PIL for thumbnail generator
