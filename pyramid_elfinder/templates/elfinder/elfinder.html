@@ -1,0 +1,62 @@
+<script type="text/javascript" charset="utf-8">
+/*
+	Docs here:
+
+	https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
+
+*/
+  var FileBrowserDialogue = {
+    init: function() {
+      // Here goes your code for setting your custom things onLoad.
+    },
+    mySubmit: function (URL) {
+      // pass selected file path to TinyMCE
+      parent.tinymce.activeEditor.windowManager.getParams().setUrl(URL);
+
+      // close popup window
+      parent.tinymce.activeEditor.windowManager.close();
+    }
+  }
+
+$().ready(function() {
+	$('#finder').elfinder({
+		url : "{{ request.route_url('connector') }}",
+		transport : new elFinderSupportVer1(),
+        getFileCallback: function(file) { // editor callback
+            // actually file.url - doesnt work for me, but file does. (elfinder 2.0-rc1)
+            FileBrowserDialogue.mySubmit(file.url); // pass selected file path to TinyMCE
+        },
+
+        height: 490,
+        commandsOptions : {
+            getfile : {
+				// allow to return multiple files info
+            		//multiple : true,
+	                // action after callback (""/"close"/"destroy")
+	                oncomplete : ''
+            },
+        },
+		// onlyMimes : ['image', 'text/plain']
+
+		lang : 'ru',
+		commands : [
+					'open', 'reload', 'home', 'up', 'back', 'forward', 'getfile', 'quicklook',
+					//'download',
+					'rm',
+					//'duplicate',
+					'rename', 'mkdir',
+					//'mkfile',
+					'upload', 'copy', 'cut', 'paste',
+					//'edit',
+					'extract', 'archive',
+					//'search',
+					'info', 'view', 'help',
+					//'resize',
+					'sort'
+				]
+
+	}).elfinder('instance');
+})
+</script>
+
+<div id="finder">elFinder <span>here</span></div>
