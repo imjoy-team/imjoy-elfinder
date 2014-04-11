@@ -9,9 +9,9 @@ from pyramid.response import Response
 
 # connector opts
 _opts = {
-    #'root' and url rewrite from ini file
+    # 'root' and url rewrite from ini file
     'root': '/tmp',
-    'URL': 'http://localhost:8080/static/uploaded',
+    'URL': 'http://localhost:6543/static/uploaded',
     # other options
     'debug': True,
     # if False: download files using connector, no direct urls to files
@@ -89,5 +89,6 @@ def includeme(config):
     config.add_route('connector', '/connector')
     config.add_route('elfinder', '/elfinder/')
     config.add_view(connector, route_name='connector')
+
     config.add_view(lambda x: {}, route_name='elfinder',
                     renderer='templates/elfinder/filebrowser.jinja2')
