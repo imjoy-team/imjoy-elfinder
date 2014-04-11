@@ -1,3 +1,5 @@
+Forked from @aleksandr-rakov repositary (elfinder-pyramid)[http://github.com/aleksandr-rakov/elfinder-pyramid]
+
 connector.py
 ------------
 This is conector for elfinder file manager, written for pyramid framework.<br />
@@ -8,7 +10,7 @@ How to try it:
 --------------
 In your virtualenv run:
 ```
-git clone git://github.com/aleksandr-rakov/elfinder-pyramid.git
+git clone https://github.com/ITCase/pyramid_elfinder.git
 cd elfinder-pyramid/elfinder_pyramid_example/
 python setup.py develop
 pserve development.ini
