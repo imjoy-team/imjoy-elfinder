@@ -1,4 +1,4 @@
-Forked from @aleksandr-rakov repositary (elfinder-pyramid)[http://github.com/aleksandr-rakov/elfinder-pyramid]
+Forked from [elfinder-pyramid](http://github.com/aleksandr-rakov/elfinder-pyramid) writed by [Aleksandr Rakov](http://github.com/aleksandr-rakov)
 
 connector.py
 ------------
