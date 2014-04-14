@@ -1,0 +1,3 @@
+include runner README
+recursive-include pyramid_elfinder/static *
+recursive-include pyramid_elfinder/templates *
