@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/itcase/pyramid_elfinder.png?label=ready&title=Ready)](https://waffle.io/itcase/pyramid_elfinder)
 Forked from [elfinder-pyramid](http://github.com/aleksandr-rakov/elfinder-pyramid) writed by [Aleksandr Rakov](http://github.com/aleksandr-rakov)
 
 connector.py
