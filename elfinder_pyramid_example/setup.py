@@ -9,7 +9,8 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 requires = [
     'pyramid',
     'pyramid_debugtoolbar',
-    'waitress'
+    'waitress',
+    'pillow'
     ]
 
 setup(name='elfinder_pyramid_example',
