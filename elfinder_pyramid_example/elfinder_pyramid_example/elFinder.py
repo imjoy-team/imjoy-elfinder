@@ -1337,8 +1337,7 @@ class connector():
 	def __initImgLib(self):
 		if not self._options['imgLib'] is False and self._im is None:
 			try:
-				import Image
-				Image
+				from PIL import Image
 				self._im = Image
 				self._options['imgLib'] = 'PIL'
 			except:
