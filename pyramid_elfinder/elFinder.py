@@ -214,7 +214,7 @@ class connector():
         if self.httpStatusCode < 100:
             self.httpStatusCode = 200
 
-        if not 'Content-type' in self.httpHeader:
+        if 'Content-type' not in self.httpHeader:
             if ('cmd' in self._request and self._request['cmd'] == 'upload') or self._options['debug']:
                 self.httpHeader['Content-type'] = 'text/html'
             else:
