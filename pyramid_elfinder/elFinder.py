@@ -591,7 +591,8 @@ class connector():
 			imResized = im.resize((width, height), self._im.ANTIALIAS)
 			imResized.save(curFile)
 		except Exception, e:
-			self.__debug('resizeFailed_' + path, str(e))
+			# self.__debug('resizeFailed_' + path, str(e))
+			self.__debug('resizeFailed_' + self._options['root'], str(e))
 			self._response['error'] = 'Unable to resize image'
 			return
 
