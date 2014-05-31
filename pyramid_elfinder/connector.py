@@ -67,7 +67,7 @@ def connector(request):
         pass
     result.headers = header
 
-    if not response is None and status == 200:
+    if response is not None and status == 200:
         # send file
         if 'file' in response and isinstance(response['file'], file):
             result.body = response['file'].read()
@@ -85,6 +85,7 @@ def includeme(config):
 
     config.add_jinja2_search_path("pyramid_elfinder:templates")
     config.add_static_view('static_elfinder', 'pyramid_elfinder:static')
+    config.include('pyramid_jinja2')
 
     config.add_route('connector', '/connector')
     config.add_route('elfinder', '/elfinder/')
