@@ -85,7 +85,6 @@ def includeme(config):
 
     config.add_jinja2_search_path("pyramid_elfinder:templates")
     config.add_static_view('static_elfinder', 'pyramid_elfinder:static')
-    config.include('pyramid_jinja2')
 
     config.add_route('connector', '/connector')
     config.add_route('elfinder', '/elfinder/')
