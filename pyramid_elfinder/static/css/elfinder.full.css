@@ -1,13 +1,13 @@
 /*!
  * elFinder - file manager for web
- * Version 2.0.2 (2013-04-15)
+ * Version 2.0.2 (2014-10-17)
  * http://elfinder.org
  * 
- * Copyright 2009-2012, Studio 42
+ * Copyright 2009-2013, Studio 42
  * Licensed under a 3 clauses BSD license
  */
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/commands.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/commands.css */
 /******************************************************************/
 /*                          COMMANDS STYLES                       */
 /******************************************************************/
@@ -265,7 +265,7 @@
 
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/common.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/common.css */
 /*********************************************/
 /*            COMMON ELFINDER STUFFS         */
 /*********************************************/
@@ -363,7 +363,7 @@
 
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/contextmenu.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/contextmenu.css */
 /* menu and submenu */
 .elfinder-contextmenu,
 .elfinder-contextmenu-sub {
@@ -434,7 +434,7 @@
 	margin:0 1px;
 }
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/cwd.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/cwd.css */
 /******************************************************************/
 /*                     CURRENT DIRECTORY STYLES                   */
 /******************************************************************/
@@ -475,6 +475,7 @@
 	height:80px;
 	padding-bottom:2px;
 	cursor:default;
+	border:none;
 /*	overflow:hidden;*/
 /*	position:relative;*/
 }
@@ -672,7 +673,7 @@
 
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/dialog.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/dialog.css */
 /*********************************************/
 /*                DIALOGS STYLES             */
 /*********************************************/
@@ -808,6 +809,11 @@
 .elfinder-dialog-icon-archive,
 .elfinder-dialog-icon-extract     { background-position: 0 -365px; }
 .elfinder-dialog-icon-search      { background-position: 0 -402px; }
+.elfinder-dialog-icon-resize,
+.elfinder-dialog-icon-loadimg,
+.elfinder-dialog-icon-netmount,
+.elfinder-dialog-icon-netunmount,
+.elfinder-dialog-icon-dim         { background-position: 0 -434px; }
 
 /*********************** CONFIRM DIALOG **************************/
 
@@ -913,7 +919,7 @@
 
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/fonts.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/fonts.css */
 .elfinder-contextmenu .elfinder-contextmenu-item span { font-size:.76em; }
 
 .elfinder-cwd-view-icons .elfinder-cwd-filename { font-size:.7em; }
@@ -937,7 +943,7 @@
 .elfinder-drag-num { font-size:12px; }
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/navbar.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/navbar.css */
 /*********************************************/
 /*              NAVIGATION PANEL             */
 /*********************************************/
@@ -1089,9 +1095,9 @@
 
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/places.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/places.css */
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/quicklook.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/quicklook.css */
 /* quicklook window */
 .elfinder-quicklook {
 	position:absolute;
@@ -1357,7 +1363,7 @@ embed.elfinder-quicklook-preview-audio {
 
 
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/statusbar.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/statusbar.css */
 /******************************************************************/
 /*                           STATUSBAR STYLES                     */
 /******************************************************************/
@@ -1396,7 +1402,7 @@ embed.elfinder-quicklook-preview-audio {
 
 .elfinder-stat-selected { white-space:nowrap; overflow:hidden; }
 
-/* File: /home/doggy/Sandbox/monstrap/monstrap/static/resources/elfinder/css/toolbar.css */
+/* File: /home/nikita/projects/itcase/pyramid_sacrud/pyramid_sacrud/static/js/bower_components/elfinder/css/toolbar.css */
 /*********************************************/
 /*               TOOLBAR STYLES              */
 /*********************************************/
@@ -1431,6 +1437,9 @@ embed.elfinder-quicklook-preview-audio {
 	overflow:hidden;
 	position:relative;
 	border:0 solid;
+	-webkit-box-sizing: content-box;
+	-moz-box-sizing: content-box;
+	box-sizing: content-box;
 }
 
 .elfinder .ui-icon-search { cursor:pointer;}

@@ -6,7 +6,6 @@
 import hashlib
 import mimetypes
 import os
-import os.path
 import re
 import shutil
 import time
@@ -133,10 +132,11 @@ class connector():
                 del self._commands[cmd]
 
         if self._options['tmbDir']:
-            self._options['tmbDir'] = os.path.join(self._options['root'],
-                                                   self._options['tmbDir'])
-            if not os.path.exists(self._options['tmbDir']):
-                self._options['tmbDir'] = False
+            thumbs_dir = os.path.join(self._options['root'],
+                                      self._options['tmbDir'])
+            if not os.path.exists(thumbs_dir):
+                os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
+            self._options['tmbDir'] = thumbs_dir
 
     def __reset(self):
         """Flush per request variables"""
