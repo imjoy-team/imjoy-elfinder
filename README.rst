@@ -1,5 +1,4 @@
-|Stories in Ready| |Build Status|
-
+|Build Status| |Stories in Ready|
 
 Forked from `elfinder-pyramid`_ writed by `Aleksandr Rakov`_
 
