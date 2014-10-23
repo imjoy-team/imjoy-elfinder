@@ -34,7 +34,7 @@ _opts = {
 }
 
 
-@view_config(route_name='sa_home')
+@view_config(route_name='elfinder_connector')
 def connector(request):
     # init connector and pass options
     _opts['root'] = request.registry.settings['elfinder_root']
