@@ -39,7 +39,27 @@ goto http://localhost:6543/elfinder/
 TinyMCE:
 --------
 
-``html     <script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>     {% include 'elfinder/tinymce.jinja2' %}     <script>       tinymce.init({         selector:'textarea.tinymce',         browser_spellcheck : true,         content_css: ["/static_extra/css/tu.css", "/static_extra/css/mytiny.css"],         plugins: "image link code contextmenu fullpage fullscreen "+                 "hr insertdatetime lists media paste preview "+                 "print table textcolor "+                 "visualchars wordcount",         toolbar1: "fullpage preview print forecolor backcolor inserttable",         toolbar2: "styleselect formatselect fontselect fontsizeselect cut copy paste  removeformat subscript superscript",         toolbar3: "undo redo | bold italic underline strikethrough | bullist numlist outdent indent blockquote | alignleft aligncenter alignright alignjustify |",         file_browser_callback: elFinderBrowser,       });     </script>     <textarea class="tinymce"></textarea>``
+.. code-block:: html
+
+    <script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>
+    {% include 'elfinder/tinymce.jinja2' %}
+    <script>
+      tinymce.init({
+        selector:'textarea.tinymce',
+        browser_spellcheck : true,
+        content_css: ["/static_extra/css/tu.css", "/static_extra/css/mytiny.css"],
+        plugins: "image link code contextmenu fullpage fullscreen "+
+                "hr insertdatetime lists media paste preview "+
+                "print table textcolor "+
+                "visualchars wordcount",
+        toolbar1: "fullpage preview print forecolor backcolor inserttable",
+        toolbar2: "styleselect formatselect fontselect fontsizeselect cut copy paste  removeformat subscript superscript",
+        toolbar3: "undo redo | bold italic underline strikethrough | bullist numlist outdent indent blockquote | alignleft aligncenter alignright alignjustify |",
+        file_browser_callback: elFinderBrowser,
+      });
+    </script>
+    <textarea class="tinymce"></textarea>
+
 
 Notes:
 ------
