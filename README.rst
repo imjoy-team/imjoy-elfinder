@@ -1,4 +1,5 @@
-|Stories in Ready|
+|Stories in Ready| |Build Status|
+
 
 Forked from `elfinder-pyramid`_ writed by `Aleksandr Rakov`_
 
@@ -69,6 +70,8 @@ Notes:
 
 .. _elfinder-pyramid: http://github.com/aleksandr-rakov/elfinder-pyramid
 .. _Aleksandr Rakov: http://github.com/aleksandr-rakov
-
 .. |Stories in Ready| image:: https://badge.waffle.io/itcase/pyramid_elfinder.png?label=ready&title=Ready
    :target: https://waffle.io/itcase/pyramid_elfinder
+.. |Build Status| image:: https://travis-ci.org/ITCase/pyramid_elfinder.svg?branch=master
+   :target: https://travis-ci.org/ITCase/pyramid_elfinder
+

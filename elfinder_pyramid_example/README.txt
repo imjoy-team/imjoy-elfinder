@@ -1,1 +1,0 @@
-elfinder_pyramid_example test application
