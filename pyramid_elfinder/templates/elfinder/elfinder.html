@@ -20,7 +20,7 @@
 
 $().ready(function() {
 	$('#finder').elfinder({
-		url : "{{ request.route_url('connector') }}",
+		url : "{{ request.route_url('elfinder_connector') }}",
 		transport : new elFinderSupportVer1(),
         getFileCallback: function(file) { // editor callback
             // actually file.url - doesnt work for me, but file does. (elfinder 2.0-rc1)
