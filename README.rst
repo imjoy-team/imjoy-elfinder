@@ -1,4 +1,4 @@
-|Build Status| |Stories in Ready|
+|Build Status| |Coveralls| |Stories in Ready|
 
 Forked from `elfinder-pyramid`_ writed by `Aleksandr Rakov`_
 
@@ -73,4 +73,6 @@ Notes:
    :target: https://waffle.io/itcase/pyramid_elfinder
 .. |Build Status| image:: https://travis-ci.org/ITCase/pyramid_elfinder.svg?branch=master
    :target: https://travis-ci.org/ITCase/pyramid_elfinder
+.. |Coveralls| image:: https://coveralls.io/repos/ITCase/pyramid_elfinder/badge.png
+  :target: https://coveralls.io/r/ITCase/pyramid_elfinder
 
