@@ -10,7 +10,7 @@
 Views for elfinder
 """
 import json
-import elFinder
+import elfinder
 from cgi import FieldStorage
 from pyramid.response import Response
 from pyramid.view import view_config
@@ -39,7 +39,7 @@ def connector(request):
     # init connector and pass options
     _opts['root'] = request.registry.settings['elfinder_root']
     _opts['URL'] = request.registry.settings['elfinder_url']
-    elf = elFinder.connector(_opts)
+    elf = elfinder.connector(_opts)
 
     # fetch only needed GET/POST parameters
     httpRequest = {}

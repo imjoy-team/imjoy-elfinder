@@ -1,7 +1,7 @@
-# -*- coding: utf8 -*-
 """
-orignal file https://github.com/Studio-42/elfinder-python/blob/master/connector.py
-changed by Alexandr Rakov 08-03-2012
+orignal file
+https://github.com/Studio-42/elfinder-python/blob/master/connector.py changed
+by Alexandr Rakov 08-03-2012
 """
 
 
