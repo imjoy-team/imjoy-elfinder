@@ -14,4 +14,5 @@ Assets for elfinder
 def includeme(config):
     config.include('pyramid_jinja2')
     config.add_jinja2_search_path("pyramid_elfinder:templates")
-    config.add_static_view('static_elfinder', 'pyramid_elfinder:static')
+    config.add_static_view('pyramid_elfinder_static',
+                           'pyramid_elfinder:static')

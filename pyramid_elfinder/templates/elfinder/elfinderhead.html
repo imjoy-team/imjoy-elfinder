@@ -1,11 +1,14 @@
-<script src="/static_elfinder/jquery/jquery-1.9.1.min.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static_elfinder/jquery/jquery-ui-1.10.1.custom.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="{{ request.static_url('pyramid_elfinder:static/jquery/jquery-1.9.1.min.js') }}"
+        type="text/javascript" charset="utf-8"></script>
+<script src="{{ request.static_url('pyramid_elfinder:static/jquery/jquery-ui-1.10.1.custom.min.js') }}"
+        type="text/javascript" charset="utf-8"></script>
 
-<link rel="stylesheet" href="/static_elfinder/jquery/ui-themes/smoothness/jquery-ui-1.10.1.custom.min.css" type="text/css" media="screen"  charset="utf-8">
+<link href="{{ request.static_url('pyramid_elfinder:static/jquery/ui-themes/smoothness/jquery-ui-1.10.1.custom.min.css') }}"
+      type="text/css" media="screen"  charset="utf-8" rel="stylesheet">
 
-<link rel="stylesheet" href="/static_elfinder/css/elfinder.min.css" type="text/css" media="screen" charset="utf-8">
-<link rel="stylesheet" href="/static_elfinder/css/theme.css" type="text/css" media="screen" charset="utf-8">
+<link rel="stylesheet" href="{{ request.static_url('pyramid_elfinder:static/css/elfinder.min.css') }}" type="text/css" media="screen" charset="utf-8">
+<link rel="stylesheet" href="{{ request.static_url('pyramid_elfinder:static/css/theme.css') }}" type="text/css" media="screen" charset="utf-8">
 
-<script src="/static_elfinder/js/elfinder.min.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static_elfinder/js/i18n/elfinder.ru.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static_elfinder/js/proxy/elFinderSupportVer1.js" type="text/javascript" charset="utf-8"></script>
+<script src="{{ request.static_url('pyramid_elfinder:static/js/elfinder.min.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ request.static_url('pyramid_elfinder:static/js/i18n/elfinder.ru.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ request.static_url('pyramid_elfinder:static/js/proxy/elFinderSupportVer1.js') }}" type="text/javascript" charset="utf-8"></script>
