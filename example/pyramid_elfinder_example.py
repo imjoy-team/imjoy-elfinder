@@ -23,5 +23,6 @@ if __name__ == '__main__':
     }
     app = main({}, **settings)
 
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=6543)
+    from wsgiref.simple_server import make_server
+    httpd = make_server('0.0.0.0', 6543, app)
+    httpd.serve_forever()

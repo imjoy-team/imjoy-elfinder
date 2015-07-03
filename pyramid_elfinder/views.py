@@ -9,6 +9,7 @@
 """
 Views for elfinder
 """
+import os
 import json
 from cgi import FieldStorage
 
@@ -51,7 +52,9 @@ def add_global_params(event):
 )
 def connector(request):
     # init connector and pass options
-    _opts['root'] = request.registry.settings['pyramid_elfinder_root']
+    root = request.registry.settings['pyramid_elfinder_root']
+    _opts['root'] = os.path.abspath(root)
+    # _opts['root'] = root'
     _opts['URL'] = request.registry.settings['pyramid_elfinder_url']
     elf = elfinder.connector(_opts)
 
