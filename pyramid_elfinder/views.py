@@ -9,8 +9,8 @@
 """
 Views for elfinder
 """
-import os
 import json
+import os
 from cgi import FieldStorage
 
 import elfinder
@@ -19,24 +19,6 @@ from pyramid.response import Response
 from pyramid.view import view_config
 
 from . import PYRAMID_ELFINDER_CONNECTOR, PYRAMID_ELFINDER_FILEBROWSER
-
-# connector opts
-_opts = {
-    # 'root' and url rewrite from ini file
-    'root': '/tmp',
-    'URL': 'http://localhost:6543/static/uploaded',
-    # other options
-    'debug': True,
-    # if False: download files using connector, no direct urls to files
-    'fileURL': True,
-    # 'dirSize': True,
-    # 'dotFiles': True,
-    'fileMode': 666,
-    'dirMode': 777,
-    # 'uploadDeny': ['image', 'application'],
-    # 'uploadAllow': ['image/png', 'image/jpeg'],
-    # 'uploadOrder': ['deny', 'allow']
-}
 
 
 @subscriber(BeforeRender)
@@ -53,10 +35,11 @@ def add_global_params(event):
 def connector(request):
     # init connector and pass options
     root = request.registry.settings['pyramid_elfinder_root']
-    _opts['root'] = os.path.abspath(root)
-    # _opts['root'] = root'
-    _opts['URL'] = request.registry.settings['pyramid_elfinder_url']
-    elf = elfinder.connector(_opts)
+    options = {
+        'root': os.path.abspath(root),
+        'URL': request.registry.settings['pyramid_elfinder_url']
+    }
+    elf = elfinder.connector(options)
 
     # fetch only needed GET/POST parameters
     httpRequest = {}
