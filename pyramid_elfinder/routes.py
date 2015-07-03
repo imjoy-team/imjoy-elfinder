@@ -9,8 +9,11 @@
 """
 Routes of elfinder
 """
+from . import PYRAMID_ELFINDER_CONNECTOR, PYRAMID_ELFINDER_FILEBROWSER
 
 
 def includeme(config):
-    config.add_route('elfinder_connector', '/elfinder_connector')
-    config.add_route('elfinder', '/elfinder/')
+    config.add_route(PYRAMID_ELFINDER_CONNECTOR,
+                     '/pyramid_elfinder/connector/')
+    config.add_route(PYRAMID_ELFINDER_FILEBROWSER,
+                     '/pyramid_elfinder/filebrowser/')

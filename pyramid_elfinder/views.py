@@ -10,10 +10,14 @@
 Views for elfinder
 """
 import json
-import elfinder
 from cgi import FieldStorage
+
+import elfinder
+from pyramid.events import BeforeRender, subscriber
 from pyramid.response import Response
 from pyramid.view import view_config
+
+from . import PYRAMID_ELFINDER_CONNECTOR, PYRAMID_ELFINDER_FILEBROWSER
 
 # connector opts
 _opts = {
@@ -26,19 +30,29 @@ _opts = {
     'fileURL': True,
     # 'dirSize': True,
     # 'dotFiles': True,
-    'fileMode': 0666,
-    'dirMode': 0777,
+    'fileMode': 666,
+    'dirMode': 777,
     # 'uploadDeny': ['image', 'application'],
     # 'uploadAllow': ['image/png', 'image/jpeg'],
     # 'uploadOrder': ['deny', 'allow']
 }
 
 
-@view_config(route_name='elfinder_connector')
+@subscriber(BeforeRender)
+def add_global_params(event):
+    event['PYRAMID_ELFINDER_CONNECTOR'] = PYRAMID_ELFINDER_CONNECTOR
+    event['PYRAMID_ELFINDER_FILEBROWSER'] = PYRAMID_ELFINDER_FILEBROWSER
+
+
+@view_config(
+    request_method=('GET', 'POST'),
+    route_name=PYRAMID_ELFINDER_CONNECTOR,
+    permission=PYRAMID_ELFINDER_CONNECTOR
+)
 def connector(request):
     # init connector and pass options
-    _opts['root'] = request.registry.settings['elfinder_root']
-    _opts['URL'] = request.registry.settings['elfinder_url']
+    _opts['root'] = request.registry.settings['pyramid_elfinder_root']
+    _opts['URL'] = request.registry.settings['pyramid_elfinder_url']
     elf = elfinder.connector(_opts)
 
     # fetch only needed GET/POST parameters
@@ -69,17 +83,16 @@ def connector(request):
     status, header, response = elf.run(httpRequest)
 
     # get connector output and print it out
-
     result = Response(status=status)
     try:
         del header['Connection']
-    except:
+    except Exception:
         pass
     result.headers = header
 
     if response is not None and status == 200:
         # send file
-        if 'file' in response and isinstance(response['file'], file):
+        if 'file' in response and hasattr(response['file'], 'read'):
             result.body = response['file'].read()
             response['file'].close()
 
@@ -87,3 +100,13 @@ def connector(request):
         else:
             result.body = json.dumps(response)
     return result
+
+
+@view_config(
+    request_method='GET',
+    route_name=PYRAMID_ELFINDER_FILEBROWSER,
+    permission=PYRAMID_ELFINDER_FILEBROWSER,
+    renderer='templates/elfinder/filebrowser.jinja2'
+)
+def index(request):
+    return {}

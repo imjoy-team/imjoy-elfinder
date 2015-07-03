@@ -1,2 +1,3 @@
 pyramid
 elfinder
+pyramid_jinja2
