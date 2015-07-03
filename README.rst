@@ -8,20 +8,20 @@ connector.py
 This is conector for elfinder file manager, written for pyramid
 framework. Based on original
 https://github.com/Studio-42/elfinder-python/blob/master/connector.py
-For work you also need
-https://github.com/Studio-42/elfinder-python/blob/master/elFinder.py
+and https://github.com/Studio-42/elfinder-python/blob/master/elFinder.py
+
+Now you can find connector there http://github.com/ITCase/elfinder
 
 How to try it:
 --------------
 
 In your virtualenv run:
 
-::
+.. code-block:: bash
 
-    git clone https://github.com/ITCase/pyramid_elfinder.git
-    cd elfinder-pyramid/elfinder_pyramid_example/
-    python setup.py develop
-    pserve development.ini
+    $ git clone https://github.com/ITCase/pyramid_elfinder.git
+    $ cd pyramid_elfinder/example
+    $ python pyramid_elfinder_example.py
 
 And open http://127.0.0.1:6543/ in your browser. Done!
 
@@ -32,7 +32,7 @@ add to config:
 
 ::
 
-    config.include('pyramid_elfinder.connector')
+    config.include('pyramid_elfinder')
 
 goto http://localhost:6543/elfinder/
 
