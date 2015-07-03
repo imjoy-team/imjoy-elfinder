@@ -5,7 +5,7 @@
 # Copyright © 2014 uralbash <root@uralbash.ru>
 #
 # Distributed under terms of the MIT license.
-
+sudo: false
 language: python
 
 notifications:
@@ -15,13 +15,12 @@ notifications:
 
 python:
   - "2.7"
-
-install:
-  - pip install nose coverage coveralls
-  - pip install -r requirements.txt
+  - "3.3"
+  - "3.4"
 
 script:
-  - nosetests --with-coverage --cover-package pyramid_elfinder --cover-erase --with-doctest
+  - python setup.py nosetests
 
 after_success:
-  coveralls
+  - pip install coveralls
+  - coveralls
