@@ -9,14 +9,14 @@
 """
 Views for elfinder
 """
-import json
 import os
+import json
 from cgi import FieldStorage
 
 import elfinder
-from pyramid.events import BeforeRender, subscriber
-from pyramid.response import Response
 from pyramid.view import view_config
+from pyramid.events import subscriber, BeforeRender
+from pyramid.response import Response
 
 from . import PYRAMID_ELFINDER_CONNECTOR, PYRAMID_ELFINDER_FILEBROWSER
 
@@ -75,16 +75,16 @@ def connector(request):
     except Exception:
         pass
     result.headers = header
+    result.charset = 'utf8'
 
     if response is not None and status == 200:
         # send file
         if 'file' in response and hasattr(response['file'], 'read'):
             result.body = response['file'].read()
             response['file'].close()
-
         # output json
         else:
-            result.body = json.dumps(response)
+            result.text = json.dumps(response)
     return result
 
 
