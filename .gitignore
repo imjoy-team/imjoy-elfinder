@@ -19,3 +19,6 @@ TODO
 TODO.txt
 nohup.out
 .ropeproject
+.DS_Store
+example/static/*
+__pycache__

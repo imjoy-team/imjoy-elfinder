@@ -13,7 +13,7 @@ import os
 import json
 from cgi import FieldStorage
 
-import elfinder
+from . import elfinder
 from pyramid.view import view_config
 from pyramid.events import subscriber, BeforeRender
 from pyramid.response import Response
@@ -37,7 +37,8 @@ def connector(request):
     root = request.registry.settings['pyramid_elfinder_root']
     options = {
         'root': os.path.abspath(root),
-        'URL': request.registry.settings['pyramid_elfinder_url']
+        'URL': request.registry.settings['pyramid_elfinder_url'],
+        'debug': True
     }
     elf = elfinder.connector(options)
 

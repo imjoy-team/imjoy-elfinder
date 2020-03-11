@@ -11,7 +11,7 @@ def read(name):
 
 setup(
     name='pyramid_elfinder',
-    version='0.0.1',
+    version='0.1.2',
     url='http://github.com/ITCase/pyramid_elfinder/',
     author='ITCase LLC.',
     packages=find_packages(),
