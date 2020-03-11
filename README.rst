@@ -21,7 +21,7 @@ In your virtualenv run:
 
     $ git clone https://github.com/ITCase/pyramid_elfinder.git
     $ cd pyramid_elfinder/example
-    $ python pyramid_elfinder_example.py
+    $ pserve  development.ini
 
 And open http://127.0.0.1:6543/ in your browser. Done!
 
