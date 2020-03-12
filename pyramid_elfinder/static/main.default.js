@@ -6,6 +6,8 @@
  **/
 (function(){
 	"use strict";
+	var ELFINDER_STATIC_URL = window.ELFINDER_STATIC_URL || 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static'
+	var ELFINDER_CONNECTOR_URL = window.ELFINDER_CONNECTOR_URL || '/pyramid_elfinder/connector/'
 	var // jQuery and jQueryUI version
 		jqver = '3.4.1',
 		uiver = '1.12.1',
@@ -104,7 +106,7 @@
 			require(
 				[
 					'elfinder'
-					, 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/extras/editors.default.js'               // load text, image editors
+					, ELFINDER_STATIC_URL + '/js/extras/editors.default.js'               // load text, image editors
 					, 'elFinderConfig'
 				//	, 'extras/quicklook.googledocs.min'          // optional preview for GoogleApps contents on the GoogleDrive volume
 				],
@@ -126,8 +128,8 @@
 		paths : {
 			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
 			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
-			'elfinder' : 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/elfinder.full',
-			'elFinderSupportVer1' : 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/proxy/elFinderSupportVer1.js',
+			'elfinder' : ELFINDER_STATIC_URL + '/js/elfinder.full',
+			'elFinderSupportVer1' : ELFINDER_STATIC_URL + '/js/proxy/elFinderSupportVer1.js',
 			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
 		},
 		waitSeconds : 10 // optional
@@ -141,7 +143,7 @@
 			// Documentation for client options:
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
-				url : 'http://localhost:6543/pyramid_elfinder/connector/', // connector URL (REQUIRED
+				url : ELFINDER_CONNECTOR_URL, // connector URL (REQUIRED
 				transport : new elFinderSupportVer1(),
 				commandsOptions : {
 					edit : {
