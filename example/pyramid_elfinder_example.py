@@ -37,4 +37,5 @@ if __name__ == '__main__':
 
     from wsgiref.simple_server import make_server
     httpd = make_server('0.0.0.0', 6543, app)
+    print('==========Server for ElFinder is Running=========\nhttp://127.0.0.1:6543\n')
     httpd.serve_forever()
