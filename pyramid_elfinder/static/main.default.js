@@ -104,7 +104,7 @@
 			require(
 				[
 					'elfinder'
-					, 'http://127.0.0.1:6543/pyramid_elfinder_static/js/extras/editors.default.min.js'               // load text, image editors
+					, 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/extras/editors.default.js'               // load text, image editors
 					, 'elFinderConfig'
 				//	, 'extras/quicklook.googledocs.min'          // optional preview for GoogleApps contents on the GoogleDrive volume
 				],
