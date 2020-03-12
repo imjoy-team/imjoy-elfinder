@@ -140,7 +140,7 @@
 			// Documentation for client options:
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
-				url : 'php/connector.minimal.php' // connector URL (REQUIRED)
+				url : 'http://localhost:6543/pyramid_elfinder/connector/' // connector URL (REQUIRED)
 				,commandsOptions : {
 					edit : {
 						extraOptions : {
