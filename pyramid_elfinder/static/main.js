@@ -6,6 +6,9 @@
  **/
 (function(){
 	"use strict";
+	var ELFINDER_STATIC_URL = window.ELFINDER_STATIC_URL || 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static'
+	var ELFINDER_CONNECTOR_URL = window.ELFINDER_CONNECTOR_URL || '/pyramid_elfinder/connector/'
+	if(!ELFINDER_CONNECTOR_URL.endsWith('/')) ELFINDER_CONNECTOR_URL = ELFINDER_CONNECTOR_URL + '/';
 	var // jQuery and jQueryUI version
 		jqver = '3.4.1',
 		uiver = '1.12.1',
@@ -47,7 +50,7 @@
 		start = function(elFinder, editors, config) {
 			// load jQueryUI CSS
 			elFinder.prototype.loadCss('//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
-			
+			config.defaultOpts.transport = new window.elFinderSupportVer1();
 			$(function() {
 				var optEditors = {
 						commandsOptions: {
@@ -104,8 +107,9 @@
 			require(
 				[
 					'elfinder'
-					, '/static/js/extras/editors.default.min.js'               // load text, image editors
+					, ELFINDER_STATIC_URL + '/js/extras/editors.default.js'               // load text, image editors
 					, 'elFinderConfig'
+					, 'elFinderSupportVer1'
 				//	, 'extras/quicklook.googledocs.min'          // optional preview for GoogleApps contents on the GoogleDrive volume
 				],
 				start,
@@ -126,11 +130,13 @@
 		paths : {
 			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
 			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
-			'elfinder' : '/pyramid_elfinder_static/js/elfinder.full',
+			'elfinder' : ELFINDER_STATIC_URL + '/js/elfinder.full',
+			'elFinderSupportVer1' : ELFINDER_STATIC_URL + '/js/proxy/elFinderSupportVer1',
 			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
 		},
 		waitSeconds : 10 // optional
 	});
+
 
 	// check elFinderConfig and fallback
 	// This part don't used if you are using elfinder.html, see elfinder.html
@@ -140,8 +146,9 @@
 			// Documentation for client options:
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
-				url : 'php/connector.minimal.php' // connector URL (REQUIRED)
-				,commandsOptions : {
+				url : ELFINDER_CONNECTOR_URL, // connector URL (REQUIRED
+				// transport : new elFinderSupportVer1(),
+				commandsOptions : {
 					edit : {
 						extraOptions : {
 							// set API key to enable Creative Cloud image editor
@@ -168,6 +175,8 @@
 			}
 		});
 	}
+
+
 
 	// load JavaScripts (REQUIRED)
 	load();
