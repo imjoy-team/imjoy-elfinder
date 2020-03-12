@@ -104,7 +104,7 @@
 			require(
 				[
 					'elfinder'
-					, '/static/js/extras/editors.default.min.js'               // load text, image editors
+					, 'extras/editors.default.min'               // load text, image editors
 					, 'elFinderConfig'
 				//	, 'extras/quicklook.googledocs.min'          // optional preview for GoogleApps contents on the GoogleDrive volume
 				],
@@ -126,7 +126,7 @@
 		paths : {
 			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
 			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
-			'elfinder' : '/pyramid_elfinder_static/js/elfinder.full',
+			'elfinder' : 'elfinder.full',
 			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
 		},
 		waitSeconds : 10 // optional
