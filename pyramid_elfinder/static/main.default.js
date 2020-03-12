@@ -8,6 +8,7 @@
 	"use strict";
 	var ELFINDER_STATIC_URL = window.ELFINDER_STATIC_URL || 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static'
 	var ELFINDER_CONNECTOR_URL = window.ELFINDER_CONNECTOR_URL || '/pyramid_elfinder/connector/'
+	if(!ELFINDER_CONNECTOR_URL.endsWith('/')) ELFINDER_CONNECTOR_URL = ELFINDER_CONNECTOR_URL + '/';
 	var // jQuery and jQueryUI version
 		jqver = '3.4.1',
 		uiver = '1.12.1',
