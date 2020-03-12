@@ -55,7 +55,7 @@ def add_global_params(event):
 
 
 @view_config(
-    request_method=('GET', 'POST'),
+    request_method=('GET', 'POST', 'OPTIONS'),
     route_name=PYRAMID_ELFINDER_CONNECTOR,
     permission=PYRAMID_ELFINDER_CONNECTOR
 )
