@@ -126,7 +126,7 @@
 		paths : {
 			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
 			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
-			'elfinder' : 'http://127.0.0.1:6543/pyramid_elfinder_static/js/elfinder.full',
+			'elfinder' : 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/elfinder.full',
 			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
 		},
 		waitSeconds : 10 // optional
