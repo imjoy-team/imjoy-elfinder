@@ -296,7 +296,7 @@ class connector():
             self.httpHeader['Content-Transfer-Encoding'] = 'binary'
             self.httpHeader['Content-Length'] = str(os.lstat(curFile).st_size)
             self.httpHeader['Connection'] = 'close'
-            self._response['file'] = open(curFile, 'r')
+            self._response['file'] = curFile
             return
         # try dir
         else:
@@ -358,6 +358,8 @@ class connector():
             name = self._request['name']
             current = self._request['current']
             path = self.__findDir(current, None)
+            if isinstance(name, bytes):
+                name = name.decode('utf-8') 
             newDir = os.path.join(path, name)
 
         if not path:
@@ -801,7 +803,7 @@ class connector():
             if os.path.isdir(lpath):
                 info['mime'] = 'directory'
             else:
-                info['parent'] = self.__hash(os.path.dirname(lpath))
+                info['phash'] = self.__hash(os.path.dirname(lpath))
                 info['mime'] = self.__mimetype(lpath)
 
             if self._options['rootAlias']:

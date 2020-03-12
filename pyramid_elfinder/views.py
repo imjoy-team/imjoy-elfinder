@@ -16,7 +16,7 @@ from cgi import FieldStorage
 from . import elfinder
 from pyramid.view import view_config
 from pyramid.events import subscriber, BeforeRender
-from pyramid.response import Response
+from pyramid.response import Response, FileResponse
 
 from . import PYRAMID_ELFINDER_CONNECTOR, PYRAMID_ELFINDER_FILEBROWSER
 
@@ -80,9 +80,14 @@ def connector(request):
 
     if response is not None and status == 200:
         # send file
-        if 'file' in response and hasattr(response['file'], 'read'):
-            result.body = response['file'].read()
-            response['file'].close()
+        if 'file' in response:
+            file_path = response['file']
+            if os.path.exists(file_path) and not os.path.isdir(file_path):                                                     #there is no overwrite
+                response = FileResponse(file_path)
+                response.headers['Content-Disposition'] = ("attachment; filename="+os.path.basename(file_path))
+                return response
+            else:
+                return Response("Unable to find: {}".format(request.path_info))
         # output json
         else:
             result.text = json.dumps(response)

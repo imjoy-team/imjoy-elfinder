@@ -4081,7 +4081,7 @@ var elFinder = function(elm, opts, bootCallback) {
 			url = self.openUrl(hash, true);
 		}
 		req = self.request({
-			data    : {cmd : 'get'},
+			data    : {cmd : 'get', target: hash},
 			options : {
 				url: url,
 				type: 'get',
@@ -28641,7 +28641,7 @@ elFinder.prototype.commands.preference = function() {
 				coverHide();
 				win.css(clcss || closedCss(node))
 					.show()
-					.animate(openedCss(), 550, function() {
+					.animate(openedCss(), 100, function() {
 						open(opened);
 						navShow();
 					});
@@ -28677,7 +28677,7 @@ elFinder.prototype.commands.preference = function() {
 					state = animated;
 					win.hasClass(fullscreen) && fsicon.click();
 					(hash && (node = cwd.find('#'+hash)).length)
-						? win.animate(closedCss(node), 500, function() {
+						? win.animate(closedCss(node), 100, function() {
 							preview.off('changesize');
 							close(closed, true);
 						})
@@ -30081,10 +30081,11 @@ elFinder.prototype.commands.quicklook.plugins = [
 								url = fm.openUrl(file.hash, true);
 							}
 							jqxhr = fm.request({
-								data    : {cmd : 'get'},
+								data    : {cmd : 'get', target: file.hash},
 								options : {
 									url: url,
 									type: 'get',
+									target : file.hash,
 									cache : true,
 									dataType : 'binary',
 									responseType :'arraybuffer',

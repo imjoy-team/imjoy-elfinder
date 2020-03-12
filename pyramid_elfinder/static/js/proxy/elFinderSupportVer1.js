@@ -341,6 +341,9 @@ window.elFinderSupportVer1 = function(upload) {
 				write  : file.write,
 				locked : !phash ? true : file.rm === void(0) ? false : !file.rm
 			};
+			if(file.volumeid){
+				info.volumeid = file.volumeid;
+			}
 		
 		if (! info.ts) {
 			if (mcts && !isNaN(mcts)) {
