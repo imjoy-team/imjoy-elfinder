@@ -127,6 +127,7 @@
 			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
 			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
 			'elfinder' : 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/elfinder.full',
+			'elFinderSupportVer1' : 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static/js/proxy/elFinderSupportVer1.js',
 			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
 		},
 		waitSeconds : 10 // optional
@@ -140,8 +141,9 @@
 			// Documentation for client options:
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
-				url : 'http://localhost:6543/pyramid_elfinder/connector/' // connector URL (REQUIRED)
-				,commandsOptions : {
+				url : 'http://localhost:6543/pyramid_elfinder/connector/', // connector URL (REQUIRED
+				transport : new elFinderSupportVer1(),
+				commandsOptions : {
 					edit : {
 						extraOptions : {
 							// set API key to enable Creative Cloud image editor
