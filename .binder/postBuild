@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -euo pipefail
+
+pip install -e .
+
+# labextensions
+jupyter labextension install --clean dask-labextension \
+                             @jupyter-widgets/jupyterlab-manager \
+                             ipytree

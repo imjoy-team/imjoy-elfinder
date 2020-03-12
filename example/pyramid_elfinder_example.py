@@ -27,10 +27,10 @@ def main(global_settings, **settings):
 
 
 if __name__ == '__main__':
-    here = os.path.dirname(os.path.realpath(__file__))
-    uploads = os.path.join(here, 'static', 'uploads')
+    # here = os.path.dirname(os.path.realpath(__file__))
+    # uploads = os.path.join(here, 'static', 'uploads')
     settings = {
-        'pyramid_elfinder_root': uploads,
+        'pyramid_elfinder_root': os.path.expanduser('~'),
         'pyramid_elfinder_url': '/static/uploads/'
     }
     app = main({}, **settings)
