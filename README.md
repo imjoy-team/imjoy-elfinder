@@ -27,6 +27,7 @@ http://127.0.0.1:8765
 
 By default, it will browse the example data folder. In order to browse your own directory, you can set it by passing `--root-dir=/PATH/TO/MY/FOLDER`.
 
+
 ![jupyter-elfinder-screenshot](example-data/jupyter-elfinder-screenshot.png)
 
 ## Use it with remote Jupyter notebook server
