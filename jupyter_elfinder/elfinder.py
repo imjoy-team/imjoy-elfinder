@@ -19,6 +19,7 @@ from datetime import datetime
 import uuid
 import traceback
 import urllib.parse
+import base64
 
 
 def exception_to_string(excp):
@@ -37,7 +38,7 @@ class connector:
         "root": "",
         "URL": "",
         "maxFolderDepth": 256,
-        "rootAlias": "Workspace",
+        "rootAlias": "HOME",
         "dotFiles": False,
         "dirSize": False,
         "fileMode": 0o644,
@@ -1070,7 +1071,13 @@ class connector:
             curFile = self.__find(self._request["target"], curDir)
             if curDir and curFile:
                 if self.__isAllowed(curFile, "read"):
-                    self._response["content"] = open(curFile, "r").read()
+                    try:
+                        with open(curFile, "r") as f:
+                            self._response["content"] = f.read()
+                    except UnicodeDecodeError:
+                        with open(curFile, "rb") as f:
+                            self._response["content"] = base64.b64encode(f.read()).decode('ascii')
+                    
                 else:
                     self._response["error"] = "Access denied"
                 return
