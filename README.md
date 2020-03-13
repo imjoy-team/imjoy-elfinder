@@ -1,6 +1,6 @@
 # elFinder connector for Jupyter server proxy
 
-This elFinder is specificly built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
+This elFinder is specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
 
 ## What is elFinder
 
@@ -43,7 +43,7 @@ Next, install jupyter server proxy:
 pip install -U jupyter-server-proxy
 ```
 
-Now start Juptyer notebook
+Now start Jupyter notebook
 
 ```sh
 jupyter notebook --ip=0.0.0.0
