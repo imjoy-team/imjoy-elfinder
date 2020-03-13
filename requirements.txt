@@ -1,3 +1,4 @@
+pillow
 pyramid
 pyramid_jinja2
 sqlalchemy
