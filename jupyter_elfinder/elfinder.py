@@ -33,9 +33,10 @@ class connector:
     _options = {
         "root": "",
         "URL": "",
+        "maxFolderDepth": 4,
         "rootAlias": "Home",
         "dotFiles": False,
-        "dirSize": True,
+        "dirSize": False,
         "fileMode": 0o644,
         "dirMode": 0o755,
         "imgLib": "auto",
@@ -114,6 +115,8 @@ class connector:
     _today = 0
     _yesterday = 0
 
+    _cachedPath = {}
+
     # public variables
     httpAllowedParameters = (
         "cmd",
@@ -140,7 +143,6 @@ class connector:
     def __init__(self, opts):
         for opt in opts:
             self._options[opt] = opts.get(opt)
-
         self._response["debug"] = {}
         self._options["URL"] = self.__checkUtf8(self._options["URL"])
         self._options["URL"] = self._options["URL"].rstrip("/")
@@ -260,7 +262,7 @@ class connector:
     def __open(self):
         """Open file or directory"""
         # try to open file
-        if "current" in self._request:
+        if not "tree" in self._request:
             curDir = self.__findDir(self._request["current"], None)
             curFile = self.__find(self._request["target"], curDir)
 
@@ -317,17 +319,22 @@ class connector:
         # try dir
         else:
             path = self._options["root"]
-
             if "target" in self._request and self._request["target"]:
-                target = self.__findDir(self._request["target"], None)
+                if "current" in self._request:
+                    curDir = self.__findDir(self._request["current"], None)
+                    target = self.__findDir(self._request["target"], curDir)
+                else:
+                    target = self.__findDir(self._request["target"], None)
                 if not target:
-                    self._response["error"] = "Invalid parameters"
+                    self._response["error"] = (
+                        "Invalid parameters: " + self._request["target"]
+                    )
                 elif not self.__isAllowed(target, "read"):
                     self._response["error"] = "Access denied"
                 else:
                     path = target
 
-            self.__content(path, "tree" in self._request)
+            self.__content(path, False)
 
     def __rename(self):
         """Rename file or dir"""
@@ -500,10 +507,6 @@ class connector:
                             f.close()
                             upSize += os.lstat(name).st_size
                             if self.__isUploadAllow(name):
-                                print(
-                                    "======================change permission",
-                                    self._options["fileMode"],
-                                )
                                 os.chmod(name, self._options["fileMode"])
                                 self._response["select"].append(self.__hash(name))
                             else:
@@ -853,7 +856,7 @@ class connector:
 
         return info
 
-    def __tree(self, path):
+    def __tree(self, path, depth=0):
         """Return directory tree starting from path"""
 
         if not os.path.isdir(path):
@@ -874,7 +877,8 @@ class connector:
             "volumeid": self.volumeid,
         }
 
-        if self.__isAllowed(path, "read"):
+        # limit the tree depth to maxFolderDepth
+        if depth < self._options["maxFolderDepth"] and self.__isAllowed(path, "read"):
             for d in sorted(os.listdir(path)):
                 pd = os.path.join(path, d)
                 if (
@@ -882,7 +886,7 @@ class connector:
                     and not os.path.islink(pd)
                     and self.__isAccepted(d)
                 ):
-                    tree["dirs"].append(self.__tree(pd))
+                    tree["dirs"].append(self.__tree(pd, depth + 1))
 
         return tree
 
@@ -1006,9 +1010,14 @@ class connector:
             return False
         return True
 
-    def __findDir(self, fhash, path):
+    def __findDir(self, fhash, path, depth=0):
         """Find directory by hash"""
         fhash = str(fhash)
+        # try to get find it in the cache
+        cached_path = self._cachedPath.get(fhash)
+        if cached_path:
+            return cached_path
+
         if not path:
             path = self._options["root"]
             if fhash == self.__hash(path):
@@ -1017,15 +1026,17 @@ class connector:
         if not os.path.isdir(path):
             return None
 
-        for d in os.listdir(path):
-            pd = os.path.join(path, d)
-            if os.path.isdir(pd) and not os.path.islink(pd):
-                if fhash == self.__hash(pd):
-                    return pd
-                else:
-                    ret = self.__findDir(fhash, pd)
-                    if ret:
-                        return ret
+        # limit the folder depth
+        if depth < self._options["maxFolderDepth"]:
+            for d in os.listdir(path):
+                pd = os.path.join(path, d)
+                if os.path.isdir(pd) and not os.path.islink(pd):
+                    if fhash == self.__hash(pd):
+                        return pd
+                    else:
+                        ret = self.__findDir(fhash, pd, depth + 1)
+                        if ret:
+                            return ret
         return None
 
     def __find(self, fhash, parent):
@@ -1372,7 +1383,11 @@ class connector:
         """Hash of the path"""
         m = hashlib.md5()
         m.update(path.encode("utf-8"))
-        return str(m.hexdigest())
+        hash_code = str(m.hexdigest())
+
+        # TODO: what if the cache getting to big?
+        self._cachedPath[hash_code] = path
+        return hash_code
 
     def __path2url(self, path):
         curDir = path

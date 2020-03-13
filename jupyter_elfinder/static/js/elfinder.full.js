@@ -21789,7 +21789,7 @@ $.fn.elfindertree = function(fm, opts) {
 						link.addClass(active);
 					}
 					if (hash != fm.cwd().hash && !link.hasClass(disabled)) {
-						fm.exec('open', hash).done(function() {
+						fm.exec('open', hash, { current: file.phash }).done(function() {
 							fm.one('opendone', function() {
 								fm.select({selected: [hash], origin: 'navbar'});
 							});
@@ -26715,7 +26715,7 @@ elFinder.prototype.commands.netunmount = function() {
 			var arg = e.data && e.data.file? [ e.data.file ]: void(0);
 			if (self.getstate(arg) === 0) {
 				e.preventDefault();
-				fm.exec('open', arg);
+				fm.exec('open', arg, {current: fm.cwd().hash});
 			}
 		},
 		'select enable disable reload' : function(e) { this.update(e.type == 'disable' ? -1 : void(0));  }
@@ -26740,6 +26740,7 @@ elFinder.prototype.commands.netunmount = function() {
 			files = this.files(hashes),
 			cnt   = files.length,
 			thash = (typeof cOpts == 'object')? cOpts.thash : false,
+			current = (typeof cOpts == 'object')? cOpts.current : null,
 			opts  = this.options,
 			into  = opts.into || 'window',
 			file, url, s, w, imgW, imgH, winW, winH, reg, link, html5dl, inline,
@@ -26763,7 +26764,7 @@ elFinder.prototype.commands.netunmount = function() {
 				}
 
 				return fm.request({
-					data   : {cmd  : 'open', target : thash || file.hash},
+					data   : {cmd  : 'open', target : thash || file.hash, current: current},
 					notify : {type : 'open', cnt : 1, hideCnt : true},
 					syncOnFail : true,
 					lazy : false
