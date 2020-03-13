@@ -1039,8 +1039,10 @@ class connector:
                             if ret:
                                 return ret
             except PermissionError:
-                print("WARNING: permission error: " + path)
-                pass
+                if depth == 0:
+                    raise
+                else:
+                    print("WARNING: permission error: " + path)
 
         return None
 
