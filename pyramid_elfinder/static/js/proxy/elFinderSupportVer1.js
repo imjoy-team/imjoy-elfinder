@@ -9,13 +9,20 @@
  *
  * @author Dmitry (dio) Levashov
  **/
-window.elFinderSupportVer1 = function(upload) {
+window.elFinderSupportVer1 = function(upload, extra_query) {
 	"use strict";
 	var self = this,
 		dateObj, today, yesterday,
 		getDateString = function(date) {
 			return date.replace('Today', today).replace('Yesterday', yesterday);
 		};
+
+	if(extra_query){
+		this.extra_query = extra_query.startsWith('&')?extra_query.slice(1):extra_query;
+	}
+	else{
+		this.extra_query = null;
+	}
 	
 	dateObj = new Date();
 	today = dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' + dateObj.getDate();
@@ -132,6 +139,14 @@ window.elFinderSupportVer1 = function(upload) {
 		}
 		// cmd = opts.data.cmd
 		
+		if(this.extra_query){
+			if(opts.url.includes('?')){
+				opts.url = opts.url + '&' + this.extra_query
+			}
+			else{
+				opts.url = opts.url + '?' + this.extra_query
+			}
+		}
 		xhr = $.ajax(opts)
 			.fail(function(error) {
 				dfrd.reject(error);
