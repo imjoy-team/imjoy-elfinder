@@ -16,7 +16,7 @@ from cgi import FieldStorage
 from . import elfinder
 from pyramid.view import view_config
 from pyramid.events import subscriber, BeforeRender
-from pyramid.response import Response, FileResponse
+from pyramid.response import Response
 
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
 
