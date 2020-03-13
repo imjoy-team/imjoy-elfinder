@@ -12,7 +12,7 @@ def read(name):
 setup(
     name='jupyter_elfinder',
     version='0.1.3',
-    url='https://github.com/oeway/jupyter_elfinder',
+    url='https://github.com/oeway/jupyter-elfinder',
     author='Wei OUYANG',
     packages=find_packages(),
     include_package_data=True,
