@@ -21,8 +21,8 @@ clean-pyc:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 
-coverage: test
-	coverage html
+coverage:
+	pytest --cov-report term-missing --cov=jupyter_elfinder tests/
 
 test:
-	nosetests --with-coverage --cover-package jupyter_elfinder --cover-erase --with-doctest --nocapture
+	pytest tests/
