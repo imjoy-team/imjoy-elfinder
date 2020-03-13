@@ -17,6 +17,7 @@ import collections
 from datetime import datetime
 import uuid
 import traceback
+import urllib.parse
 
 
 def exception_to_string(excp):
@@ -733,7 +734,7 @@ class connector:
         else:
             basename = os.path.basename(self._options["root"])
 
-        rel = basename + path[len(self._options["root"]) :]
+        rel = os.path.join(basename, path[len(self._options["root"]) :])
 
         self._response["cwd"] = {
             "hash": self.__hash(path),
@@ -823,7 +824,7 @@ class connector:
                 basename = os.path.basename(self._options["root"])
 
             info["link"] = self.__hash(lpath)
-            info["linkTo"] = basename + lpath[len(self._options["root"]) :]
+            info["linkTo"] = os.path.join(basename, lpath[len(self._options["root"]) :])
             info["read"] = info["read"] and self.__isAllowed(lpath, "read")
             info["write"] = info["write"] and self.__isAllowed(lpath, "write")
             info["rm"] = self.__isAllowed(lpath, "rm")
@@ -1402,16 +1403,12 @@ class connector:
     def __path2url(self, path):
         curDir = path
         length = len(self._options["root"])
-        url = self.__checkUtf8(self._options["URL"] + curDir[length:]).replace(
-            os.sep, "/"
-        )
-
-        try:
-            import urllib
-
-            url = urllib.quote(url, "/:~")
-        except:
-            pass
+        if self._options["URL"].startswith("http"):
+            url = urllib.parse.urljoin(self._options["URL"], curDir[length:])
+        else:
+            url = os.path.join(self._options["URL"], curDir[length:])
+        url = self.__checkUtf8(url).replace(os.sep, "/")
+        url = urllib.parse.quote(url, "/:~")
         return url
 
     def __errorData(self, path, msg):
