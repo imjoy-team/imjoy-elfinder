@@ -1028,15 +1028,20 @@ class connector:
 
         # limit the folder depth
         if depth < self._options["maxFolderDepth"]:
-            for d in os.listdir(path):
-                pd = os.path.join(path, d)
-                if os.path.isdir(pd) and not os.path.islink(pd):
-                    if fhash == self.__hash(pd):
-                        return pd
-                    else:
-                        ret = self.__findDir(fhash, pd, depth + 1)
-                        if ret:
-                            return ret
+            try:
+                for d in os.listdir(path):
+                    pd = os.path.join(path, d)
+                    if os.path.isdir(pd) and not os.path.islink(pd):
+                        if fhash == self.__hash(pd):
+                            return pd
+                        else:
+                            ret = self.__findDir(fhash, pd, depth + 1)
+                            if ret:
+                                return ret
+            except PermissionError:
+                print("WARNING: permission error: " + path)
+                pass
+
         return None
 
     def __find(self, fhash, parent):
