@@ -71,6 +71,10 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		switch (cmd) {
 			case 'open':
 				opts.data.tree = 1;
+				if(opts.data.target){
+					var _file = fm.file(opts.data.target)
+					opts.data.current = _file && _file.phash;
+				}
 				break;
 			case 'parents':
 			case 'tree':
