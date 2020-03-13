@@ -1042,6 +1042,7 @@ class connector:
                 if depth == 0:
                     raise
                 else:
+                    self.__debug("permission error", path)
                     print("WARNING: permission error: " + path)
 
         return None
