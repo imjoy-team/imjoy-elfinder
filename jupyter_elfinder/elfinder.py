@@ -102,7 +102,7 @@ class connector:
         "ogg": "application/ogg",
         "7z": "application/x-7z-compressed",
         # video
-        "ogm": "appllication/ogm",
+        "ogm": "application/ogm",
         "mkv": "video/x-matroska",
     }
 
