@@ -4,7 +4,7 @@ This elFinder is specifically built for the [ImJoy](https://imjoy.io) project, a
 
 ## What is elFinder
 
-elFinder is a Open-source file manager for web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42).
+elFinder is an Open-source file manager for the web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42).
 
 ## Installation
 
@@ -18,7 +18,7 @@ pip install -U jupyter-elfinder
 jupyter-elfinder
 ```
 
-You will then see the following message
+You will then see the following message:
 
 ```sh
 ==========Jupyter elFinder server is running=========
@@ -31,7 +31,7 @@ By default, it will browse the example data folder. In order to browse your own 
 
 ## Use it with remote Jupyter notebook server
 
-If you don't have jupyter notebook, run
+If you don't have jupyter notebook, run:
 
 ```sh
 pip install -U jupyter
@@ -43,7 +43,7 @@ Next, install jupyter server proxy:
 pip install -U jupyter-server-proxy
 ```
 
-Now start Jupyter notebook
+Now start Jupyter notebook:
 
 ```sh
 jupyter notebook --ip=0.0.0.0
