@@ -6,6 +6,7 @@ This elFinder connector is specifically built for the [ImJoy](https://imjoy.io) 
 ## What is elFinder?
 
 elFinder is an open-source file manager for web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42). 
+
 [Try their online demo here](https://studio-42.github.io/elFinder/).
 
 
