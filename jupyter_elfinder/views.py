@@ -18,13 +18,14 @@ from pyramid.view import view_config
 from pyramid.events import subscriber, BeforeRender
 from pyramid.response import Response, FileResponse
 
-from . import PYRAMID_ELFINDER_CONNECTOR, PYRAMID_ELFINDER_FILEBROWSER
+from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
 
 class FileIterable(object):
     def __init__(self, filename):
         self.filename = filename
     def __iter__(self):
         return FileIterator(self.filename)
+
 class FileIterator(object):
     chunk_size = 32768
     def __init__(self, filename):
@@ -50,22 +51,22 @@ def make_response(filename):
 
 @subscriber(BeforeRender)
 def add_global_params(event):
-    event['PYRAMID_ELFINDER_CONNECTOR'] = PYRAMID_ELFINDER_CONNECTOR
-    event['PYRAMID_ELFINDER_FILEBROWSER'] = PYRAMID_ELFINDER_FILEBROWSER
+    event['JUPYTER_ELFINDER_CONNECTOR'] = JUPYTER_ELFINDER_CONNECTOR
+    event['JUPYTER_ELFINDER_FILEBROWSER'] = JUPYTER_ELFINDER_FILEBROWSER
 
 
 @view_config(
     request_method=('GET', 'POST', 'OPTIONS'),
-    route_name=PYRAMID_ELFINDER_CONNECTOR,
-    permission=PYRAMID_ELFINDER_CONNECTOR
+    route_name=JUPYTER_ELFINDER_CONNECTOR,
+    permission=JUPYTER_ELFINDER_CONNECTOR
 )
 def connector(request):
     # init connector and pass options
-    root = request.registry.settings['pyramid_elfinder_root']
+    root = request.registry.settings['jupyter_elfinder_root']
     options = {
         'root': os.path.abspath(root),
-        'URL': '', # request.registry.settings['pyramid_elfinder_url'],
-        'uploadMaxSize': 1024*1024, #MB
+        'URL': request.registry.settings['jupyter_elfinder_url'],
+        'uploadMaxSize': 1024*1024, # in MB
         'debug': True
     }
     elf = elfinder.connector(options)
@@ -127,8 +128,8 @@ def connector(request):
 
 @view_config(
     request_method='GET',
-    route_name=PYRAMID_ELFINDER_FILEBROWSER,
-    permission=PYRAMID_ELFINDER_FILEBROWSER,
+    route_name=JUPYTER_ELFINDER_FILEBROWSER,
+    permission=JUPYTER_ELFINDER_FILEBROWSER,
     renderer='templates/elfinder/filebrowser.jinja2'
 )
 def index(request):

@@ -20,6 +20,6 @@ TODO.txt
 nohup.out
 .ropeproject
 .DS_Store
-example/static/*
+example-data
 __pycache__
 logfile.txt

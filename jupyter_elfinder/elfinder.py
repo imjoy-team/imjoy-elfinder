@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 #
 # Connector for elFinder File Manager
-# author Troex Nevelin <troex@fury.scancode.ru>
+# Original author Troex Nevelin <troex@fury.scancode.ru>
+# Modified by Svintsov Dmitry (https://github.com/uralbash)
+# Further adapted by Wei OUYANG (https://oeway.github.io/)
+# License: 3-clauses BSD license
 
 import os
 import re
