@@ -83,6 +83,10 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				opts.data.cmd = 'edit';
 				opts.data.current = fm.file(opts.data.target).phash;
 				break;
+			case 'dim':
+				opts.data.cmd = 'dim';
+				opts.data.current = fm.file(opts.data.target).phash;
+				break;
 			case 'archive':
 			case 'rm':
 				opts.data.current = fm.file(opts.data.targets[0]).phash;
@@ -208,7 +212,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			},
 			phash, diff, isCwd, treeDiff;
 
-		if ((cmd == 'tmb' || cmd == 'get')) {
+		if ((cmd == 'tmb' || cmd == 'get' || cmd == 'dim')) {
 			return data;
 		}
 		

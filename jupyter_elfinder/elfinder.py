@@ -74,6 +74,7 @@ class connector:
         "duplicate": "__duplicate",
         "read": "__read",
         "edit": "__edit",
+        "dim": "__dim",
         "extract": "__extract",
         "archive": "__archive",
         "resize": "__resize",
@@ -222,7 +223,7 @@ class connector:
                             traceback.print_exc()
                             self.__debug("exception", exception_to_string(e))
                 else:
-                    self._response["error"] = "Unknown command"
+                    self._response["error"] = "Unknown command: " + self._request["cmd"]
             else:
                 self.__open()
 
@@ -1073,6 +1074,24 @@ class connector:
                 else:
                     self._response["error"] = "Access denied"
                 return
+
+        self._response["error"] = "Invalid parameters"
+        return
+
+    def __dim(self):
+        if "current" in self._request and "target" in self._request:
+            curDir = self.__findDir(self._request["current"], None)
+            curFile = self.__find(self._request["target"], curDir)
+            if curFile and curDir:
+                if self.__isAllowed(curFile, "read"):
+                    dim = self.__getImgSize(curFile)
+                    if dim:
+                        self._response["dim"] = str(dim)
+                    else:
+                        self._response["dim"] = "unknown"
+                else:
+                    self._response["error"] = "Access denied"
+            return
 
         self._response["error"] = "Invalid parameters"
         return
