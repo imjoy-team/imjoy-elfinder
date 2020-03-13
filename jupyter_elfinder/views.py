@@ -6,9 +6,7 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-Views for elfinder
-"""
+"""Provide views for elfinder."""
 import os
 import json
 from cgi import FieldStorage
@@ -22,24 +20,33 @@ from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
 
 
 class FileIterable(object):
+    """Represent a file iterable."""
+
     def __init__(self, filename):
+        """Set up file iterable instance."""
         self.filename = filename
 
     def __iter__(self):
+        """Return the file iterator."""
         return FileIterator(self.filename)
 
 
 class FileIterator(object):
+    """Represent a file iterator."""
+
     chunk_size = 32768
 
     def __init__(self, filename):
+        """Set up the file iterator instance."""
         self.filename = filename
         self.fileobj = open(self.filename, "rb")
 
     def __iter__(self):
+        """Return the file iterator."""
         return self
 
     def next(self):
+        """Return the next item."""
         chunk = self.fileobj.read(self.chunk_size)
         if not chunk:
             raise StopIteration
@@ -49,6 +56,7 @@ class FileIterator(object):
 
 
 def make_response(filename):
+    """Return a response."""
     res = Response(conditional_response=True)
     res.app_iter = FileIterable(filename)
     res.content_length = os.path.getsize(filename)
@@ -63,6 +71,7 @@ def make_response(filename):
 
 @subscriber(BeforeRender)
 def add_global_params(event):
+    """Add global parameters."""
     event["JUPYTER_ELFINDER_CONNECTOR"] = JUPYTER_ELFINDER_CONNECTOR
     event["JUPYTER_ELFINDER_FILEBROWSER"] = JUPYTER_ELFINDER_FILEBROWSER
 
@@ -73,6 +82,7 @@ def add_global_params(event):
     permission=JUPYTER_ELFINDER_CONNECTOR,
 )
 def connector(request):
+    """Handle the connector request."""
     # init connector and pass options
     root = request.registry.settings["jupyter_elfinder_root"]
     options = {
@@ -146,4 +156,5 @@ def connector(request):
     renderer="templates/elfinder/filebrowser.jinja2",
 )
 def index(request):
+    """Handle the index request."""
     return {}
