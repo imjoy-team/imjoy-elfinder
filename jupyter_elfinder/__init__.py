@@ -1,5 +1,5 @@
 """
-orignal file
+original file
 https://github.com/Studio-42/elfinder-python/blob/master/connector.py changed
 by Alexandr Rakov 08-03-2012
 """

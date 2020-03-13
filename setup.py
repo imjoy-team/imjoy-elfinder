@@ -23,7 +23,7 @@ setup(
     zip_safe=False,
     test_suite="nose.collector",
     license="MIT",
-    description="A pyramid connector elfinder, sepcifically for working with jupyter server proxy.",
+    description="A pyramid connector elfinder, specifically for working with jupyter server proxy.",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     install_requires=read("requirements.txt"),
