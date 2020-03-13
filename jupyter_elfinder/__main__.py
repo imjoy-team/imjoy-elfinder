@@ -73,7 +73,7 @@ def main(args=None):
         "jupyter_elfinder_root": opt.root_dir or example_data,
         "jupyter_elfinder_url": "/static",
         "jupyter_base_url": opt.base_url or "",
-        "jupyter_elfinder_thumbnail_dir": '.tmb' if opt.thumbnail else None,
+        "jupyter_elfinder_thumbnail_dir": ".tmb" if opt.thumbnail else None,
     }
 
     app = build_app(opt, **settings)
