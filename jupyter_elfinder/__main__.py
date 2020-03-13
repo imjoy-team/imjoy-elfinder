@@ -59,7 +59,7 @@ def main(args=None):
     parser.add_argument(
         "--host", type=str, default="127.0.0.1", help="host for the server"
     )
-    parser.add_argument("--port", type=int, default=6543, help="port for the server")
+    parser.add_argument("--port", type=int, default=8765, help="port for the server")
 
     opt = parser.parse_args(args=args)
 

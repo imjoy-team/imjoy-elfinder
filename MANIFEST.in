@@ -1,3 +1,4 @@
 include README.md requirements.txt requirements-test.txt
 recursive-include jupyter_elfinder/static *
 recursive-include jupyter_elfinder/templates *
+recursive-include example-data *
