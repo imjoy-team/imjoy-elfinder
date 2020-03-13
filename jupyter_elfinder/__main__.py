@@ -1,3 +1,4 @@
+"""Provide a main module."""
 import os
 import sys
 import argparse
@@ -8,6 +9,7 @@ from pyramid.events import NewRequest
 
 
 def build_app(opt, **settings):
+    """Build the app."""
     config = Configurator(settings=settings)
     config.include("jupyter_elfinder")
 
@@ -37,6 +39,7 @@ def build_app(opt, **settings):
 
 
 def main(args=None):
+    """Run the app."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--root-dir",
@@ -91,6 +94,7 @@ def main(args=None):
 
 
 def setup_for_jupyter_server_proxy():
+    """Set up jupyter server proxy."""
     return {
         "command": ["jupyter-elfinder", "--port", "{port}", "--base-url", "{base_url}"]
     }

@@ -5,6 +5,7 @@
 # Modified by Svintsov Dmitry (https://github.com/uralbash)
 # Further adapted by Wei OUYANG (https://oeway.github.io/)
 # License: 3-clauses BSD license
+"""Provide the connector for elFinder File Manager."""
 
 import os
 import re
@@ -21,6 +22,7 @@ import urllib.parse
 
 
 def exception_to_string(excp):
+    """Convert exception to string."""
     stack = traceback.extract_stack()[:-3] + traceback.extract_tb(
         excp.__traceback__
     )  # add limit=??
@@ -29,7 +31,7 @@ def exception_to_string(excp):
 
 
 class connector:
-    """Connector for elFinder"""
+    """Connector for elFinder."""
 
     _options = {
         "root": "",
@@ -142,6 +144,7 @@ class connector:
     httpResponse = None
 
     def __init__(self, opts):
+        """Set up connector instance."""
         for opt in opts:
             self._options[opt] = opts.get(opt)
         self._response["debug"] = {}
@@ -166,7 +169,7 @@ class connector:
             self._options["tmbDir"] = thumbs_dir
 
     def __reset(self):
-        """Flush per request variables"""
+        """Flush per request variables."""
         self.httpStatusCode = 0
         self.httpHeader = {}
         self.httpResponse = None
@@ -183,7 +186,7 @@ class connector:
         self._response["debug"] = {}
 
     def run(self, httpRequest=[]):
-        """main function"""
+        """Run main function."""
         self.__reset()
         rootOk = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
@@ -263,7 +266,7 @@ class connector:
         return self.httpStatusCode, self.httpHeader, self.httpResponse
 
     def __open(self):
-        """Open file or directory"""
+        """Open file or directory."""
         # try to open file
         if not "tree" in self._request:
             curDir = self.__findDir(self._request["current"], None)
@@ -340,7 +343,7 @@ class connector:
             self.__content(path, False)
 
     def __rename(self):
-        """Rename file or dir"""
+        """Rename file or dir."""
         current = name = target = None
         curDir = curName = newName = None
         if (
@@ -377,7 +380,7 @@ class connector:
                 self._response["error"] = "Unable to rename file"
 
     def __mkdir(self):
-        """Create new directory"""
+        """Create new directory."""
         current = None
         path = None
         newDir = None
@@ -408,7 +411,7 @@ class connector:
                 self._response["error"] = "Unable to create folder"
 
     def __mkfile(self):
-        """Create new file"""
+        """Create new file."""
         name = current = None
         curDir = newFile = None
         if "name" in self._request and "current" in self._request:
@@ -436,7 +439,7 @@ class connector:
                 self._response["error"] = "Unable to create file"
 
     def __rm(self):
-        """Delete files and directories"""
+        """Delete files and directories."""
         current = rmList = None
         curDir = rmFile = None
         if "current" in self._request and "targets[]" in self._request:
@@ -460,7 +463,7 @@ class connector:
         self.__content(curDir, True)
 
     def __upload(self):
-        """Upload files"""
+        """Upload files."""
         try:  # Windows needs stdio set for binary mode.
             import msvcrt
 
@@ -543,7 +546,7 @@ class connector:
             return
 
     def __paste(self):
-        """Copy or cut files/directories"""
+        """Copy or cut files/directories."""
         if (
             "current" in self._request
             and "src" in self._request
@@ -614,7 +617,7 @@ class connector:
         return
 
     def __duplicate(self):
-        """Create copy of files/directories"""
+        """Create copy of files/directories."""
         if "current" in self._request and "target" in self._request:
             curDir = self.__findDir(self._request["current"], None)
             target = self.__find(self._request["target"], curDir)
@@ -634,7 +637,7 @@ class connector:
         return
 
     def __resize(self):
-        """Scale image size"""
+        """Scale image size."""
         if not (
             "current" in self._request
             and "target" in self._request
@@ -676,7 +679,7 @@ class connector:
         return
 
     def __thumbnails(self):
-        """Create previews for images"""
+        """Create previews for images."""
         if "current" in self._request:
             curDir = self.__findDir(self._request["current"], None)
             if not curDir or curDir == self._options["tmbDir"]:
@@ -713,7 +716,7 @@ class connector:
         return
 
     def __content(self, path, tree):
-        """CWD + CDC + maybe(TREE)"""
+        """CWD + CDC + maybe(TREE)."""
         self.__cwd(path)
         self.__cdc(path)
 
@@ -721,7 +724,7 @@ class connector:
             self._response["tree"] = self.__tree(self._options["root"])
 
     def __cwd(self, path):
-        """Current Working Directory"""
+        """Get Current Working Directory."""
         name = os.path.basename(path)
         if path == self._options["root"]:
             name = self._options["rootAlias"]
@@ -752,7 +755,7 @@ class connector:
         }
 
     def __cdc(self, path):
-        """Current Directory Content"""
+        """Get Current Directory Content."""
         files = []
         dirs = []
 
@@ -860,7 +863,7 @@ class connector:
         return info
 
     def __tree(self, path, depth=0):
-        """Return directory tree starting from path"""
+        """Return directory tree starting from path."""
 
         if not os.path.isdir(path):
             return ""
@@ -894,7 +897,7 @@ class connector:
         return tree
 
     def __uniqueName(self, path, copy=" copy"):
-        """Generate unique name for file copied file"""
+        """Generate unique name for file copied file."""
         curDir = os.path.dirname(path)
         curName = os.path.basename(path)
         lastDot = curName.rfind(".")
@@ -944,7 +947,7 @@ class connector:
         return
 
     def __remove(self, target):
-        """Internal remove procedure"""
+        """Provide internal remove procedure."""
         if not self.__isAllowed(target, "rm"):
             self.__errorData(target, "Access denied")
 
@@ -969,7 +972,7 @@ class connector:
         pass
 
     def __copy(self, src, dst):
-        """Internal copy procedure"""
+        """Provide internal copy procedure."""
         dstDir = os.path.dirname(dst)
         if not self.__isAllowed(src, "read"):
             self.__errorData(src, "Access denied")
@@ -1007,14 +1010,14 @@ class connector:
         return True
 
     def __checkName(self, name):
-        """Check for valid file/dir name"""
+        """Check for valid file/dir name."""
         pattern = r"[\/\\\:\<\>]"
         if re.search(pattern, name):
             return False
         return True
 
     def __findDir(self, fhash, path, depth=0):
-        """Find directory by hash"""
+        """Find directory by hash."""
         fhash = str(fhash)
         # try to get find it in the cache
         cached_path = self._cachedPath.get(fhash)
@@ -1051,7 +1054,7 @@ class connector:
         return None
 
     def __find(self, fhash, parent):
-        """Find file/dir by hash"""
+        """Find file/dir by hash."""
         fhash = str(fhash)
         if os.path.isdir(parent):
             for i in os.listdir(parent):
@@ -1075,7 +1078,7 @@ class connector:
         return
 
     def __edit(self):
-        """Save content in file"""
+        """Save content in file."""
         if (
             "current" in self._request
             and "target" in self._request
@@ -1100,7 +1103,7 @@ class connector:
         return
 
     def __archive(self):
-        """Compress files/directories to archive"""
+        """Compress files/directories to archive."""
         self.__checkArchivers()
 
         if (
@@ -1165,7 +1168,7 @@ class connector:
         return
 
     def __extract(self):
-        """Uncompress archive"""
+        """Uncompress archive."""
         if "current" not in self._request or "target" not in self._request:
             self._response["error"] = "Invalid parameters"
             return
@@ -1203,13 +1206,13 @@ class connector:
         return
 
     def __ping(self):
-        """Workaround for Safari"""
+        """Workaround for Safari."""
         self.httpStatusCode = 200
         self.httpHeader["Connection"] = "close"
         return
 
     def __mimetype(self, path):
-        """Detect mimetype of file"""
+        """Detect mimetype of file."""
         mime = mimetypes.guess_type(path)[0] or "unknown"
         ext = path[path.rfind(".") + 1 :]
 
@@ -1233,7 +1236,7 @@ class connector:
         return mime
 
     def __tmb(self, path, tmb):
-        """Internal thumbnail create procedure"""
+        """Provide internal thumbnail create procedure."""
         try:
             im = self._im.open(path).copy()
             size = self._options["tmbSize"], self._options["tmbSize"]
@@ -1276,7 +1279,7 @@ class connector:
         return False
 
     def __readlink(self, path):
-        """Read link and return real path if not broken"""
+        """Read link and return real path if not broken."""
         target = os.readlink(path)
         if not target[0] == "/":
             target = os.path.join(os.path.dirname(path), target)
@@ -1391,7 +1394,7 @@ class connector:
         return self._options["defaults"][access]
 
     def __hash(self, path):
-        """Hash of the path"""
+        """Hash of the path."""
         m = hashlib.md5()
         m.update(path.encode("utf-8"))
         hash_code = str(m.hexdigest())
@@ -1412,7 +1415,7 @@ class connector:
         return url
 
     def __errorData(self, path, msg):
-        """Collect error/warning messages"""
+        """Collect error/warning messages."""
         self._errorData[path] = msg
 
     def __initImgLib(self):

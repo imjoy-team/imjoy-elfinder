@@ -6,12 +6,11 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-Routes of elfinder
-"""
+"""Provide routes of elfinder."""
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
 
 
 def includeme(config):
+    """Include routes in frontend."""
     config.add_route(JUPYTER_ELFINDER_CONNECTOR, "/jupyter_elfinder/connector/")
     config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/jupyter_elfinder/filebrowser/")
