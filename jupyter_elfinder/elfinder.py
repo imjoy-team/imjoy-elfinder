@@ -37,7 +37,7 @@ class connector:
         "root": "",
         "URL": "",
         "maxFolderDepth": 256,
-        "rootAlias": "Home",
+        "rootAlias": "Workspace",
         "dotFiles": False,
         "dirSize": False,
         "fileMode": 0o644,
