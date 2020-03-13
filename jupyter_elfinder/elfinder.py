@@ -884,8 +884,8 @@ class connector:
             "volumeid": self.volumeid,
         }
 
-        # limit the tree depth to maxFolderDepth
-        if depth < self._options["maxFolderDepth"] and self.__isAllowed(path, "read"):
+        # limit the tree depth to 1
+        if depth < 1 and self.__isAllowed(path, "read"):
             for d in sorted(os.listdir(path)):
                 pd = os.path.join(path, d)
                 if (
@@ -1088,7 +1088,7 @@ class connector:
                     if dim:
                         self._response["dim"] = str(dim)
                     else:
-                        self._response["dim"] = "unknown"
+                        self._response["dim"] = None
                 else:
                     self._response["error"] = "Access denied"
             return
@@ -1428,7 +1428,7 @@ class connector:
         if self._options["URL"].startswith("http"):
             url = urllib.parse.urljoin(self._options["URL"], curDir[length:])
         else:
-            url = os.path.join(self._options["URL"], curDir[length:])
+            url = os.path.join(self._options["URL"], curDir[length:].lstrip("/"))
         url = self.__checkUtf8(url).replace(os.sep, "/")
         url = urllib.parse.quote(url, "/:~")
         return url
