@@ -49,7 +49,7 @@ setup(
     entry_points={
         "console_scripts": ["jupyter-elfinder = jupyter_elfinder.__main__:main"],
         "jupyter_serverproxy_servers": [
-            "elfinder = jupyter_elfinder.__main__:main"
-        ]
+            "elfinder = jupyter_elfinder.__main__:setup_for_jupyter_server_proxy"
+        ],
     },
 )

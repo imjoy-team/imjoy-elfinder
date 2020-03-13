@@ -86,5 +86,11 @@ def main(args=None):
     httpd.serve_forever()
 
 
+def setup_for_jupyter_server_proxy():
+    return {
+        "command": ["jupyter-elfinder", "--port", "{port}", "--base-url", "{base_url}"]
+    }
+
+
 if __name__ == "__main__":
     main()

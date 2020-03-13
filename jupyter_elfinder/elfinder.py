@@ -36,8 +36,8 @@ class connector:
         "rootAlias": "Home",
         "dotFiles": False,
         "dirSize": True,
-        "fileMode": 644,
-        "dirMode": 755,
+        "fileMode": 0o644,
+        "dirMode": 0o755,
         "imgLib": "auto",
         "tmbDir": ".tmb",
         "tmbAtOnce": 5,
@@ -405,6 +405,8 @@ class connector:
             name = self._request["name"]
             current = self._request["current"]
             curDir = self.__findDir(current, None)
+            if isinstance(name, bytes):
+                name = name.decode("utf-8")
             newFile = os.path.join(curDir, name)
 
         if not curDir or not name:
@@ -498,6 +500,10 @@ class connector:
                             f.close()
                             upSize += os.lstat(name).st_size
                             if self.__isUploadAllow(name):
+                                print(
+                                    "======================change permission",
+                                    self._options["fileMode"],
+                                )
                                 os.chmod(name, self._options["fileMode"])
                                 self._response["select"].append(self.__hash(name))
                             else:
