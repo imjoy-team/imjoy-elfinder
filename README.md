@@ -1,10 +1,13 @@
 # elFinder connector for Jupyter server proxy
 
-This elFinder is specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
 
-## What is elFinder
+This elFinder connector is specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
 
-elFinder is an Open-source file manager for the web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42).
+## What is elFinder?
+
+elFinder is an open-source file manager for web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42). 
+[Try their online demo here](https://studio-42.github.io/elFinder/).
+
 
 ## Installation
 
