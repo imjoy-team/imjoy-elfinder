@@ -64,7 +64,7 @@ def connector(request):
     root = request.registry.settings['pyramid_elfinder_root']
     options = {
         'root': os.path.abspath(root),
-        'URL': request.registry.settings['pyramid_elfinder_url'],
+        'URL': '', # request.registry.settings['pyramid_elfinder_url'],
         'uploadMaxSize': 1024*1024, #MB
         'debug': True
     }
