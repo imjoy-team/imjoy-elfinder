@@ -6,9 +6,13 @@
  **/
 (function(){
 	"use strict";
-	var ELFINDER_STATIC_URL = window.ELFINDER_STATIC_URL || 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static'
-	var ELFINDER_CONNECTOR_URL = window.ELFINDER_CONNECTOR_URL || '/pyramid_elfinder/connector/'
-	if(!ELFINDER_CONNECTOR_URL.endsWith('/')) ELFINDER_CONNECTOR_URL = ELFINDER_CONNECTOR_URL + '/';
+	window.ELFINDER_CONFIG = window.ELFINDER_CONFIG || {};
+	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || 'https://oeway.github.io/pyramid_elfinder/pyramid_elfinder/static'
+	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/pyramid_elfinder/connector/'
+	window.ELFINDER_CONFIG['connector_query'] = window.window.ELFINDER_CONFIG['connector_query'] || null
+	window.ELFINDER_CONFIG['file_base_url'] = window.window.ELFINDER_CONFIG['file_base_url'] || '/static/uploads'
+	
+	if(!window.ELFINDER_CONFIG['connector_url'].endsWith('/')) window.ELFINDER_CONFIG['connector_url'] = window.ELFINDER_CONFIG['connector_url'] + '/';
 	var // jQuery and jQueryUI version
 		jqver = '3.4.1',
 		uiver = '1.12.1',
@@ -50,7 +54,19 @@
 		start = function(elFinder, editors, config) {
 			// load jQueryUI CSS
 			elFinder.prototype.loadCss('//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
-			config.defaultOpts.transport = new window.elFinderSupportVer1();
+			config.defaultOpts.transport = new window.elFinderSupportVer1(null, window.ELFINDER_CONFIG['connector_query']);
+			if(window.ELFINDER_CONFIG['connector_query']){
+				config.defaultOpts.urlUpload = config.defaultOpts.url;
+				if(config.defaultOpts.urlUpload.includes('?')){
+					config.defaultOpts.urlUpload = config.defaultOpts.urlUpload + '&' + window.ELFINDER_CONFIG['connector_query']
+				}
+				else{
+					config.defaultOpts.urlUpload = config.defaultOpts.urlUpload + '?' + window.ELFINDER_CONFIG['connector_query']
+				}
+			}
+			else{
+				config.defaultOpts.urlUpload = config.defaultOpts.url;
+			}
 			$(function() {
 				var optEditors = {
 						commandsOptions: {
@@ -107,7 +123,7 @@
 			require(
 				[
 					'elfinder'
-					, ELFINDER_STATIC_URL + '/js/extras/editors.default.js'               // load text, image editors
+					, window.ELFINDER_CONFIG['static_url'] + '/js/extras/editors.default.js'               // load text, image editors
 					, 'elFinderConfig'
 					, 'elFinderSupportVer1'
 				//	, 'extras/quicklook.googledocs.min'          // optional preview for GoogleApps contents on the GoogleDrive volume
@@ -130,8 +146,8 @@
 		paths : {
 			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
 			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
-			'elfinder' : ELFINDER_STATIC_URL + '/js/elfinder.full',
-			'elFinderSupportVer1' : ELFINDER_STATIC_URL + '/js/proxy/elFinderSupportVer1',
+			'elfinder' : window.ELFINDER_CONFIG['static_url'] + '/js/elfinder.full',
+			'elFinderSupportVer1' : window.ELFINDER_CONFIG['static_url'] + '/js/proxy/elFinderSupportVer1',
 			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
 		},
 		waitSeconds : 10 // optional
@@ -146,7 +162,9 @@
 			// Documentation for client options:
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
-				url : ELFINDER_CONNECTOR_URL, // connector URL (REQUIRED
+				url : window.ELFINDER_CONFIG['connector_url'], // connector URL (REQUIRED
+				file_base_url: window.ELFINDER_CONFIG['file_base_url'],
+				height: '100%',
 				// transport : new elFinderSupportVer1(),
 				commandsOptions : {
 					edit : {
