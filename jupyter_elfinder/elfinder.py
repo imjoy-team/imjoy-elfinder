@@ -33,7 +33,7 @@ class connector:
     _options = {
         "root": "",
         "URL": "",
-        "maxFolderDepth": 4,
+        "maxFolderDepth": 256,
         "rootAlias": "Home",
         "dotFiles": False,
         "dirSize": False,
@@ -147,7 +147,9 @@ class connector:
         self._options["URL"] = self.__checkUtf8(self._options["URL"])
         self._options["URL"] = self._options["URL"].rstrip("/")
         self._options["root"] = self.__checkUtf8(self._options["root"])
-        self._options["root"] = self._options["root"].rstrip(os.sep)
+        # only strip / if it's not root
+        if os.path.dirname(self._options["root"]) != self._options["root"]:
+            self._options["root"] = self._options["root"].rstrip(os.sep)
         self.__debug("URL", self._options["URL"])
         self.__debug("root", self._options["root"])
         self.volumeid = str(uuid.uuid4())
