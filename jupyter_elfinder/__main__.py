@@ -60,6 +60,9 @@ def main(args=None):
         "--host", type=str, default="127.0.0.1", help="host for the server"
     )
     parser.add_argument("--port", type=int, default=8765, help="port for the server")
+    parser.add_argument(
+        "--thumbnail", action="store_true", help="enable thumbnail for files"
+    )
 
     opt = parser.parse_args(args=args)
 
@@ -70,6 +73,7 @@ def main(args=None):
         "jupyter_elfinder_root": opt.root_dir or example_data,
         "jupyter_elfinder_url": "/static",
         "jupyter_base_url": opt.base_url or "",
+        "jupyter_elfinder_thumbnail_dir": '.tmb' if opt.thumbnail else None,
     }
 
     app = build_app(opt, **settings)
