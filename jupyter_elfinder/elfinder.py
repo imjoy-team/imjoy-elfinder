@@ -1621,7 +1621,6 @@ class Connector:
             pass
 
         self._options["archivers"] = archive
-        pass
 
     def __run_sub_process(self, cmd, valid_return=[0]):
         try:
