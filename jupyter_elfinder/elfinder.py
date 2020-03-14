@@ -648,7 +648,7 @@ class Connector:
                 cur_dir, "write"
             ):
                 self._response["error"] = "Access denied"
-            new_name = self.__unique_name(target)
+            new_name = _unique_name(target)
             if not self.__copy(target, new_name):
                 self._response["error"] = "Unable to create file copy"
                 return
@@ -913,55 +913,6 @@ class Connector:
 
         return tree
 
-    def __unique_name(self, path, copy=" copy"):
-        """Generate unique name for file copied file."""
-        cur_dir = os.path.dirname(path)
-        cur_name = os.path.basename(path)
-        last_dot = cur_name.rfind(".")
-        ext = new_name = ""
-
-        if not os.path.isdir(path) and re.search(r"\..{3}\.(gz|bz|bz2)$", cur_name):
-            pos = -7
-            if cur_name[-1:] == "2":
-                pos -= 1
-            ext = cur_name[pos:]
-            old_name = cur_name[0:pos]
-            new_name = old_name + copy
-        elif os.path.isdir(path) or last_dot <= 0:
-            old_name = cur_name
-            new_name = old_name + copy
-        else:
-            ext = cur_name[last_dot:]
-            old_name = cur_name[0:last_dot]
-            new_name = old_name + copy
-
-        pos = 0
-
-        if old_name[-len(copy) :] == copy:
-            new_name = old_name
-        elif re.search(r"" + copy + r"\s\d+$", old_name):
-            pos = old_name.rfind(copy) + len(copy)
-            new_name = old_name[0:pos]
-        else:
-            new_path = os.path.join(cur_dir, new_name + ext)
-            if not os.path.exists(new_path):
-                return new_path
-
-        # if we are here then copy already exists or making copy of copy
-        # we will make new indexed copy *black magic*
-        idx = 1
-        if pos > 0:
-            idx = int(old_name[pos:])
-        while True:
-            idx += 1
-            new_name_ext = new_name + " " + str(idx) + ext
-            new_path = os.path.join(cur_dir, new_name_ext)
-            if not os.path.exists(new_path):
-                return new_path
-            # if idx >= 1000: break # possible loop
-
-        return None
-
     def __remove(self, target):
         """Provide internal remove procedure."""
         if not self.__is_allowed(target, "rm"):
@@ -1195,7 +1146,7 @@ class Connector:
         else:
             archive_name = real_files[0]
         archive_name += "." + arc["ext"]
-        archive_name = self.__unique_name(archive_name, "")
+        archive_name = _unique_name(archive_name, "")
         archive_path = os.path.join(cur_dir, archive_name)
 
         cmd = [arc["cmd"]]
@@ -1655,3 +1606,53 @@ class Connector:
             self.__debug("invalid encoding", name)
             #  name += ' (invalid encoding)'
         return name
+
+
+def _unique_name(path, copy=" copy"):
+    """Generate unique name for file copied file."""
+    cur_dir = os.path.dirname(path)
+    cur_name = os.path.basename(path)
+    last_dot = cur_name.rfind(".")
+    ext = new_name = ""
+
+    if not os.path.isdir(path) and re.search(r"\..{3}\.(gz|bz|bz2)$", cur_name):
+        pos = -7
+        if cur_name[-1:] == "2":
+            pos -= 1
+        ext = cur_name[pos:]
+        old_name = cur_name[0:pos]
+        new_name = old_name + copy
+    elif os.path.isdir(path) or last_dot <= 0:
+        old_name = cur_name
+        new_name = old_name + copy
+    else:
+        ext = cur_name[last_dot:]
+        old_name = cur_name[0:last_dot]
+        new_name = old_name + copy
+
+    pos = 0
+
+    if old_name[-len(copy) :] == copy:
+        new_name = old_name
+    elif re.search(r"" + copy + r"\s\d+$", old_name):
+        pos = old_name.rfind(copy) + len(copy)
+        new_name = old_name[0:pos]
+    else:
+        new_path = os.path.join(cur_dir, new_name + ext)
+        if not os.path.exists(new_path):
+            return new_path
+
+    # if we are here then copy already exists or making copy of copy
+    # we will make new indexed copy *black magic*
+    idx = 1
+    if pos > 0:
+        idx = int(old_name[pos:])
+    while True:
+        idx += 1
+        new_name_ext = new_name + " " + str(idx) + ext
+        new_path = os.path.join(cur_dir, new_name_ext)
+        if not os.path.exists(new_path):
+            return new_path
+        # if idx >= 1000: break # possible loop
+
+    return None
