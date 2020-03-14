@@ -1350,7 +1350,7 @@ class Connector:
     def __dir_size(self, path):
         total_size = 0
         if self._options["dirSize"]:
-            for dirpath, dirnames, filenames in os.walk(path):
+            for dirpath, _, filenames in os.walk(path):
                 for fil in filenames:
                     file_path = os.path.join(dirpath, fil)
                     if os.path.exists(file_path):
@@ -1632,9 +1632,8 @@ class Connector:
                 stderr=subprocess.PIPE,
                 stdin=subprocess.PIPE,
             )
-            out, err = proc.communicate("")
+            proc.communicate("")
             ret = proc.returncode
-            # print cmd, ret, out, err
         except (subprocess.SubprocessError, OSError):
             return False
 
