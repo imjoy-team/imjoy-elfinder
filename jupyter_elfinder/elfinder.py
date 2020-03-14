@@ -36,6 +36,8 @@ def exception_to_string(excp):
 class Connector:
     """Connector for elFinder."""
 
+    # pylint: disable=too-many-instance-attributes
+
     _options = {
         "root": "",
         "URL": "",
@@ -633,8 +635,6 @@ class Connector:
             self.__content(cur_dir, True)
         else:
             self._response["error"] = "Invalid parameters"
-
-        return
 
     def __duplicate(self):
         """Create copy of files/directories."""
@@ -1503,7 +1503,6 @@ class Connector:
     def __debug(self, key, val):
         if self._options["debug"]:
             self._response["debug"].update({key: val})
-        return
 
     def __check_archivers(self):
         # import subprocess
