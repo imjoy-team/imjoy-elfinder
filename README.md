@@ -63,7 +63,7 @@ You should then go to `http://YOUR_NOTEBOOK_URL/elfinder` (depending on what you
 
 1. Start an instance on MyBinder: https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master
 
-2. Get the URL and add `/elFinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elFinder`
+2. Get the generated Jupyter Notebook URL and add `/elFinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elFinder`
 
 3. You should be able to see a file browser.
 
