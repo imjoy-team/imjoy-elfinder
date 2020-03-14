@@ -5,7 +5,7 @@ import argparse
 import json
 
 from pyramid.config import Configurator
-from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER, JUPYTER_ELFINDER_CONNECTOR
+from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
 from pyramid.events import NewRequest
 from pyramid.events import BeforeRender
 
@@ -27,7 +27,9 @@ def build_app(opt, **settings):
                 {
                     "Access-Control-Allow-Origin": opt.allow_origin,
                     "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
-                    "Access-Control-Allow-Headers": "Origin, Content-Type, Accept, Authorization, x-requested-with",
+                    "Access-Control-Allow-Headers": (
+                        "Origin, Content-Type, Accept, Authorization, x-requested-with"
+                    ),
                     "Access-Control-Allow-Credentials": "true",
                     "Access-Control-Max-Age": "1728000",
                 }
