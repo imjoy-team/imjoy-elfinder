@@ -1526,6 +1526,8 @@ class Connector:
         self._options["archivers"] = archive
 
     def __check_utf8(self, name):
+        if isinstance(name, str):
+            return name
         try:
             name.decode("utf-8")
         except UnicodeDecodeError:
