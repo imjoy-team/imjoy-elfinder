@@ -7,20 +7,20 @@
 # License: 3-clauses BSD license
 """Provide the connector for elFinder File Manager."""
 
-import os
-import re
-import sys
-import time
-import shutil
+import base64
+import collections
 import hashlib
 import mimetypes
+import os
+import re
+import shutil
 import subprocess
-import collections
-from datetime import datetime
-import uuid
+import sys
+import time
 import traceback
 import urllib.parse
-import base64
+import uuid
+from datetime import datetime
 
 
 def exception_to_string(excp):
