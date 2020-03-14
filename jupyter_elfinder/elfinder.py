@@ -1076,8 +1076,10 @@ class connector:
                             self._response["content"] = f.read()
                     except UnicodeDecodeError:
                         with open(curFile, "rb") as f:
-                            self._response["content"] = base64.b64encode(f.read()).decode('ascii')
-                    
+                            self._response["content"] = base64.b64encode(
+                                f.read()
+                            ).decode("ascii")
+
                 else:
                     self._response["error"] = "Access denied"
                 return
