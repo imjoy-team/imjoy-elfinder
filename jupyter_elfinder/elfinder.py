@@ -54,8 +54,8 @@ class connector:
         "uploadAllow": [],
         "uploadDeny": [],
         "uploadOrder": ["deny", "allow"],
-        # 'aclObj': None, # TODO
-        # 'aclRole': 'user', # TODO
+        # 'aclObj': None, # TODO  # pylint: disable=fixme
+        # 'aclRole': 'user', # TODO  # pylint: disable=fixme
         "defaults": {"read": True, "write": True, "rm": True},
         "perms": {},
         "archiveMimes": {},
@@ -470,7 +470,7 @@ class connector:
             if not rmFile:
                 continue
             self.__remove(rmFile)
-        # TODO if errorData not empty return error
+        # TODO if error_data not empty return error  # pylint: disable=fixme
         self.__content(curDir, True)
 
     def __upload(self):
@@ -541,7 +541,7 @@ class connector:
                                     name, "File exceeds the maximum allowed filesize"
                                 )
                             except OSError:
-                                # TODO ?
+                                # TODO ?  # pylint: disable=fixme
                                 self.__errorData(
                                     name, "File was only partially uploaded"
                                 )
@@ -598,7 +598,7 @@ class connector:
                         self.__errorData(f, "Access denied")
                         self.__content(curDir, True)
                         return
-                    # TODO thumbs
+                    # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(newDst):
                         self._response["error"] = "Unable to move files"
                         self.__errorData(
@@ -1445,7 +1445,7 @@ class connector:
         m.update(path.encode("utf-8"))
         hash_code = str(m.hexdigest())
 
-        # TODO: what if the cache getting to big?
+        # TODO: what if the cache getting to big?  # pylint: disable=fixme
         self._cachedPath[hash_code] = path
         return hash_code
 
