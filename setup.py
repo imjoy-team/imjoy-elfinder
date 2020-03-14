@@ -31,6 +31,7 @@ setup(
     description=DESCRIPTION,
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
+    python_requires=">=3.5",
     install_requires=read("requirements.txt"),
     tests_require=read("requirements.txt") + read("requirements_test.txt"),
     classifiers=[

@@ -8,12 +8,14 @@ The frontend is built with [elFinder](https://github.com/Studio-42/elfinder) and
 
 ## What is elFinder?
 
-elFinder is an open-source file manager for web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42). 
+elFinder is an open-source file manager for web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42).
 
 [Try their online demo here](https://studio-42.github.io/elFinder/).
 
 
 ## Installation
+
+Python 3.5+ is required.
 
 ```sh
 pip install -U jupyter-elfinder
