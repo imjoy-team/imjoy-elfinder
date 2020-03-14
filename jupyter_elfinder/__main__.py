@@ -88,11 +88,14 @@ def main(args=None):
     from wsgiref.simple_server import make_server
 
     httpd = make_server(opt.host, opt.port, app)
-    print(
-        "==========Jupyter elFinder server is running=========\nhttp://{}:{}\n".format(
-            opt.base_url or opt.host, opt.port
-        )
-    )
+
+    if opt.base_url and opt.base_url.startswith("http"):
+        url = opt.base_url
+    else:
+        url = "http://{}:{}".format(opt.host, opt.port)
+
+    print("==========Jupyter elFinder server is running=========\n{}\n".format(url))
+
     sys.stdout.flush()
     httpd.serve_forever()
 
