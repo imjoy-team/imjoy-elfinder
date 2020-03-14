@@ -9,19 +9,18 @@
 # pylint: disable=too-many-lines
 
 import base64
-import collections
 import hashlib
 import mimetypes
 import os
 import re
 import shutil
 import subprocess
-import sys
 import time
 import traceback
 import urllib.parse
 import uuid
 from datetime import datetime
+from collections.abc import Callable
 
 
 def exception_to_string(excp):
@@ -222,12 +221,7 @@ class Connector:
                 if self._request["cmd"] in self._commands:
                     cmd = self._commands[self._request["cmd"]]
                     func = getattr(self, "_" + self.__class__.__name__ + cmd, None)
-                    if sys.version_info > (3, 0):
-                        # Python 3 code in this block
-                        is_callable = isinstance(func, collections.Callable)
-                    else:
-                        # Python 2 code in this block
-                        is_callable = callable(func)
+                    is_callable = isinstance(func, Callable)
 
                     if is_callable:
                         try:
@@ -373,8 +367,7 @@ class Connector:
             target = self._request["target"]
             cur_dir = self.__find_dir(current, None)
             cur_name = self.__find(target, cur_dir)
-            if isinstance(name, bytes):
-                name = name.decode("utf-8")
+            name = self.__check_utf8(name)
             new_name = os.path.join(cur_dir, name)
 
         if not cur_dir or not cur_name:
@@ -407,8 +400,7 @@ class Connector:
             name = self._request["name"]
             current = self._request["current"]
             path = self.__find_dir(current, None)
-            if isinstance(name, bytes):
-                name = name.decode("utf-8")
+            name = self.__check_utf8(name)
             new_dir = os.path.join(path, name)
 
         if not path:
@@ -437,8 +429,7 @@ class Connector:
             name = self._request["name"]
             current = self._request["current"]
             cur_dir = self.__find_dir(current, None)
-            if isinstance(name, bytes):
-                name = name.decode("utf-8")
+            name = self.__check_utf8(name)
             new_file = os.path.join(cur_dir, name)
 
         if not cur_dir or not name:
@@ -517,8 +508,7 @@ class Connector:
             max_size = self._options["uploadMaxSize"] * 1024 * 1024
             for name, data in up_files.items():
                 if name:
-                    if isinstance(name, bytes):
-                        name = name.decode("utf-8")
+                    name = self.__check_utf8(name)
                     total += 1
                     name = os.path.basename(name)
                     if not _check_name(name):
@@ -1536,22 +1526,11 @@ class Connector:
         self._options["archivers"] = archive
 
     def __check_utf8(self, name):
-        # pylint: disable=fixme
-        # FIXME: Not sure what is intended here. The logic does not fit.
         try:
-            if sys.version_info <= (3, 0):
-                name.decode("utf-8")
+            name.decode("utf-8")
         except UnicodeDecodeError:
-            if sys.version_info > (3, 0):
-                # Python 3 code in this block
-                name = str(name, "utf-8", "replace")
-            else:
-                # Python 2 code in this block
-                name = unicode(  # pylint: disable=undefined-variable; # noqa: F821
-                    name, "utf-8", "replace"
-                )
+            name = str(name, "utf-8", "replace")
             self.__debug("invalid encoding", name)
-            #  name += ' (invalid encoding)'
         return name
 
 
