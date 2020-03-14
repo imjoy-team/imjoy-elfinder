@@ -467,7 +467,7 @@ class Connector:
 
         if not rm_list or not cur_dir:
             self._response["error"] = "Invalid parameters"
-            return False
+            return
 
         if not isinstance(rm_list, list):
             rm_list = [rm_list]
@@ -702,40 +702,34 @@ class Connector:
 
     def __thumbnails(self):
         """Create previews for images."""
-        if "current" in self._request:
-            cur_dir = self.__find_dir(self._request["current"], None)
-            if not cur_dir or cur_dir == self._options["tmbDir"]:
-                return False
-        else:
-            return False
+        if "current" not in self._request:
+            return
+        cur_dir = self.__find_dir(self._request["current"], None)
+        if not cur_dir or cur_dir == self._options["tmbDir"]:
+            return
 
         self.__init_img_lib()
-        if self.__can_create_tmb():
-            if self._options["tmbAtOnce"] > 0:
-                tmb_max = self._options["tmbAtOnce"]
-            else:
-                tmb_max = 5
-            self._response["current"] = self.__hash(cur_dir)
-            self._response["images"] = {}
-            i = 0
-            for fil in os.listdir(cur_dir):
-                path = os.path.join(cur_dir, fil)
-                fhash = self.__hash(path)
-                if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
-                    tmb = os.path.join(self._options["tmbDir"], fhash + ".png")
-                    if not os.path.exists(tmb):
-                        if self.__tmb(path, tmb):
-                            self._response["images"].update(
-                                {fhash: self.__path2url(tmb)}
-                            )
-                            i += 1
-                if i >= tmb_max:
-                    self._response["tmb"] = True
-                    break
+        if not self.__can_create_tmb():
+            return
+        if self._options["tmbAtOnce"] > 0:
+            tmb_max = self._options["tmbAtOnce"]
         else:
-            return False
-
-        return
+            tmb_max = 5
+        self._response["current"] = self.__hash(cur_dir)
+        self._response["images"] = {}
+        i = 0
+        for fil in os.listdir(cur_dir):
+            path = os.path.join(cur_dir, fil)
+            fhash = self.__hash(path)
+            if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
+                tmb = os.path.join(self._options["tmbDir"], fhash + ".png")
+                if not os.path.exists(tmb):
+                    if self.__tmb(path, tmb):
+                        self._response["images"].update({fhash: self.__path2url(tmb)})
+                        i += 1
+            if i >= tmb_max:
+                self._response["tmb"] = True
+                break
 
     def __content(self, path, tree):
         """CWD + CDC + maybe(TREE)."""
@@ -965,7 +959,7 @@ class Connector:
                 return new_path
             # if idx >= 1000: break # possible loop
 
-        return
+        return None
 
     def __remove(self, target):
         """Provide internal remove procedure."""
@@ -1257,15 +1251,14 @@ class Connector:
 
         if ret:
             self.__content(cur_dir, True)
-        else:
-            self._response["error"] = "Unable to extract files from archive"
-        return
+            return
+
+        self._response["error"] = "Unable to extract files from archive"
 
     def __ping(self):
         """Workaround for Safari."""
         self.http_status_code = 200
         self.http_header["Connection"] = "close"
-        return
 
     def __mimetype(self, path):
         """Detect mimetype of file."""
