@@ -72,7 +72,7 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 
 ## Security Considerations
 
-Please be aware that there is potential rosk by exposing your file system locally or remotely.
+Please be aware that there is potential risk to use Jupyter elFinder locally or remotely over the internet.
 
 Here are some suggestions:
 1. Try to set root-dir to a folder containing the files you actually need, as minimal as possible, avoid exposing the entire file system.
@@ -80,6 +80,8 @@ Here are some suggestions:
 2. For remote servers, use it via the Jupyter proxy such that the access will be protected by jupyter token or password. also, do not turn off the authentication in Jupyter.
 
 3. For running it locally, we use allow-origin header (CORS) to protect access from a random website, for that to work, please use a modern browser and keep it updated.
+
+4. Update Jupyter elFinder regularly with 'pip install -U jupyter-elfinder', in case there is security updates.
 
 ## License
 
