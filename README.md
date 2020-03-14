@@ -1,7 +1,10 @@
-# elFinder connector for Jupyter server proxy
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master)
 
+# Jupyter elFinder
 
-This elFinder connector is specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
+A web file browser for managing data on remote jupyter servers, specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
+
+The frontend is built with [elFinder](https://github.com/Studio-42/elfinder) and a Python backend server.
 
 ## What is elFinder?
 
@@ -55,6 +58,15 @@ jupyter notebook --ip=0.0.0.0
 ```
 
 You should then go to `http://YOUR_NOTEBOOK_URL/elfinder` (depending on what you get from your notebook, for example, the url can be `http://localhost:8000/elfinder`).
+
+## Try it on MyBinder
+
+1. Start an instance on MyBinder: https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master
+
+2. Get the URL and add `/elFinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elFinder`
+
+3. You should be able to see a file browser.
+
 
 ## License
 
