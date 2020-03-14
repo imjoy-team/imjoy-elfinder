@@ -2,6 +2,7 @@
 import os
 import sys
 import argparse
+import json
 
 from pyramid.config import Configurator
 from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER, JUPYTER_ELFINDER_CONNECTOR
@@ -40,6 +41,11 @@ def build_app(opt, **settings):
     def add_global_params(event):
         """Add global parameters."""
         event["JUPYTER_ELFINDER_BASE_URL"] = settings["jupyter_base_url"]
+        with open(
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "VERSION"), "r"
+        ) as f:
+            version = json.load(f)["version"]
+        event["JUPYTER_ELFINDER_VERSION"] = version
 
     config.add_subscriber(add_global_params, BeforeRender)
 
@@ -58,7 +64,7 @@ def main(args=None):
     parser.add_argument(
         "--allow-origin",
         type=str,
-        default="",
+        default="https://lib.imjoy.io",
         help="The Access-Control-Allow-Origin header, by default it's empty.",
     )
     parser.add_argument(
