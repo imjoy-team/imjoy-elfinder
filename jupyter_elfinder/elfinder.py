@@ -166,9 +166,16 @@ class connector:
 
         if self._options["tmbDir"]:
             thumbs_dir = os.path.join(self._options["root"], self._options["tmbDir"])
-            if not os.path.exists(thumbs_dir):
-                os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
-            self._options["tmbDir"] = thumbs_dir
+            try:
+                if not os.path.exists(thumbs_dir):
+                    os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
+                self._options["tmbDir"] = thumbs_dir
+            except PermissionError:
+                self._options["tmbDir"] = None
+                self.__debug("thumbnail", " Permission denied: " + thumbs_dir)
+                print(
+                    "WARNING: failed to create thumbnail folder due to permission denied, it will be disabled."
+                )
 
     def __reset(self):
         """Flush per request variables."""
