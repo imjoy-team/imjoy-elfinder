@@ -76,12 +76,8 @@ def main(args=None):
     )
 
     opt = parser.parse_args(args=args)
-
-    here = os.path.dirname(os.path.realpath(__file__))
-    example_data = os.path.join(here, "..", "example-data")
-
     settings = {
-        "jupyter_elfinder_root": opt.root_dir or example_data,
+        "jupyter_elfinder_root": opt.root_dir or os.getcwd(),
         "jupyter_elfinder_url": "/static",
         "jupyter_base_url": opt.base_url or "",
         "jupyter_elfinder_thumbnail_dir": ".tmb" if opt.thumbnail else None,
