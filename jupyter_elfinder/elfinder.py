@@ -114,7 +114,7 @@ class connector:
     _time = 0
     _request = {}
     _response = {}
-    _errorData = {}
+    _error_data = {}
     _form = {}
     _im = None
     _today = 0
@@ -185,7 +185,7 @@ class connector:
         self.httpResponse = None
         self._request = {}
         self._response = {}
-        self._errorData = {}
+        self._error_data = {}
         self._form = {}
 
         self._time = time.time()
@@ -251,8 +251,8 @@ class connector:
                     "url": url,
                 }
 
-        if self._errorData:
-            self._response["errorData"] = self._errorData
+        if self._error_data:
+            self._response["errorData"] = self._error_data
 
         if self._options["debug"]:
             self.__debug("time", (time.time() - self._time))
@@ -547,8 +547,8 @@ class connector:
                                 )
                             break
 
-            if self._errorData:
-                if len(self._errorData) == total:
+            if self._error_data:
+                if len(self._error_data) == total:
                     self._response["error"] = "Unable to upload files"
                 else:
                     self._response["error"] = "Some files was not uploaded"
@@ -595,13 +595,13 @@ class connector:
                 if cut:
                     if not self.__isAllowed(f, "rm"):
                         self._response["error"] = "Move failed"
-                        self._errorData(f, "Access denied")
+                        self.__errorData(f, "Access denied")
                         self.__content(curDir, True)
                         return
                     # TODO thumbs
                     if os.path.exists(newDst):
                         self._response["error"] = "Unable to move files"
-                        self._errorData(
+                        self.__errorData(
                             f, "File or folder with the same name already exists"
                         )
                         self.__content(curDir, True)
@@ -612,7 +612,7 @@ class connector:
                         continue
                     except OSError:
                         self._response["error"] = "Unable to move files"
-                        self._errorData(f, "Unable to move")
+                        self.__errorData(f, "Unable to move")
                         self.__content(curDir, True)
                         return
                 else:
@@ -1462,7 +1462,7 @@ class connector:
 
     def __errorData(self, path, msg):
         """Collect error/warning messages."""
-        self._errorData[path] = msg
+        self._error_data[path] = msg
 
     def __initImgLib(self):
         if not self._options["imgLib"] is False and self._im is None:
