@@ -21,6 +21,7 @@ pip install -U jupyter-elfinder
 
 ## Basic Usage
 
+In your terminal, run the following command:
 ```sh
 jupyter-elfinder
 ```
@@ -32,7 +33,9 @@ You will then see the following message:
 http://127.0.0.1:8765
 ```
 
-By default, it will browse the example data folder. In order to browse your own directory, you can set it by passing `--root-dir=/PATH/TO/MY/FOLDER`.
+Depending on where you started the command, the file browser will show your current folder as root directory or HOME. 
+
+In order to browse your own directory, you can manually set the root directory by passing `--root-dir=/PATH/TO/MY/FOLDER`.
 
 
 ![jupyter-elfinder-screenshot](example-data/jupyter-elfinder-screenshot.png)
@@ -45,28 +48,40 @@ If you don't have jupyter notebook, run:
 pip install -U jupyter
 ```
 
-Next, install jupyter server proxy:
+Next, install Jupyter elFinder with jupyter server proxy extension:
 
 ```sh
-pip install -U jupyter-server-proxy
+pip install -U jupyter-elfinder[jupyter]
 ```
 
-Now start Jupyter notebook:
+Now start Jupyter notebook as you would do normally, for example:
 
 ```sh
 jupyter notebook --ip=0.0.0.0
 ```
 
-You should then go to `http://YOUR_NOTEBOOK_URL/elfinder` (depending on what you get from your notebook, for example, the url can be `http://localhost:8000/elfinder`).
+You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (depending on what you get from your notebook, for example, the url can be `http://localhost:8000/elfinder`).
 
-## Try it on MyBinder
+## Start a demo with MyBinder
 
 1. Start an instance on MyBinder: https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master
 
-2. Get the generated Jupyter Notebook URL and add `/elFinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elFinder`
+2. Get the generated Jupyter Notebook URL and add `/elfinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elfinder`
 
 3. You should be able to see a file browser.
 
+## Security Considerations
+
+Please be aware that there is potential risk to use Jupyter elFinder locally or remotely over the internet.
+
+Here are some suggestions:
+1. Try to set root-dir to a folder containing the files you actually need, as minimal as possible, avoid exposing the entire file system.
+
+2. For remote servers, use it via the Jupyter proxy such that the access will be protected by jupyter token or password. also, do not turn off the authentication in Jupyter.
+
+3. For running it locally, we use allow-origin header (CORS) to protect access from a random website, for that to work, please use a modern browser and keep it updated.
+
+4. Update Jupyter elFinder regularly with 'pip install -U jupyter-elfinder', in case there is security updates.
 
 ## License
 
