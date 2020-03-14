@@ -227,7 +227,7 @@ class connector:
                     if is_callable:
                         try:
                             func()
-                        except Exception as e:
+                        except Exception as e:  # pylint: disable=broad-except
                             self._response["error"] = (
                                 "Command Failed: " + cmd + ", Error: \n" + str(e)
                             )
@@ -651,6 +651,8 @@ class connector:
 
     def __resize(self):
         """Scale image size."""
+        from PIL import UnidentifiedImageError
+
         if not (
             "current" in self._request
             and "target" in self._request
@@ -681,7 +683,7 @@ class connector:
             im = self._im.open(curFile)
             imResized = im.resize((width, height), self._im.ANTIALIAS)
             imResized.save(curFile)
-        except Exception as e:
+        except (UnidentifiedImageError, OSError) as e:
             # self.__debug('resizeFailed_' + path, str(e))
             self.__debug("resizeFailed_" + self._options["root"], str(e))
             self._response["error"] = "Unable to resize image"
