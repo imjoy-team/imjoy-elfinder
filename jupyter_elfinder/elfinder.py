@@ -1622,7 +1622,9 @@ class Connector:
 
         self._options["archivers"] = archive
 
-    def __run_sub_process(self, cmd, valid_return=[0]):
+    def __run_sub_process(self, cmd, valid_return=None):
+        if valid_return is None:
+            valid_return = [0]
         try:
             proc = subprocess.Popen(
                 cmd,
