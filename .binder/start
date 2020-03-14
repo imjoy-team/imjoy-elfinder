@@ -1,2 +1,5 @@
 #!/bin/bash
+
+jupyter notebook list > logfile.txt 2>&1 &
+
 exec "$@"

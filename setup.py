@@ -51,6 +51,7 @@ setup(
         "Framework :: Pyramid ",
         "Topic :: Internet",
     ],
+    extras_require={"jupyter": ["jupyter-server-proxy"]},
     entry_points={
         "console_scripts": ["jupyter-elfinder = jupyter_elfinder.__main__:main"],
         "jupyter_serverproxy_servers": [

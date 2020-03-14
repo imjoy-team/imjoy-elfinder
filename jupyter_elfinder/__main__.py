@@ -116,7 +116,7 @@ def setup_for_jupyter_server_proxy():
             "--port",
             "{port}",
             "--base-url",
-            "{base_url}/proxy/{port}",
+            "{base_url}/elfinder",
             "--allow-origin",
             "https://lib.imjoy.io",
         ]
