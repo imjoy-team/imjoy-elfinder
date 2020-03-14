@@ -7,18 +7,17 @@
 # Distributed under terms of the MIT license.
 
 """Provide views for elfinder."""
-import os
 import json
+import os
 from cgi import FieldStorage
 
-from . import elfinder
-from pyramid.view import view_config
 from pyramid.response import Response
+from pyramid.view import view_config
 
-from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
+from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
 
 
-class FileIterable(object):
+class FileIterable:
     """Represent a file iterable."""
 
     def __init__(self, filename):
@@ -30,7 +29,7 @@ class FileIterable(object):
         return FileIterator(self.filename)
 
 
-class FileIterator(object):
+class FileIterator:
     """Represent a file iterator."""
 
     chunk_size = 32768
@@ -84,34 +83,34 @@ def connector(request):
         "debug": True,
         "tmbDir": request.registry.settings["jupyter_elfinder_thumbnail_dir"],
     }
-    elf = elfinder.connector(options)
+    elf = elfinder.Connector(options)
 
     # fetch only needed GET/POST parameters
-    httpRequest = {}
+    http_request = {}
     form = request.params
-    for field in elf.httpAllowedParameters:
+    for field in elf.http_allowed_parameters:
         if field in form:
             # Russian file names hack
             if field == "name":
-                httpRequest[field] = form.getone(field).encode("utf-8")
+                http_request[field] = form.getone(field).encode("utf-8")
 
             elif field == "targets[]":
-                httpRequest[field] = form.getall(field)
+                http_request[field] = form.getall(field)
 
             # handle CGI upload
             elif field == "upload[]":
-                upFiles = {}
-                cgiUploadFiles = form.getall(field)
-                for up in cgiUploadFiles:
-                    if isinstance(up, FieldStorage):
+                up_files = {}
+                cgi_upload_files = form.getall(field)
+                for up_ in cgi_upload_files:
+                    if isinstance(up_, FieldStorage):
                         # pack dict(filename: filedescriptor)
-                        upFiles[up.filename.encode("utf-8")] = up.file
-                httpRequest[field] = upFiles
+                        up_files[up_.filename.encode("utf-8")] = up_.file
+                http_request[field] = up_files
             else:
-                httpRequest[field] = form.getone(field)
+                http_request[field] = form.getone(field)
 
     # run connector with parameters
-    status, header, response = elf.run(httpRequest)
+    status, header, response = elf.run(http_request)
 
     if response is not None and status == 200:
         # send file
@@ -119,21 +118,21 @@ def connector(request):
             file_path = response["file"]
             if os.path.exists(file_path) and not os.path.isdir(file_path):
                 result = make_response(file_path)
-                result.headers["Content-Length"] = elf.httpHeader["Content-Length"]
-                result.headers["Content-type"] = elf.httpHeader["Content-type"]
-                result.headers["Content-Disposition"] = elf.httpHeader[
+                result.headers["Content-Length"] = elf.http_header["Content-Length"]
+                result.headers["Content-type"] = elf.http_header["Content-type"]
+                result.headers["Content-Disposition"] = elf.http_header[
                     "Content-Disposition"
                 ]
                 return result
-            else:
-                result = Response("Unable to find: {}".format(request.path_info))
+
+            result = Response("Unable to find: {}".format(request.path_info))
         # output json
         else:
             # get connector output and print it out
             result = Response(status=status)
             try:
                 del header["Connection"]
-            except Exception:
+            except KeyError:
                 pass
             result.headers = header
             result.charset = "utf8"

@@ -1,13 +1,14 @@
 """Provide a main module."""
-import os
-import sys
 import argparse
 import json
+import os
+import sys
+from wsgiref.simple_server import make_server
 
 from pyramid.config import Configurator
+from pyramid.events import BeforeRender, NewRequest
+
 from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
-from pyramid.events import NewRequest
-from pyramid.events import BeforeRender
 
 
 def build_app(opt, **settings):
@@ -45,8 +46,8 @@ def build_app(opt, **settings):
         event["JUPYTER_ELFINDER_BASE_URL"] = settings["jupyter_base_url"]
         with open(
             os.path.join(os.path.dirname(os.path.realpath(__file__)), "VERSION"), "r"
-        ) as f:
-            version = json.load(f)["version"]
+        ) as fil:
+            version = json.load(fil)["version"]
         event["JUPYTER_ELFINDER_VERSION"] = version
 
     config.add_subscriber(add_global_params, BeforeRender)
@@ -92,8 +93,6 @@ def main(args=None):
     }
 
     app = build_app(opt, **settings)
-
-    from wsgiref.simple_server import make_server
 
     httpd = make_server(opt.host, opt.port, app)
 
