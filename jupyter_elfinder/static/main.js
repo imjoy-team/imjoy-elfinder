@@ -166,6 +166,7 @@
 				file_base_url: window.ELFINDER_CONFIG['file_base_url'],
 				height: '100%',
 				rememberLastDir: false,
+				cssAutoLoad: true,
 				// transport : new elFinderSupportVer1(),
 				commandsOptions : {
 					edit : {

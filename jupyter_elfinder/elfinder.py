@@ -277,7 +277,7 @@ class connector:
     def __open(self):
         """Open file or directory."""
         # try to open file
-        if not "tree" in self._request:
+        if "tree" not in self._request and "current" in self._request:
             curDir = self.__findDir(self._request["current"], None)
             curFile = self.__find(self._request["target"], curDir)
 
@@ -334,7 +334,8 @@ class connector:
         # try dir
         else:
             path = self._options["root"]
-            if "target" in self._request and self._request["target"]:
+            initialized = len(self._cachedPath) > 0
+            if initialized and "target" in self._request and self._request["target"]:
                 if "current" in self._request:
                     curDir = self.__findDir(self._request["current"], None)
                     target = self.__findDir(self._request["target"], curDir)
@@ -494,6 +495,7 @@ class connector:
                 return
 
             upFiles = self._request["upload[]"]
+            print('========upload===========', self._request)
             # invalid format
             # must be dict('filename1': 'filedescriptor1',
             #              'filename2': 'filedescriptor2', ...)
