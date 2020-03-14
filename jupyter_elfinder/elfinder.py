@@ -1555,7 +1555,9 @@ class Connector:
                 name = str(name, "utf-8", "replace")
             else:
                 # Python 2 code in this block
-                name = unicode(name, "utf-8", "replace")  # noqa
+                name = unicode(  # pylint: disable=undefined-variable; # noqa: F821
+                    name, "utf-8", "replace"
+                )
             self.__debug("invalid encoding", name)
             #  name += ' (invalid encoding)'
         return name
