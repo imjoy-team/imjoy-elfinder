@@ -15,7 +15,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import time
 import traceback
 import urllib.parse
@@ -1531,22 +1530,11 @@ class Connector:
         self._options["archivers"] = archive
 
     def __check_utf8(self, name):
-        # pylint: disable=fixme
-        # FIXME: Not sure what is intended here. The logic does not fit.
         try:
-            if sys.version_info <= (3, 0):
-                name.decode("utf-8")
+            name.decode("utf-8")
         except UnicodeDecodeError:
-            if sys.version_info > (3, 0):
-                # Python 3 code in this block
-                name = str(name, "utf-8", "replace")
-            else:
-                # Python 2 code in this block
-                name = unicode(  # pylint: disable=undefined-variable; # noqa: F821
-                    name, "utf-8", "replace"
-                )
+            name = str(name, "utf-8", "replace")
             self.__debug("invalid encoding", name)
-            #  name += ' (invalid encoding)'
         return name
 
 
