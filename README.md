@@ -21,6 +21,7 @@ pip install -U jupyter-elfinder
 
 ## Basic Usage
 
+In your terminal, run the following command:
 ```sh
 jupyter-elfinder
 ```
@@ -32,7 +33,9 @@ You will then see the following message:
 http://127.0.0.1:8765
 ```
 
-By default, it will browse the example data folder. In order to browse your own directory, you can set it by passing `--root-dir=/PATH/TO/MY/FOLDER`.
+Depending on where you started the command, the file browser will show your current folder as root directory or HOME. 
+
+In order to browse your own directory, you can manually set the root directory by passing `--root-dir=/PATH/TO/MY/FOLDER`.
 
 
 ![jupyter-elfinder-screenshot](example-data/jupyter-elfinder-screenshot.png)
@@ -67,6 +70,16 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 
 3. You should be able to see a file browser.
 
+## Security Considerations
+
+Please be aware that there is potential rosk by exposing your file system locally or remotely.
+
+Here are some suggestions:
+1. Try to set root-dir to a folder containing the files you actually need, as minimal as possible, avoid exposing the entire file system.
+
+2. For remote servers, use it via the Jupyter proxy such that the access will be protected by jupyter token or password. also, do not turn off the authentication in Jupyter.
+
+3. For running it locally, we use allow-origin header (CORS) to protect access from a random website, for that to work, please use a modern browser and keep it updated.
 
 ## License
 
