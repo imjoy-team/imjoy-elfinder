@@ -5,7 +5,7 @@ import argparse
 import json
 
 from pyramid.config import Configurator
-from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER, JUPYTER_ELFINDER_CONNECTOR
+from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
 from pyramid.events import NewRequest
 from pyramid.events import BeforeRender
 
