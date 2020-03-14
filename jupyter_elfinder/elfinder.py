@@ -1642,10 +1642,10 @@ class Connector:
         return True
 
     def __check_utf8(self, name):
+        # pylint: disable=fixme
+        # FIXME: Not sure what is intended here. The logic does not fit.
         try:
-            if sys.version_info > (3, 0):
-                name
-            else:
+            if sys.version_info <= (3, 0):
                 name.decode("utf-8")
         except UnicodeDecodeError:
             if sys.version_info > (3, 0):
