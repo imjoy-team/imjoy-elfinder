@@ -1237,7 +1237,7 @@ class Connector:
         try:
             img = self._img.open(path).copy()
             size = self._options["tmbSize"], self._options["tmbSize"]
-            box = self.__crop_tuple(img.size)
+            box = _crop_tuple(img.size)
             if box:
                 img = img.crop(box)
             img.thumbnail(size, self._img.ANTIALIAS)
@@ -1255,26 +1255,6 @@ class Connector:
                     os.unlink(tmb)
                 except OSError:
                     pass
-
-    def __crop_tuple(self, size):
-        """Return the crop rectangle, as a (left, upper, right, lower)-tuple."""
-        width, height = size
-        if width > height:  # landscape
-            left = int((width - height) / 2)
-            upper = 0
-            right = left + height
-            lower = height
-            return (left, upper, right, lower)
-        elif height > width:  # portrait
-            left = 0
-            upper = int((height - width) / 2)
-            right = width
-            lower = upper + width
-            return (left, upper, right, lower)
-        else:  # cube
-            pass
-
-        return False
 
     def __readlink(self, path):
         """Read link and return real path if not broken."""
@@ -1658,3 +1638,24 @@ def _unique_name(path, copy=" copy"):
         # if idx >= 1000: break # possible loop
 
     return None
+
+
+def _crop_tuple(size):
+    """Return the crop rectangle, as a (left, upper, right, lower)-tuple."""
+    width, height = size
+    if width > height:  # landscape
+        left = int((width - height) / 2)
+        upper = 0
+        right = left + height
+        lower = height
+        return (left, upper, right, lower)
+    elif height > width:  # portrait
+        left = 0
+        upper = int((height - width) / 2)
+        right = width
+        lower = upper + width
+        return (left, upper, right, lower)
+    else:  # cube
+        pass
+
+    return False
