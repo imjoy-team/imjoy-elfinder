@@ -195,8 +195,10 @@ class connector:
 
         self._response["debug"] = {}
 
-    def run(self, httpRequest=[]):
+    def run(self, httpRequest=None):
         """Run main function."""
+        if httpRequest is None:
+            httpRequest = []
         self.__reset()
         rootOk = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
