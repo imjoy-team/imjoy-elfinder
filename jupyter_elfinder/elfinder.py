@@ -9,7 +9,6 @@
 # pylint: disable=too-many-lines
 
 import base64
-import collections
 import hashlib
 import mimetypes
 import os
@@ -22,6 +21,7 @@ import traceback
 import urllib.parse
 import uuid
 from datetime import datetime
+from collections.abc import Callable
 
 
 def exception_to_string(excp):
@@ -222,12 +222,7 @@ class Connector:
                 if self._request["cmd"] in self._commands:
                     cmd = self._commands[self._request["cmd"]]
                     func = getattr(self, "_" + self.__class__.__name__ + cmd, None)
-                    if sys.version_info > (3, 0):
-                        # Python 3 code in this block
-                        is_callable = isinstance(func, collections.Callable)
-                    else:
-                        # Python 2 code in this block
-                        is_callable = callable(func)
+                    is_callable = isinstance(func, Callable)
 
                     if is_callable:
                         try:
