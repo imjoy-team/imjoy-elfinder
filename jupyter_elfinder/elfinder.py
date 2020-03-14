@@ -495,7 +495,6 @@ class connector:
                 return
 
             upFiles = self._request["upload[]"]
-            print("========upload===========", self._request)
             # invalid format
             # must be dict('filename1': 'filedescriptor1',
             #              'filename2': 'filedescriptor2', ...)
@@ -1126,9 +1125,17 @@ class connector:
             if curFile and curDir:
                 if self.__isAllowed(curFile, "write"):
                     try:
-                        f = open(curFile, "w+")
-                        f.write(self._request["content"])
-                        f.close()
+                        if (
+                            self._request["content"].startswith("data:")
+                            and ";base64," in self._request["content"][:100]
+                        ):
+                            imgdata = self._request["content"].split(";base64,")[1]
+                            imgdata = base64.b64decode(imgdata)
+                            with open(curFile, "wb") as f:
+                                f.write(imgdata)
+                        else:
+                            with open(curFile, "w+") as f:
+                                f.write(self._request["content"])
                         self._response["target"] = self.__info(curFile)
                     except:
                         self._response["error"] = "Unable to write to file"
