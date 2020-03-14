@@ -19,6 +19,7 @@ from datetime import datetime
 import uuid
 import traceback
 import urllib.parse
+import base64
 
 
 def exception_to_string(excp):
@@ -37,7 +38,7 @@ class connector:
         "root": "",
         "URL": "",
         "maxFolderDepth": 256,
-        "rootAlias": "Home",
+        "rootAlias": "HOME",
         "dotFiles": False,
         "dirSize": False,
         "fileMode": 0o644,
@@ -74,6 +75,7 @@ class connector:
         "duplicate": "__duplicate",
         "read": "__read",
         "edit": "__edit",
+        "dim": "__dim",
         "extract": "__extract",
         "archive": "__archive",
         "resize": "__resize",
@@ -164,9 +166,16 @@ class connector:
 
         if self._options["tmbDir"]:
             thumbs_dir = os.path.join(self._options["root"], self._options["tmbDir"])
-            if not os.path.exists(thumbs_dir):
-                os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
-            self._options["tmbDir"] = thumbs_dir
+            try:
+                if not os.path.exists(thumbs_dir):
+                    os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
+                self._options["tmbDir"] = thumbs_dir
+            except PermissionError:
+                self._options["tmbDir"] = None
+                self.__debug("thumbnail", " Permission denied: " + thumbs_dir)
+                print(
+                    "WARNING: failed to create thumbnail folder due to permission denied, it will be disabled."
+                )
 
     def __reset(self):
         """Flush per request variables."""
@@ -222,7 +231,7 @@ class connector:
                             traceback.print_exc()
                             self.__debug("exception", exception_to_string(e))
                 else:
-                    self._response["error"] = "Unknown command"
+                    self._response["error"] = "Unknown command: " + self._request["cmd"]
             else:
                 self.__open()
 
@@ -883,8 +892,8 @@ class connector:
             "volumeid": self.volumeid,
         }
 
-        # limit the tree depth to maxFolderDepth
-        if depth < self._options["maxFolderDepth"] and self.__isAllowed(path, "read"):
+        # limit the tree depth to 1
+        if depth < 1 and self.__isAllowed(path, "read"):
             for d in sorted(os.listdir(path)):
                 pd = os.path.join(path, d)
                 if (
@@ -1069,10 +1078,36 @@ class connector:
             curFile = self.__find(self._request["target"], curDir)
             if curDir and curFile:
                 if self.__isAllowed(curFile, "read"):
-                    self._response["content"] = open(curFile, "r").read()
+                    try:
+                        with open(curFile, "r") as f:
+                            self._response["content"] = f.read()
+                    except UnicodeDecodeError:
+                        with open(curFile, "rb") as f:
+                            self._response["content"] = base64.b64encode(
+                                f.read()
+                            ).decode("ascii")
+
                 else:
                     self._response["error"] = "Access denied"
                 return
+
+        self._response["error"] = "Invalid parameters"
+        return
+
+    def __dim(self):
+        if "current" in self._request and "target" in self._request:
+            curDir = self.__findDir(self._request["current"], None)
+            curFile = self.__find(self._request["target"], curDir)
+            if curFile and curDir:
+                if self.__isAllowed(curFile, "read"):
+                    dim = self.__getImgSize(curFile)
+                    if dim:
+                        self._response["dim"] = str(dim)
+                    else:
+                        self._response["dim"] = None
+                else:
+                    self._response["error"] = "Access denied"
+            return
 
         self._response["error"] = "Invalid parameters"
         return
@@ -1409,7 +1444,7 @@ class connector:
         if self._options["URL"].startswith("http"):
             url = urllib.parse.urljoin(self._options["URL"], curDir[length:])
         else:
-            url = os.path.join(self._options["URL"], curDir[length:])
+            url = os.path.join(self._options["URL"], curDir[length:].lstrip("/"))
         url = self.__checkUtf8(url).replace(os.sep, "/")
         url = urllib.parse.quote(url, "/:~")
         return url

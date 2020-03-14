@@ -177,113 +177,7 @@
 				ifm.trigger('destroy').remove();
 			}
 		},
-		pixlrSetup = function(opts, fm) {
-			if (!hasFlash || fm.UA.ltIE8) {
-				this.disabled = true;
-			}
-		},
-		pixlrLoad = function(mode, base) {
-			var self = this,
-				fm = this.fm,
-				clPreventBack = fm.res('class', 'preventback'),
-				node = $(base).children('img:first')
-					.data('loading')()
-					.data('resizeoff', function() {
-						$(window).off('resize.'+node.attr('id'));
-						dialog.addClass(clPreventBack);
-						return node;
-					})
-					.on('click', function() {
-						launch();
-					}),
-				dialog = $(base).closest('.ui-dialog'),
-				elfNode = fm.getUI(),
-				uiToast = fm.getUI('toast'),
-				container = $('<iframe class="ui-front" allowtransparency="true">'),
-				file = this.file,
-				timeout = 15,
-				error = function(error) {
-					if (error) {
-						container.trigger('destroy').remove();
-						node.data('loading')(true);
-						fm.error(error);
-					} else {
-						uiToast.appendTo(dialog.closest('.ui-dialog'));
-						fm.toast({
-							mode: 'info',
-							msg: 'Can not launch Pixlr yet. Waiting ' + timeout + ' seconds.',
-							button: {
-								text: 'Abort',
-								click: function() {
-									container.trigger('destroy').remove();
-									node.data('loading')(true);
-								}
-							},
-							onHidden: function() {
-								uiToast.children().length === 1 && uiToast.appendTo(fm.getUI());
-							}
-						});
-						errtm = setTimeout(error, timeout * 1000);
-					}
-				},
-				launch = function() {
-					var src = 'https://pixlr.com/'+mode+'/?s=c',
-						myurl = window.location.href.toString().replace(/#.*$/, ''),
-						opts = {};
-
-					errtm = setTimeout(error, timeout * 1000);
-					myurl += (myurl.indexOf('?') === -1? '?' : '&') + 'pixlr='+node.attr('id');
-					src += '&referrer=elFinder&locktitle=true';
-					src += '&exit='+encodeURIComponent(myurl+'&image=0');
-					src += '&target='+encodeURIComponent(myurl);
-					src += '&title='+encodeURIComponent(file.name);
-					src += '&image='+encodeURIComponent(node.attr('_src'));
-					
-					opts.src = src;
-					opts.css = {
-						width: '100%',
-						height: $(window).height()+'px',
-						position: 'fixed',
-						display: 'block',
-						backgroundColor: 'transparent',
-						border: 'none',
-						top: 0,
-						right: 0
-					};
-
-					// trigger event 'editEditorPrepare'
-					self.trigger('Prepare', {
-						node: base,
-						editorObj: void(0),
-						instance: container,
-						opts: opts
-					});
-
-					container
-						.attr('id', node.attr('id')+'iframe')
-						.attr('src', opts.src)
-						.css(opts.css)
-						.one('load', function() {
-							errtm && clearTimeout(errtm);
-							setTimeout(function() {
-								if (container.is(':hidden')) {
-									error('Please disable your ad blocker.');
-								}
-							}, 1000);
-							dialog.addClass(clPreventBack);
-							fm.toggleMaximize(container, true);
-							fm.toFront(container);
-						})
-						.on('destroy', function() {
-							fm.toggleMaximize(container, false);
-						})
-						.on('error', error)
-						.appendTo(elfNode.hasClass('elfinder-fullscreen')? elfNode : 'body');
-				},
-				errtm;
-			$(base).on('saveAsFail', launch);
-			launch();
-		},
+		
 		iframeClose = function(ifm) {
 			var $ifm = $(ifm),
 				dfd = $.Deferred().always(function() {
@@ -378,7 +272,7 @@
 			},
 			// Initialization of editing node (this: this editors HTML node)
 			init : function(id, file, content, fm) {
-				this.data('url', content);
+				this.data('url', file.url);
 			},
 			load : function(base) {
 				var self = this,
@@ -607,80 +501,6 @@
 			}
 		},
 		{
-			// Pixlr Editor
-			info : {
-				id : 'pixlreditor',
-				name : 'Pixlr Editor',
-				iconImg : 'img/editor-icons.png 0 -128',
-				urlAsContent: true,
-				schemeContent: true,
-				single: true,
-				canMakeEmpty: true,
-				integrate: {
-					title: 'PIXLR EDITOR',
-					link: 'https://pixlr.com/editor/'
-				}
-			},
-			// MIME types to accept
-			mimes : ['image/jpeg', 'image/png', 'image/gif', 'image/x-ms-bmp', 'image/x-pixlr-data'],
-			// HTML of this editor
-			html : '<div class="elfinder-edit-imageeditor"><img/></div>',
-			// called on initialization of elFinder cmd edit (this: this editor's config object)
-			setup : function(opts, fm) {
-				pixlrSetup.call(this, opts, fm);
-			},
-			// Initialization of editing node (this: this editors HTML node)
-			init : function(id, file, url, fm) {
-				initImgTag.call(this, id, file, file.size > 0? fm.convAbsUrl(url) : '', fm);
-			},
-			// Get data uri scheme (this: this editors HTML node)
-			getContent : function() {
-				return $(this).children('img:first').attr('src');
-			},
-			load : function(base) {
-				pixlrLoad.call(this, 'editor', base);
-			},
-			save : function(base) {},
-			close : function(base) {}
-		},
-		{
-			// Pixlr Express
-			info : {
-				id: 'pixlrexpress',
-				name : 'Pixlr Express',
-				iconImg : 'img/editor-icons.png 0 -112',
-				urlAsContent: true,
-				schemeContent: true,
-				single: true,
-				canMakeEmpty: false,
-				integrate: {
-					title: 'PIXLR EXPRESS',
-					link: 'https://pixlr.com/express/'
-				}
-			},
-			// MIME types to accept
-			mimes : ['image/jpeg', 'image/png', 'image/gif'],
-			// HTML of this editor
-			html : '<div class="elfinder-edit-imageeditor"><img/></div>',
-			// called on initialization of elFinder cmd edit (this: this editor's config object)
-			setup : function(opts, fm) {
-				pixlrSetup.call(this, opts, fm);
-			},
-			// Initialization of editing node (this: this editors HTML node)
-			init : function(id, file, url, fm) {
-				initImgTag.call(this, id, file, file.size > 0? fm.convAbsUrl(url) : '', fm);
-			},
-			// Get data uri scheme (this: this editors HTML node)
-			getContent : function() {
-				return $(this).children('img:first').attr('src');
-			},
-			load : function(base) {
-				pixlrLoad.call(this, 'express', base);
-			},
-			save : function(base) {},
-			close : function(base) {}
-		},
-		{
 			// Photopea advanced image editor
 			info : {
 				id : 'photopea',
@@ -768,7 +588,7 @@
 
 						this.load = function() {
 							return fm.request({
-								data    : {cmd : 'get'},
+								data    : {cmd : 'get', target: file.hash},
 								options : {
 									url: url,
 									type: 'get',

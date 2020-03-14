@@ -71,6 +71,10 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		switch (cmd) {
 			case 'open':
 				opts.data.tree = 1;
+				if(opts.data.target){
+					var _file = fm.file(opts.data.target)
+					opts.data.current = _file && _file.phash;
+				}
 				break;
 			case 'parents':
 			case 'tree':
@@ -81,6 +85,10 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				break;
 			case 'put':
 				opts.data.cmd = 'edit';
+				opts.data.current = fm.file(opts.data.target).phash;
+				break;
+			case 'dim':
+				opts.data.cmd = 'dim';
 				opts.data.current = fm.file(opts.data.target).phash;
 				break;
 			case 'archive':
@@ -208,7 +216,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			},
 			phash, diff, isCwd, treeDiff;
 
-		if ((cmd == 'tmb' || cmd == 'get')) {
+		if ((cmd == 'tmb' || cmd == 'get' || cmd == 'dim')) {
 			return data;
 		}
 		

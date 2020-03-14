@@ -2668,6 +2668,9 @@ var elFinder = function(elm, opts, bootCallback) {
 					self.trigger(cmd + 'fail', response);
 					errMsg = (typeof error === 'object')? error.error : error;
 					if (errMsg) {
+						if(response.debug && response.debug.exception){
+							console.error(response.debug.exception)
+						}
 						deffail ? self.error(errMsg) : self.debug('error', self.i18n(errMsg));
 					}
 					syncOnFail && self.sync();
@@ -11085,11 +11088,11 @@ elFinder.prototype._options = {
 			sharecadMimes : [],
 			// MIME types to use Google Docs online viewer
 			// Example ['application/pdf', 'image/tiff', 'application/vnd.ms-office', 'application/msword', 'application/vnd.ms-word', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/postscript', 'application/rtf']
-			googleDocsMimes : [],
+			googleDocsMimes : ['application/pdf', 'image/tiff', 'application/vnd.ms-office', 'application/msword', 'application/vnd.ms-word', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/postscript', 'application/rtf'],
 			// MIME types to use Microsoft Office Online viewer
 			// Example ['application/msword', 'application/vnd.ms-word', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.presentation']
 			// These MIME types override "googleDocsMimes"
-			officeOnlineMimes : [],
+			officeOnlineMimes : ['application/msword', 'application/vnd.ms-word', 'application/vnd.ms-excel', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.spreadsheet', 'application/vnd.oasis.opendocument.presentation'],
 			// File size threshold when using the dim command for obtain the image size necessary to image preview
 			getDimThreshold : '200K',
 			// Max filesize to show filenames of the zip/tar/gzip/bzip file 
@@ -21789,7 +21792,7 @@ $.fn.elfindertree = function(fm, opts) {
 						link.addClass(active);
 					}
 					if (hash != fm.cwd().hash && !link.hasClass(disabled)) {
-						fm.exec('open', hash, { current: file.phash }).done(function() {
+						fm.exec('open', hash).done(function() {
 							fm.one('opendone', function() {
 								fm.select({selected: [hash], origin: 'navbar'});
 							});
@@ -26715,7 +26718,7 @@ elFinder.prototype.commands.netunmount = function() {
 			var arg = e.data && e.data.file? [ e.data.file ]: void(0);
 			if (self.getstate(arg) === 0) {
 				e.preventDefault();
-				fm.exec('open', arg, {current: fm.cwd().hash});
+				fm.exec('open', arg);
 			}
 		},
 		'select enable disable reload' : function(e) { this.update(e.type == 'disable' ? -1 : void(0));  }
@@ -26740,7 +26743,6 @@ elFinder.prototype.commands.netunmount = function() {
 			files = this.files(hashes),
 			cnt   = files.length,
 			thash = (typeof cOpts == 'object')? cOpts.thash : false,
-			current = (typeof cOpts == 'object')? cOpts.current : null,
 			opts  = this.options,
 			into  = opts.into || 'window',
 			file, url, s, w, imgW, imgH, winW, winH, reg, link, html5dl, inline,
@@ -26764,7 +26766,7 @@ elFinder.prototype.commands.netunmount = function() {
 				}
 
 				return fm.request({
-					data   : {cmd  : 'open', target : thash || file.hash, current: current},
+					data   : {cmd  : 'open', target : thash || file.hash},
 					notify : {type : 'open', cnt : 1, hideCnt : true},
 					syncOnFail : true,
 					lazy : false
