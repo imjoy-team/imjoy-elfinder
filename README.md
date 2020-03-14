@@ -45,25 +45,25 @@ If you don't have jupyter notebook, run:
 pip install -U jupyter
 ```
 
-Next, install jupyter server proxy:
+Next, install Jupyter elFinder with jupyter server proxy extension:
 
 ```sh
-pip install -U jupyter-server-proxy
+pip install -U jupyter-elfinder[jupyter]
 ```
 
-Now start Jupyter notebook:
+Now start Jupyter notebook as you would do normally, for example:
 
 ```sh
 jupyter notebook --ip=0.0.0.0
 ```
 
-You should then go to `http://YOUR_NOTEBOOK_URL/elfinder` (depending on what you get from your notebook, for example, the url can be `http://localhost:8000/elfinder`).
+You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (depending on what you get from your notebook, for example, the url can be `http://localhost:8000/elfinder`).
 
-## Try it on MyBinder
+## Start a demo with MyBinder
 
 1. Start an instance on MyBinder: https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master
 
-2. Get the generated Jupyter Notebook URL and add `/elFinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elFinder`
+2. Get the generated Jupyter Notebook URL and add `/elfinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elfinder`
 
 3. You should be able to see a file browser.
 
