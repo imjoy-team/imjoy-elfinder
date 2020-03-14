@@ -174,7 +174,8 @@ class connector:
                 self._options["tmbDir"] = None
                 self.__debug("thumbnail", " Permission denied: " + thumbs_dir)
                 print(
-                    "WARNING: failed to create thumbnail folder due to permission denied, it will be disabled."
+                    "WARNING: failed to create thumbnail folder "
+                    "due to permission denied, it will be disabled."
                 )
 
     def __reset(self):
@@ -386,7 +387,7 @@ class connector:
                 os.rename(curName, newName)
                 self._response["select"] = [self.__hash(newName)]
                 self.__content(curDir, os.path.isdir(newName))
-            except:
+            except OSError:
                 self._response["error"] = "Unable to rename file"
 
     def __mkdir(self):
@@ -417,7 +418,7 @@ class connector:
                 os.mkdir(newDir, int(self._options["dirMode"]))
                 self._response["select"] = [self.__hash(newDir)]
                 self.__content(path, True)
-            except:
+            except OSError:
                 self._response["error"] = "Unable to create folder"
 
     def __mkfile(self):
@@ -445,7 +446,7 @@ class connector:
                 open(newFile, "w").close()
                 self._response["select"] = [self.__hash(newFile)]
                 self.__content(curDir, False)
-            except:
+            except OSError:
                 self._response["error"] = "Unable to create file"
 
     def __rm(self):
@@ -529,9 +530,9 @@ class connector:
                                 self.__errorData(name, "Not allowed file type")
                                 try:
                                     os.unlink(name)
-                                except:
+                                except OSError:
                                     pass
-                        except:
+                        except OSError:
                             self.__errorData(name, "Unable to save uploaded file")
                         if upSize > maxSize:
                             try:
@@ -539,7 +540,7 @@ class connector:
                                 self.__errorData(
                                     name, "File exceeds the maximum allowed filesize"
                                 )
-                            except:
+                            except OSError:
                                 # TODO ?
                                 self.__errorData(
                                     name, "File was only partially uploaded"
@@ -609,7 +610,7 @@ class connector:
                         os.rename(f, newDst)
                         self.__rmTmb(f)
                         continue
-                    except:
+                    except OSError:
                         self._response["error"] = "Unable to move files"
                         self._errorData(f, "Unable to move")
                         self.__content(curDir, True)
@@ -933,7 +934,7 @@ class connector:
 
         if oldName[-len(copy) :] == copy:
             newName = oldName
-        elif re.search(r"" + copy + "\s\d+$", oldName):
+        elif re.search(r"" + copy + r"\s\d+$", oldName):
             pos = oldName.rfind(copy) + len(copy)
             newName = oldName[0:pos]
         else:
@@ -965,7 +966,7 @@ class connector:
             try:
                 os.unlink(target)
                 return True
-            except:
+            except OSError:
                 self.__errorData(target, "Remove failed")
                 return False
         else:
@@ -976,7 +977,7 @@ class connector:
             try:
                 os.rmdir(target)
                 return True
-            except:
+            except OSError:
                 self.__errorData(target, "Remove failed")
                 return False
         pass
@@ -999,14 +1000,14 @@ class connector:
                 shutil.copyfile(src, dst)
                 shutil.copymode(src, dst)
                 return True
-            except:
+            except (shutil.SameFileError, OSError):
                 self.__errorData(src, "Unable to copy files")
                 return False
         else:
             try:
                 os.mkdir(dst)
                 shutil.copymode(src, dst)
-            except:
+            except (shutil.SameFileError, OSError):
                 self.__errorData(src, "Unable to copy files")
                 return False
 
@@ -1137,7 +1138,7 @@ class connector:
                             with open(curFile, "w+") as f:
                                 f.write(self._request["content"])
                         self._response["target"] = self.__info(curFile)
-                    except:
+                    except OSError:
                         self._response["error"] = "Unable to write to file"
                 else:
                     self._response["error"] = "Access denied"
@@ -1300,23 +1301,24 @@ class connector:
             if os.path.exists(tmb):
                 try:
                     os.unlink(tmb)
-                except:
+                except OSError:
                     pass
 
     def __cropTuple(self, size):
-        w, h = size
-        if w > h:  # landscape
-            l = int((w - h) / 2)
-            u = 0
-            r = l + h
-            d = h
-            return (l, u, r, d)
-        elif h > w:  # portrait
-            l = 0
-            u = int((h - w) / 2)
-            r = w
-            d = u + w
-            return (l, u, r, d)
+        """Return the crop rectangle, as a (left, upper, right, lower)-tuple."""
+        width, height = size
+        if width > height:  # landscape
+            left = int((width - height) / 2)
+            upper = 0
+            right = left + height
+            lower = height
+            return (left, upper, right, lower)
+        elif height > width:  # portrait
+            left = 0
+            upper = int((height - width) / 2)
+            right = width
+            lower = upper + width
+            return (left, upper, right, lower)
         else:  # cube
             pass
 
@@ -1469,7 +1471,7 @@ class connector:
 
                 self._im = Image
                 self._options["imgLib"] = "PIL"
-            except:
+            except ImportError:
                 self._options["imgLib"] = False
                 self._im = False
 
@@ -1479,10 +1481,12 @@ class connector:
     def __getImgSize(self, path):
         self.__initImgLib()
         if self.__canCreateTmb():
+            from PIL import UnidentifiedImageError
+
             try:
                 im = self._im.open(path)
                 return str(im.size[0]) + "x" + str(im.size[1])
-            except:
+            except (UnidentifiedImageError, FileNotFoundError):
                 pass
 
         return False
@@ -1616,7 +1620,7 @@ class connector:
             out, err = sp.communicate("")
             ret = sp.returncode
             # print cmd, ret, out, err
-        except:
+        except (subprocess.SubprocessError, OSError):
             return False
 
         if ret not in validReturn:
@@ -1636,7 +1640,7 @@ class connector:
                 name = str(name, "utf-8", "replace")
             else:
                 # Python 2 code in this block
-                name = unicode(name, "utf-8", "replace")
+                name = unicode(name, "utf-8", "replace")  # noqa
             self.__debug("invalid encoding", name)
             #  name += ' (invalid encoding)'
         return name
