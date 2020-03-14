@@ -17,7 +17,7 @@ from pyramid.view import view_config
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
 
 
-class FileIterable(object):
+class FileIterable:
     """Represent a file iterable."""
 
     def __init__(self, filename):
@@ -29,7 +29,7 @@ class FileIterable(object):
         return FileIterator(self.filename)
 
 
-class FileIterator(object):
+class FileIterator:
     """Represent a file iterator."""
 
     chunk_size = 32768
