@@ -483,7 +483,7 @@ class Connector:
     def __upload(self):
         """Upload files."""
         try:  # Windows needs stdio set for binary mode.
-            import msvcrt
+            import msvcrt  # pylint: disable=import-outside-toplevel
 
             msvcrt.setmode(0, os.O_BINARY)  # stdin  = 0  # pylint: disable=no-member
             msvcrt.setmode(1, os.O_BINARY)  # stdout = 1  # pylint: disable=no-member
@@ -658,6 +658,7 @@ class Connector:
 
     def __resize(self):
         """Scale image size."""
+        # pylint: disable=import-outside-toplevel
         from PIL import UnidentifiedImageError
 
         if not (
@@ -1286,6 +1287,7 @@ class Connector:
 
     def __tmb(self, path, tmb):
         """Provide internal thumbnail create procedure."""
+        # pylint: disable=import-outside-toplevel
         from PIL import UnidentifiedImageError
 
         try:
@@ -1473,7 +1475,7 @@ class Connector:
     def __init_img_lib(self):
         if not self._options["imgLib"] is False and self._img is None:
             try:
-                from PIL import Image
+                from PIL import Image  # pylint: disable=import-outside-toplevel
 
                 self._img = Image
                 self._options["imgLib"] = "PIL"
@@ -1487,6 +1489,7 @@ class Connector:
     def __get_img_size(self, path):
         self.__init_img_lib()
         if self.__can_create_tmb():
+            # pylint: disable=import-outside-toplevel
             from PIL import UnidentifiedImageError
 
             try:
