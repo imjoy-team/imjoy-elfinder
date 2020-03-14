@@ -133,7 +133,7 @@ def connector(request):
             result = Response(status=status)
             try:
                 del header["Connection"]
-            except Exception:
+            except KeyError:
                 pass
             result.headers = header
             result.charset = "utf8"
