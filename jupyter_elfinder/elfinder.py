@@ -478,8 +478,8 @@ class connector:
         try:  # Windows needs stdio set for binary mode.
             import msvcrt
 
-            msvcrt.setmode(0, os.O_BINARY)  # stdin  = 0
-            msvcrt.setmode(1, os.O_BINARY)  # stdout = 1
+            msvcrt.setmode(0, os.O_BINARY)  # stdin  = 0  # pylint: disable=no-member
+            msvcrt.setmode(1, os.O_BINARY)  # stdout = 1  # pylint: disable=no-member
         except ImportError:
             pass
 
