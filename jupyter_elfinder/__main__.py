@@ -27,7 +27,9 @@ def build_app(opt, **settings):
                 {
                     "Access-Control-Allow-Origin": opt.allow_origin,
                     "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
-                    "Access-Control-Allow-Headers": "Origin, Content-Type, Accept, Authorization, x-requested-with",
+                    "Access-Control-Allow-Headers": (
+                        "Origin, Content-Type, Accept, Authorization, x-requested-with"
+                    ),
                     "Access-Control-Allow-Credentials": "true",
                     "Access-Control-Max-Age": "1728000",
                 }
