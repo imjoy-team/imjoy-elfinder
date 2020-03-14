@@ -495,7 +495,7 @@ class connector:
                 return
 
             upFiles = self._request["upload[]"]
-            print('========upload===========', self._request)
+            print("========upload===========", self._request)
             # invalid format
             # must be dict('filename1': 'filedescriptor1',
             #              'filename2': 'filedescriptor2', ...)

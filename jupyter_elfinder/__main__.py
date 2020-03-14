@@ -4,8 +4,9 @@ import sys
 import argparse
 
 from pyramid.config import Configurator
-from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
+from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER, JUPYTER_ELFINDER_CONNECTOR
 from pyramid.events import NewRequest
+from pyramid.events import BeforeRender
 
 
 def build_app(opt, **settings):
@@ -35,6 +36,13 @@ def build_app(opt, **settings):
 
     # add cors headers
     config.add_subscriber(add_cors_headers_response_callback, NewRequest)
+
+    def add_global_params(event):
+        """Add global parameters."""
+        event["JUPYTER_ELFINDER_BASE_URL"] = settings["jupyter_base_url"]
+
+    config.add_subscriber(add_global_params, BeforeRender)
+
     return config.make_wsgi_app()
 
 

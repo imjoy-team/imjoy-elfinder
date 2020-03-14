@@ -8,7 +8,7 @@
 
 		<!-- Require JS (REQUIRED) -->
 		<script>
-			const serverUrl = 'http://127.0.0.1:8765';
+			const serverUrl = "{{ JUPYTER_ELFINDER_BASE_URL }}";
 			window.ELFINDER_CONFIG = {
 				static_url: serverUrl + '/jupyter_elfinder_static',
 				connector_url: serverUrl + '/jupyter_elfinder/connector',

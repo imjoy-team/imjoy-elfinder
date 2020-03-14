@@ -7,10 +7,10 @@
 (function(){
 	"use strict";
 	window.ELFINDER_CONFIG = window.ELFINDER_CONFIG || {};
-	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || '/jupyter_elfinder/static'
-	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/jupyter_elfinder/connector/'
+	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || '/static'
+	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/connector/'
 	window.ELFINDER_CONFIG['connector_query'] = window.window.ELFINDER_CONFIG['connector_query'] || null
-	window.ELFINDER_CONFIG['file_base_url'] = window.window.ELFINDER_CONFIG['file_base_url'] || '/example-data'
+	window.ELFINDER_CONFIG['file_base_url'] = window.window.ELFINDER_CONFIG['file_base_url'] || ''
 	
 	if(!window.ELFINDER_CONFIG['connector_url'].endsWith('/')) window.ELFINDER_CONFIG['connector_url'] = window.ELFINDER_CONFIG['connector_url'] + '/';
 	var // jQuery and jQueryUI version

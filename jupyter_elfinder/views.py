@@ -13,7 +13,6 @@ from cgi import FieldStorage
 
 from . import elfinder
 from pyramid.view import view_config
-from pyramid.events import subscriber, BeforeRender
 from pyramid.response import Response
 
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
@@ -67,13 +66,6 @@ def make_response(filename):
         hash(filename),
     )
     return res
-
-
-@subscriber(BeforeRender)
-def add_global_params(event):
-    """Add global parameters."""
-    event["JUPYTER_ELFINDER_CONNECTOR"] = JUPYTER_ELFINDER_CONNECTOR
-    event["JUPYTER_ELFINDER_FILEBROWSER"] = JUPYTER_ELFINDER_FILEBROWSER
 
 
 @view_config(
