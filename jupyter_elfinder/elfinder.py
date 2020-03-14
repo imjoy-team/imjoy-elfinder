@@ -6,6 +6,7 @@
 # Further adapted by Wei OUYANG (https://oeway.github.io/)
 # License: 3-clauses BSD license
 """Provide the connector for elFinder File Manager."""
+# pylint: disable=too-many-lines
 
 import base64
 import collections
