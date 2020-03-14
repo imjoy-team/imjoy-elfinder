@@ -100,11 +100,11 @@ def connector(request):
             # handle CGI upload
             elif field == "upload[]":
                 up_files = {}
-                cgiUploadFiles = form.getall(field)
-                for up in cgiUploadFiles:
-                    if isinstance(up, FieldStorage):
+                cgi_upload_files = form.getall(field)
+                for up_ in cgi_upload_files:
+                    if isinstance(up_, FieldStorage):
                         # pack dict(filename: filedescriptor)
-                        up_files[up.filename.encode("utf-8")] = up.file
+                        up_files[up_.filename.encode("utf-8")] = up_.file
                 http_request[field] = up_files
             else:
                 http_request[field] = form.getone(field)
