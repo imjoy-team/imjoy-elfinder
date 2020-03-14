@@ -926,7 +926,6 @@ class connector:
         elif os.path.isdir(path) or lastDot <= 0:
             oldName = curName
             newName = oldName + copy
-            pass
         else:
             ext = curName[lastDot:]
             oldName = curName[0:lastDot]
@@ -982,7 +981,6 @@ class connector:
             except OSError:
                 self.__errorData(target, "Remove failed")
                 return False
-        pass
 
     def __copy(self, src, dst):
         """Provide internal copy procedure."""
