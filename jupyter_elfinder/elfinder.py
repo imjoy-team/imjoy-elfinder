@@ -1300,6 +1300,7 @@ class Connector:
         return total_size
 
     def __fbuffer(self, fil, chunk_size=_options["uploadWriteChunk"]):
+        # pylint: disable=no-self-use
         while True:
             chunk = fil.read(chunk_size)
             if not chunk:
