@@ -277,7 +277,7 @@ class connector:
     def __open(self):
         """Open file or directory."""
         # try to open file
-        if not "tree" in self._request:
+        if "tree" not in self._request and "current" in self._request:
             curDir = self.__findDir(self._request["current"], None)
             curFile = self.__find(self._request["target"], curDir)
 
@@ -334,7 +334,8 @@ class connector:
         # try dir
         else:
             path = self._options["root"]
-            if "target" in self._request and self._request["target"]:
+            initialized = len(self._cachedPath) > 0
+            if initialized and "target" in self._request and self._request["target"]:
                 if "current" in self._request:
                     curDir = self.__findDir(self._request["current"], None)
                     target = self.__findDir(self._request["target"], curDir)
@@ -1124,9 +1125,17 @@ class connector:
             if curFile and curDir:
                 if self.__isAllowed(curFile, "write"):
                     try:
-                        f = open(curFile, "w+")
-                        f.write(self._request["content"])
-                        f.close()
+                        if (
+                            self._request["content"].startswith("data:")
+                            and ";base64," in self._request["content"][:100]
+                        ):
+                            imgdata = self._request["content"].split(";base64,")[1]
+                            imgdata = base64.b64decode(imgdata)
+                            with open(curFile, "wb") as f:
+                                f.write(imgdata)
+                        else:
+                            with open(curFile, "w+") as f:
+                                f.write(self._request["content"])
                         self._response["target"] = self.__info(curFile)
                     except:
                         self._response["error"] = "Unable to write to file"

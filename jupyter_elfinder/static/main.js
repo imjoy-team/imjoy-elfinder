@@ -7,10 +7,10 @@
 (function(){
 	"use strict";
 	window.ELFINDER_CONFIG = window.ELFINDER_CONFIG || {};
-	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || '/jupyter_elfinder/static'
-	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/jupyter_elfinder/connector/'
+	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || '/static'
+	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/connector/'
 	window.ELFINDER_CONFIG['connector_query'] = window.window.ELFINDER_CONFIG['connector_query'] || null
-	window.ELFINDER_CONFIG['file_base_url'] = window.window.ELFINDER_CONFIG['file_base_url'] || '/example-data'
+	window.ELFINDER_CONFIG['file_base_url'] = window.window.ELFINDER_CONFIG['file_base_url'] || ''
 	
 	if(!window.ELFINDER_CONFIG['connector_url'].endsWith('/')) window.ELFINDER_CONFIG['connector_url'] = window.ELFINDER_CONFIG['connector_url'] + '/';
 	var // jQuery and jQueryUI version
@@ -166,6 +166,16 @@
 				file_base_url: window.ELFINDER_CONFIG['file_base_url'],
 				height: '100%',
 				rememberLastDir: false,
+				cssAutoLoad: true,
+				themes : {
+					'dark-slim'     : 'https://johnfort.github.io/elFinder.themes/dark-slim/manifest.json',
+					'material'      : 'https://nao-pon.github.io/elfinder-theme-manifests/material-default.json',
+					'material-gray' : 'https://nao-pon.github.io/elfinder-theme-manifests/material-gray.json',
+					'material-light': 'https://nao-pon.github.io/elfinder-theme-manifests/material-light.json',
+					'bootstrap'     : 'https://nao-pon.github.io/elfinder-theme-manifests/bootstrap.json',
+					'moono'         : 'https://nao-pon.github.io/elfinder-theme-manifests/moono.json',
+					'win10'         : 'https://nao-pon.github.io/elfinder-theme-manifests/win10.json'
+				},
 				// transport : new elFinderSupportVer1(),
 				commandsOptions : {
 					edit : {

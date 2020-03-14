@@ -4,11 +4,11 @@
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-		<title>elFinder 2.1.x source version with PHP connector</title>
+		<title>Jupyter elFinder v{{ JUPYTER_ELFINDER_VERSION }}</title>
 
-		<!-- Require JS (REQUIRED) -->
 		<script>
-			const serverUrl = 'http://127.0.0.1:8765';
+			let serverUrl = "{{ JUPYTER_ELFINDER_BASE_URL }}";
+			if(serverUrl && serverUrl.endsWith('/')) serverUrl.substring(0, serverUrl.length - 1);
 			window.ELFINDER_CONFIG = {
 				static_url: serverUrl + '/jupyter_elfinder_static',
 				connector_url: serverUrl + '/jupyter_elfinder/connector',
@@ -21,10 +21,8 @@
 			script.src = '//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js';
 			document.getElementsByTagName('head')[0].appendChild(script);
 		</script>
-		<!-- Rename "main.default.js" to "main.js" and edit it if you need configure elFInder options or any things -->
-		<!-- <script data-main="/jupyter_elfinder_static/main.js" src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script> -->
-		<!-- <link rel="stylesheet" type="text/css" media="screen" href="http://127.0.0.1:6543/jupyter_elfinder_static/themes/Material/css/theme-light.min.css"> -->
-		<!-- <link rel="stylesheet" type="text/css" media="screen" href="http://127.0.0.1:6543/jupyter_elfinder_static/themes/windows-10/css/theme.css"> -->
+		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ JUPYTER_ELFINDER_BASE_URL }}/jupyter_elfinder_static/themes/Material/css/theme-light.min.css"> -->
+		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ JUPYTER_ELFINDER_BASE_URL }}/jupyter_elfinder_static/themes/windows-10/css/theme.css"> -->
 	</head>
 	<body>
 

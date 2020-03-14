@@ -1,5 +1,2 @@
 #!/bin/bash
-
-python3 example/jupyter_elfinder_example.py > logfile.txt 2>&1 &
-
 exec "$@"
