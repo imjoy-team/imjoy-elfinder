@@ -1292,6 +1292,8 @@ class Connector:
 
     def __tmb(self, path, tmb):
         """Provide internal thumbnail create procedure."""
+        from PIL import UnidentifiedImageError
+
         try:
             img = self._img.open(path).copy()
             size = self._options["tmbSize"], self._options["tmbSize"]
@@ -1300,7 +1302,7 @@ class Connector:
                 img = img.crop(box)
             img.thumbnail(size, self._img.ANTIALIAS)
             img.save(tmb, "PNG")
-        except Exception as exc:
+        except (UnidentifiedImageError, OSError) as exc:
             self.__debug("tmbFailed_" + path, str(exc))
             return False
         return True
