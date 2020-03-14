@@ -8,7 +8,8 @@
 
 		<!-- Require JS (REQUIRED) -->
 		<script>
-			const serverUrl = "{{ JUPYTER_ELFINDER_BASE_URL }}";
+			let serverUrl = "{{ JUPYTER_ELFINDER_BASE_URL }}";
+			if(serverUrl && serverUrl.endsWith('/')) serverUrl.substring(0, serverUrl.length - 1);
 			window.ELFINDER_CONFIG = {
 				static_url: serverUrl + '/jupyter_elfinder_static',
 				connector_url: serverUrl + '/jupyter_elfinder/connector',

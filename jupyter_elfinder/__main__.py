@@ -90,7 +90,7 @@ def main(args=None):
     httpd = make_server(opt.host, opt.port, app)
     print(
         "==========Jupyter elFinder server is running=========\nhttp://{}:{}\n".format(
-            opt.host, opt.port
+            opt.base_url or opt.host, opt.port
         )
     )
     sys.stdout.flush()
