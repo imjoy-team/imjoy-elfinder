@@ -1598,19 +1598,13 @@ def _run_sub_process(cmd, valid_return=None):
     if valid_return is None:
         valid_return = [0]
     try:
-        proc = subprocess.Popen(
-            cmd,
-            shell=False,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE,
+        completed = subprocess.run(
+            cmd, input=b"", check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        proc.communicate("")
-        ret = proc.returncode
     except (subprocess.SubprocessError, OSError):
         return False
 
-    if ret not in valid_return:
+    if completed.returncode not in valid_return:
         return False
 
     return True
