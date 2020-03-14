@@ -64,7 +64,7 @@ def main(args=None):
     parser.add_argument(
         "--allow-origin",
         type=str,
-        default="https://lib.imjoy.io",
+        default="",
         help="The Access-Control-Allow-Origin header, by default it's empty.",
     )
     parser.add_argument(
@@ -115,6 +115,8 @@ def setup_for_jupyter_server_proxy():
             "{port}",
             "--base-url",
             "{base_url}/proxy/{port}",
+            "--allow-origin",
+            "https://lib.imjoy.io",
         ]
     }
 
