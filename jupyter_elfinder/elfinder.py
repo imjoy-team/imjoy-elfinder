@@ -14,6 +14,7 @@ import time
 import shutil
 import hashlib
 import mimetypes
+import subprocess
 import collections
 from datetime import datetime
 import uuid
@@ -116,7 +117,6 @@ class connector:
     _errorData = {}
     _form = {}
     _im = None
-    _sp = None
     _today = 0
     _yesterday = 0
 
@@ -1604,18 +1604,13 @@ class connector:
         pass
 
     def __runSubProcess(self, cmd, validReturn=[0]):
-        if self._sp is None:
-            import subprocess
-
-            self._sp = subprocess
-
         try:
-            sp = self._sp.Popen(
+            sp = subprocess.Popen(
                 cmd,
                 shell=False,
-                stdout=self._sp.PIPE,
-                stderr=self._sp.PIPE,
-                stdin=self._sp.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
             )
             out, err = sp.communicate("")
             ret = sp.returncode
