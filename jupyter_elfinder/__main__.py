@@ -103,7 +103,13 @@ def main(args=None):
 def setup_for_jupyter_server_proxy():
     """Set up jupyter server proxy."""
     return {
-        "command": ["jupyter-elfinder", "--port", "{port}", "--base-url", "{base_url}"]
+        "command": [
+            "jupyter-elfinder",
+            "--port",
+            "{port}",
+            "--base-url",
+            "{base_url}/proxy/{port}",
+        ]
     }
 
 
