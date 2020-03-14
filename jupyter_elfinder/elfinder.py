@@ -681,7 +681,7 @@ class Connector:
         if not self.__is_allowed(cur_file, "write"):
             self._response["error"] = "Access denied"
             return
-        if not self.__mimetype(cur_file).find("image") == 0:
+        if self.__mimetype(cur_file).find("image") != 0:
             self._response["error"] = "File is not an image"
             return
 
@@ -1366,7 +1366,7 @@ class Connector:
         if self._options["imgLib"] and self._options["tmbDir"]:
             if path is not None:
                 mime = self.__mimetype(path)
-                if not mime[0:5] == "image":
+                if mime[0:5] != "image":
                     return False
             return True
         else:
@@ -1414,7 +1414,7 @@ class Connector:
                 return True
 
     def __is_accepted(self, target):
-        if target == "." or target == "..":
+        if target in (".", ".."):
             return False
         if target[0:1] == "." and not self._options["dotFiles"]:
             return False
@@ -1473,7 +1473,7 @@ class Connector:
         self._error_data[path] = msg
 
     def __init_img_lib(self):
-        if not self._options["imgLib"] is False and self._img is None:
+        if not self._options["imgLib"] and self._img is None:
             try:
                 from PIL import Image  # pylint: disable=import-outside-toplevel
 
