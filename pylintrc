@@ -6,3 +6,4 @@ reports=no
 disable=
   bad-continuation,
   locally-disabled,
+  unused-argument,
