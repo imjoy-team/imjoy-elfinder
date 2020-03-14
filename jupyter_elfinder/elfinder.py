@@ -340,25 +340,24 @@ class Connector:
             self._response["file"] = cur_file
             return
         # try dir
-        else:
-            path = self._options["root"]
-            initialized = len(self._cached_path) > 0
-            if initialized and "target" in self._request and self._request["target"]:
-                if "current" in self._request:
-                    cur_dir = self.__find_dir(self._request["current"], None)
-                    target = self.__find_dir(self._request["target"], cur_dir)
-                else:
-                    target = self.__find_dir(self._request["target"], None)
-                if not target:
-                    self._response["error"] = (
-                        "Invalid parameters: " + self._request["target"]
-                    )
-                elif not self.__is_allowed(target, "read"):
-                    self._response["error"] = "Access denied"
-                else:
-                    path = target
+        path = self._options["root"]
+        initialized = len(self._cached_path) > 0
+        if initialized and "target" in self._request and self._request["target"]:
+            if "current" in self._request:
+                cur_dir = self.__find_dir(self._request["current"], None)
+                target = self.__find_dir(self._request["target"], cur_dir)
+            else:
+                target = self.__find_dir(self._request["target"], None)
+            if not target:
+                self._response["error"] = (
+                    "Invalid parameters: " + self._request["target"]
+                )
+            elif not self.__is_allowed(target, "read"):
+                self._response["error"] = "Access denied"
+            else:
+                path = target
 
-            self.__content(path, False)
+        self.__content(path, False)
 
     def __rename(self):
         """Rename file or dir."""
@@ -1001,16 +1000,14 @@ class Connector:
                     if os.path.isdir(dir_path) and not os.path.islink(dir_path):
                         if fhash == self.__hash(dir_path):
                             return dir_path
-                        else:
-                            ret = self.__find_dir(fhash, dir_path, depth + 1)
-                            if ret:
-                                return ret
+                        ret = self.__find_dir(fhash, dir_path, depth + 1)
+                        if ret:
+                            return ret
             except PermissionError:
                 if depth == 0:
                     raise
-                else:
-                    self.__debug("permission error", path)
-                    print("WARNING: permission error: " + path)
+                self.__debug("permission error", path)
+                print("WARNING: permission error: " + path)
 
         return None
 
@@ -1294,8 +1291,7 @@ class Connector:
                 if mime[0:5] != "image":
                     return False
             return True
-        else:
-            return False
+        return False
 
     def __tmb_path(self, path):
         tmb = False
@@ -1326,17 +1322,13 @@ class Connector:
         if self._options["uploadOrder"][0] == "allow":  # ,deny
             if deny is True:
                 return False
-            elif allow is True:
-                return True
-            else:
-                return False
-        else:  # deny,allow
-            if allow is True:
-                return True
-            elif deny is True:
-                return False
-            else:
-                return True
+            return bool(allow)
+        # deny,allow
+        if allow is True:
+            return True
+        if deny is True:
+            return False
+        return True
 
     def __is_accepted(self, target):
         if target in (".", ".."):
@@ -1652,13 +1644,12 @@ def _crop_tuple(size):
         right = left + height
         lower = height
         return (left, upper, right, lower)
-    elif height > width:  # portrait
+    if height > width:  # portrait
         left = 0
         upper = int((height - width) / 2)
         right = width
         lower = upper + width
         return (left, upper, right, lower)
-    else:  # cube
-        pass
 
+    # cube
     return False
