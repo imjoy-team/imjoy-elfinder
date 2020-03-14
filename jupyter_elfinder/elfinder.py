@@ -384,7 +384,7 @@ class Connector:
             cur_name, "rm"
         ):
             self._response["error"] = "Access denied"
-        elif not self.__check_name(name):
+        elif not _check_name(name):
             self._response["error"] = "Invalid name"
         elif os.path.exists(new_name):
             self._response["error"] = (
@@ -416,7 +416,7 @@ class Connector:
             self._response["error"] = "Invalid parameters"
         elif not self.__is_allowed(path, "write"):
             self._response["error"] = "Access denied"
-        elif not self.__check_name(name):
+        elif not _check_name(name):
             self._response["error"] = "Invalid name"
         elif os.path.exists(new_dir):
             self._response["error"] = (
@@ -446,7 +446,7 @@ class Connector:
             self._response["error"] = "Invalid parameters"
         elif not self.__is_allowed(cur_dir, "write"):
             self._response["error"] = "Access denied"
-        elif not self.__check_name(name):
+        elif not _check_name(name):
             self._response["error"] = "Invalid name"
         elif os.path.exists(new_file):
             self._response["error"] = "File or folder with the same name already exists"
@@ -522,7 +522,7 @@ class Connector:
                         name = name.decode("utf-8")
                     total += 1
                     name = os.path.basename(name)
-                    if not self.__check_name(name):
+                    if not _check_name(name):
                         self.__set_error_data(name, "Invalid name")
                     else:
                         name = os.path.join(cur_dir, name)
@@ -975,13 +975,6 @@ class Connector:
                     self.__set_error_data(new_src, "Unable to copy files")
                     return False
 
-        return True
-
-    def __check_name(self, name):
-        """Check for valid file/dir name."""
-        pattern = r"[\/\\\:\<\>]"
-        if re.search(pattern, name):
-            return False
         return True
 
     def __find_dir(self, fhash, path, depth=0):
@@ -1606,6 +1599,14 @@ class Connector:
             self.__debug("invalid encoding", name)
             #  name += ' (invalid encoding)'
         return name
+
+
+def _check_name(name):
+    """Check for valid file/dir name."""
+    pattern = r"[\/\\\:\<\>]"
+    if re.search(pattern, name):
+        return False
+    return True
 
 
 def _unique_name(path, copy=" copy"):
