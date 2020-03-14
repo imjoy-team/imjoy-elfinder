@@ -8,7 +8,12 @@
 
 		<script>
 			let serverUrl = "{{ JUPYTER_ELFINDER_BASE_URL }}";
-			if(serverUrl && serverUrl.endsWith('/')) serverUrl.substring(0, serverUrl.length - 1);
+			if(!serverUrl.startsWith('http')){
+				if(serverUrl.startsWith('//')) serverUrl = serverUrl.slice(1)
+				var origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
+				serverUrl = origin + (serverUrl.startsWith('/') ? serverUrl : ("/" + serverUrl))
+			}
+			if(serverUrl && serverUrl.endsWith('/')) serverUrl = serverUrl.substring(0, serverUrl.length - 1);
 			window.ELFINDER_CONFIG = {
 				static_url: serverUrl + '/jupyter_elfinder_static',
 				connector_url: serverUrl + '/jupyter_elfinder/connector',
