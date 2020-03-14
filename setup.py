@@ -1,16 +1,22 @@
-import os
+"""Set up the jupyter_elfinder package."""
 import json
+import os
+
 from setuptools import find_packages, setup
 
-here = os.path.dirname(os.path.realpath(__file__))
+DESCRIPTION = (
+    "A pyramid connector elfinder, specifically for working with jupyter server proxy."
+)
+HERE = os.path.dirname(os.path.realpath(__file__))
 
 
 def read(name):
-    with open(os.path.join(here, name)) as f:
-        return f.read()
+    """Read file name contents and return it."""
+    with open(os.path.join(HERE, name)) as fil:
+        return fil.read()
 
 
-with open(os.path.join(here, "jupyter_elfinder", "VERSION"), "r") as f:
+with open(os.path.join(HERE, "jupyter_elfinder", "VERSION"), "r") as f:
     VERSION = json.load(f)["version"]
 
 setup(
@@ -22,7 +28,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     license="MIT",
-    description="A pyramid connector elfinder, specifically for working with jupyter server proxy.",
+    description=DESCRIPTION,
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     install_requires=read("requirements.txt"),
