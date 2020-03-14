@@ -124,8 +124,8 @@ def connector(request):
                     "Content-Disposition"
                 ]
                 return result
-            else:
-                result = Response("Unable to find: {}".format(request.path_info))
+
+            result = Response("Unable to find: {}".format(request.path_info))
         # output json
         else:
             # get connector output and print it out
