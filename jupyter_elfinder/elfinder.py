@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Connector for elFinder File Manager
 # Original author Troex Nevelin <troex@fury.scancode.ru>
