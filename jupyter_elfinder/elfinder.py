@@ -367,8 +367,7 @@ class Connector:
             target = self._request["target"]
             cur_dir = self.__find_dir(current, None)
             cur_name = self.__find(target, cur_dir)
-            if isinstance(name, bytes):
-                name = name.decode("utf-8")
+            name = self.__check_utf8(name)
             new_name = os.path.join(cur_dir, name)
 
         if not cur_dir or not cur_name:
@@ -401,8 +400,7 @@ class Connector:
             name = self._request["name"]
             current = self._request["current"]
             path = self.__find_dir(current, None)
-            if isinstance(name, bytes):
-                name = name.decode("utf-8")
+            name = self.__check_utf8(name)
             new_dir = os.path.join(path, name)
 
         if not path:
@@ -431,8 +429,7 @@ class Connector:
             name = self._request["name"]
             current = self._request["current"]
             cur_dir = self.__find_dir(current, None)
-            if isinstance(name, bytes):
-                name = name.decode("utf-8")
+            name = self.__check_utf8(name)
             new_file = os.path.join(cur_dir, name)
 
         if not cur_dir or not name:
@@ -511,8 +508,7 @@ class Connector:
             max_size = self._options["uploadMaxSize"] * 1024 * 1024
             for name, data in up_files.items():
                 if name:
-                    if isinstance(name, bytes):
-                        name = name.decode("utf-8")
+                    name = self.__check_utf8(name)
                     total += 1
                     name = os.path.basename(name)
                     if not _check_name(name):
