@@ -1151,7 +1151,7 @@ class Connector:
 
         cur_cwd = os.getcwd()
         os.chdir(cur_dir)
-        self.__run_sub_process(cmd)
+        _run_sub_process(cmd)
         os.chdir(cur_cwd)
 
         if os.path.exists(archive_path):
@@ -1191,7 +1191,7 @@ class Connector:
 
         cur_cwd = os.getcwd()
         os.chdir(cur_dir)
-        ret = self.__run_sub_process(cmd)
+        ret = _run_sub_process(cmd)
         os.chdir(cur_cwd)
 
         if ret:
@@ -1445,16 +1445,16 @@ class Connector:
             self._options["archivers"] = archive
             return
 
-        tar = self.__run_sub_process(["tar", "--version"])
-        gzip = self.__run_sub_process(["gzip", "--version"])
-        bzip2 = self.__run_sub_process(["bzip2", "--version"])
-        zipc = self.__run_sub_process(["zip", "--version"])
-        unzip = self.__run_sub_process(["unzip", "--help"])
-        rar = self.__run_sub_process(["rar", "--version"], valid_return=[0, 7])
-        unrar = self.__run_sub_process(["unrar"], valid_return=[0, 7])
-        p7z = self.__run_sub_process(["7z", "--help"])
-        p7za = self.__run_sub_process(["7za", "--help"])
-        p7zr = self.__run_sub_process(["7zr", "--help"])
+        tar = _run_sub_process(["tar", "--version"])
+        gzip = _run_sub_process(["gzip", "--version"])
+        bzip2 = _run_sub_process(["bzip2", "--version"])
+        zipc = _run_sub_process(["zip", "--version"])
+        unzip = _run_sub_process(["unzip", "--help"])
+        rar = _run_sub_process(["rar", "--version"], valid_return=[0, 7])
+        unrar = _run_sub_process(["unrar"], valid_return=[0, 7])
+        p7z = _run_sub_process(["7z", "--help"])
+        p7za = _run_sub_process(["7za", "--help"])
+        p7zr = _run_sub_process(["7zr", "--help"])
 
         # tar = False
         # tar = gzip = bzip2 = zipc = unzip = rar = unrar = False
@@ -1543,27 +1543,6 @@ class Connector:
 
         self._options["archivers"] = archive
 
-    def __run_sub_process(self, cmd, valid_return=None):
-        if valid_return is None:
-            valid_return = [0]
-        try:
-            proc = subprocess.Popen(
-                cmd,
-                shell=False,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.PIPE,
-            )
-            proc.communicate("")
-            ret = proc.returncode
-        except (subprocess.SubprocessError, OSError):
-            return False
-
-        if ret not in valid_return:
-            return False
-
-        return True
-
     def __check_utf8(self, name):
         # pylint: disable=fixme
         # FIXME: Not sure what is intended here. The logic does not fit.
@@ -1638,6 +1617,28 @@ def _unique_name(path, copy=" copy"):
         # if idx >= 1000: break # possible loop
 
     return None
+
+
+def _run_sub_process(cmd, valid_return=None):
+    if valid_return is None:
+        valid_return = [0]
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            shell=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
+        proc.communicate("")
+        ret = proc.returncode
+    except (subprocess.SubprocessError, OSError):
+        return False
+
+    if ret not in valid_return:
+        return False
+
+    return True
 
 
 def _crop_tuple(size):
