@@ -7,15 +7,14 @@
 # Distributed under terms of the MIT license.
 
 """Provide views for elfinder."""
-import os
 import json
+import os
 from cgi import FieldStorage
 
-from . import elfinder
-from pyramid.view import view_config
 from pyramid.response import Response
+from pyramid.view import view_config
 
-from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
+from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
 
 
 class FileIterable(object):
