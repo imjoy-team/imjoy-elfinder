@@ -7,10 +7,12 @@
 # Distributed under terms of the MIT license.
 
 """Provide routes of elfinder."""
+from pyramid.config import Configurator
+
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
 
 
-def includeme(config):
+def includeme(config: Configurator) -> None:
     """Include routes in frontend."""
     config.add_route(JUPYTER_ELFINDER_CONNECTOR, "/jupyter_elfinder/connector/")
     config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/jupyter_elfinder/filebrowser/")
