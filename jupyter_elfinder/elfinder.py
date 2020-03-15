@@ -728,30 +728,37 @@ class Connector:
         else:
             self._response["error"] = "Invalid parameters"
 
-    def __duplicate(self):
+    def __duplicate(self) -> None:
         """Create copy of files/directories."""
-        if "current" in self._request and "targets[]" in self._request:
-            cur_dir = self.__find_dir(self._request["current"], None)
-            if not cur_dir:
-                self._response["error"] = "Invalid parameters"
-                return
-            added = []
-            for target in self._request["targets[]"]:
-                target = self.__find(target, cur_dir)
-                if not self.__is_allowed(target, "read") or not self.__is_allowed(
-                    cur_dir, "write"
-                ):
-                    self._response["error"] = "Access denied"
-                    return
-                new_name = _unique_name(target)
-                if not self.__copy(target, new_name):
-                    self._response["error"] = "Unable to create file copy"
-                    return
-                added.append(self.__info(new_name))
-            self._response["added"] = added
-        else:
+        current = self._request.get("current")
+        targets = self._request.get("targets[]")
+        if not current or not targets:
             self._response["error"] = "Invalid parameters"
-        return
+            return
+
+        cur_dir = self.__find_dir(self._request["current"], None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
+        added = []
+        for target in targets:
+            target = self.__find(target, cur_dir)
+            if not target:
+                self._response["error"] = "File not found"
+                return
+            if not self.__is_allowed(target, "read") or not self.__is_allowed(
+                cur_dir, "write"
+            ):
+                self._response["error"] = "Access denied"
+                return
+            new_name = _unique_name(target)
+            if not self.__copy(target, new_name):
+                self._response["error"] = "Unable to create file copy"
+                return
+            added.append(self.__info(new_name))
+        self._response["added"] = added
 
     def __resize(self):
         """Scale image size."""
