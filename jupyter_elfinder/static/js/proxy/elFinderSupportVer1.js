@@ -422,7 +422,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			};
 		
 		if (data.params) {
-			opts.api      = 2.1;
+			opts.api      = 1;
 			opts.url      = data.params.url;
 			opts.archivers = {
 				create  : data.params.archives || [],
