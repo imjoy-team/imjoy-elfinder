@@ -1416,7 +1416,7 @@ class Connector:
                         result.append(self.__info(file_path))
         self._response["files"] = result
 
-    def __mimetype(self, path):
+    def __mimetype(self, path: str) -> str:
         """Detect mimetype of file."""
         mime = mimetypes.guess_type(path)[0] or "unknown"
         ext = path[path.rfind(".") + 1 :]
