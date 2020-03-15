@@ -902,28 +902,23 @@ class Connector:
 
         stat = os.lstat(path)
         stat_date = datetime.fromtimestamp(stat.st_mtime)
-
-        fdate = ""
-        if stat.st_mtime >= self._today:
-            fdate = "Today " + stat_date.strftime("%H:%M")
-        elif stat.st_mtime >= self._yesterday and stat.st_mtime < self._today:
-            fdate = "Yesterday " + stat_date.strftime("%H:%M")
-        else:
-            fdate = stat_date.strftime("%d %b %Y %H:%M")
+        readable = self.__is_allowed(path, "read")
+        writable = self.__is_allowed(path, "write")
+        deletable = self.__is_allowed(path, "rm")
 
         info = {
             "name": self.__check_utf8(os.path.basename(path)),
             "hash": self.__hash(path),
             "mime": "directory" if filetype == "dir" else self.__mimetype(path),
-            "date": fdate,
-            "size": self.__dir_size(path) if filetype == "dir" else stat.st_size,
-            "read": self.__is_allowed(path, "read"),
-            "write": self.__is_allowed(path, "write"),
-            "rm": self.__is_allowed(path, "rm"),
+            "read": readable,
+            "write": writable,
+            "locked": not readable and not writable and not deletable,
+            "ts": stat.st_mtime,
         }
 
         if filetype == "dir":
             info["volumeid"] = self.volumeid
+            info["dirs"] = any(next(os.walk("."))[1])
 
         if path != self._options["root"]:
             info["phash"] = self.__hash(os.path.dirname(path))
@@ -945,12 +940,18 @@ class Connector:
                 basename = os.path.basename(self._options["root"])
 
             info["link"] = self.__hash(lpath)
-            info["linkTo"] = os.path.join(basename, lpath[len(self._options["root"]) :])
+            info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
             info["read"] = info["read"] and self.__is_allowed(lpath, "read")
             info["write"] = info["write"] and self.__is_allowed(lpath, "write")
-            info["rm"] = self.__is_allowed(lpath, "rm")
+            info["locked"] = (
+                not info["write"]
+                and not info["read"]
+                and not self.__is_allowed(lpath, "rm")
+            )
+            info["size"] = 0
         else:
             lpath = False
+            info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
             if self._options["fileURL"] and info["read"] is True:
@@ -979,6 +980,11 @@ class Connector:
                         info["tmb"] = tmb_url
                     else:
                         self._response["tmb"] = True
+                        if info["mime"].startswith("image/"):
+                            info["tmb"] = 1
+
+        if info["mime"] == "application/x-empty" or info["mime"] == "inode/x-empty":
+            info["mime"] = "text/plain"
 
         return info
 
