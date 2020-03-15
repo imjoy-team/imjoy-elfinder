@@ -1031,7 +1031,7 @@ class Connector:
                     tree["dirs"].append(self.__tree(dir_path, depth + 1))
         return tree
 
-    def __remove(self, target):
+    def __remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
         if not self.__is_allowed(target, "rm"):
             self.__set_error_data(target, "Access denied")
