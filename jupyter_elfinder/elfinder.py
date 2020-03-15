@@ -47,6 +47,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "tmbSize": int,
         "fileURL": bool,
         "uploadMaxSize": int,
+        "uploadMaxConn": int,
         "uploadWriteChunk": int,
         "uploadAllow": List[str],
         "uploadDeny": List[str],
