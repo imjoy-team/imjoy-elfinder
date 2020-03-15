@@ -47,6 +47,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "tmbSize": int,
         "fileURL": bool,
         "uploadMaxSize": int,
+        "uploadMaxConn": int,
         "uploadWriteChunk": int,
         "uploadAllow": List[str],
         "uploadDeny": List[str],
@@ -299,20 +300,22 @@ class Connector:
                 self._response["uplMaxSize"] = (
                     str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
                 )
+                thumbs_url = (
+                    self.__path2url(self._options["tmbDir"])
+                    if self._options["tmbDir"]
+                    else None
+                )
                 self._response["options"] = {
                     "path": self._response["cwd"]["rel"],
                     "separator": os.path.sep,
                     "url": url,
                     "disabled": self._options["disabled"],
-                    "tmbURL": self.__path2url(self._options["tmbDir"])
-                    if self._options["tmbDir"]
-                    else None,
+                    "tmbURL": thumbs_url,
                     "dotFiles": self._options["dotFiles"],
                     "archives": {
                         "create": list(self._options["archivers"]["create"].keys()),
                         "extract": list(self._options["archivers"]["extract"].keys()),
                     },
-                    "url": url,
                     "copyOverwrite": True,
                     "uploadMaxSize": self._options["uploadMaxSize"],
                     "uploadOverwrite": True,
@@ -900,7 +903,6 @@ class Connector:
             filetype = "link"
 
         stat = os.lstat(path)
-        stat_date = datetime.fromtimestamp(stat.st_mtime)
         readable = self.__is_allowed(path, "read")
         writable = self.__is_allowed(path, "write")
         deletable = self.__is_allowed(path, "rm")
@@ -1312,14 +1314,19 @@ class Connector:
             return
 
         if "target" in self._request:
-            search_path = self.__find_dir(self._request["target"], None)
+            target = self._request["target"]
+            if not target:
+                self._response["error"] = "Invalid parameters"
+                return
+            search_path = self.__find_dir(target, None)
         else:
             search_path = self._options["root"]
 
-        if "mimes" in self._request:
-            mimes = self._request["mimes"]
-        else:
-            mimes = None
+        if not search_path:
+            self._response["error"] = "File not found"
+            return
+
+        mimes = self._request.get("mimes")
 
         result = []
         query = self._request["q"]
