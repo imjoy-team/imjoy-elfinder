@@ -432,7 +432,7 @@ class Connector:
                 path = target
         self.__content(path, False)
 
-    def __rename(self):
+    def __rename(self) -> None:
         """Rename file or dir."""
         current = name = target = None
         cur_dir = cur_name = new_name = None
