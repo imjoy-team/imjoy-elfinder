@@ -902,7 +902,6 @@ class Connector:
             filetype = "link"
 
         stat = os.lstat(path)
-        stat_date = datetime.fromtimestamp(stat.st_mtime)
         readable = self.__is_allowed(path, "read")
         writable = self.__is_allowed(path, "write")
         deletable = self.__is_allowed(path, "rm")
