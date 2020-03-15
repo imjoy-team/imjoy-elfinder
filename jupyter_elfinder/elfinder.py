@@ -299,20 +299,22 @@ class Connector:
                 self._response["uplMaxSize"] = (
                     str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
                 )
+                thumbs_url = (
+                    self.__path2url(self._options["tmbDir"])
+                    if self._options["tmbDir"]
+                    else None
+                )
                 self._response["options"] = {
                     "path": self._response["cwd"]["rel"],
                     "separator": os.path.sep,
                     "url": url,
                     "disabled": self._options["disabled"],
-                    "tmbURL": self.__path2url(self._options["tmbDir"])
-                    if self._options["tmbDir"]
-                    else None,
+                    "tmbURL": thumbs_url,
                     "dotFiles": self._options["dotFiles"],
                     "archives": {
                         "create": list(self._options["archivers"]["create"].keys()),
                         "extract": list(self._options["archivers"]["extract"].keys()),
                     },
-                    "url": url,
                     "copyOverwrite": True,
                     "uploadMaxSize": self._options["uploadMaxSize"],
                     "uploadOverwrite": True,
@@ -1323,7 +1325,7 @@ class Connector:
 
         result = []
         query = self._request["q"]
-        for root, dir, files in os.walk(search_path):
+        for root, _, files in os.walk(search_path):
             if query in files:
                 file_path = os.path.join(root, query)
                 if mimes is None:
