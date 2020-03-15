@@ -653,7 +653,7 @@ class Connector:
                 else:
                     self._response["warning"] = "Some files was not uploaded"
 
-    def __paste(self):
+    def __paste(self) -> None:
         """Copy or cut files/directories."""
         if (
             "current" in self._request
