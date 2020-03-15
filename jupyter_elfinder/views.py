@@ -78,12 +78,12 @@ def connector(request):
     root = request.registry.settings["jupyter_elfinder_root"]
     options = {
         "root": os.path.abspath(root),
-        "URL": request.registry.settings["jupyter_elfinder_url"],
-        "uploadMaxSize": 1024 * 1024,  # in MB
+        "url": request.registry.settings["jupyter_elfinder_url"],
+        "upload_max_size": 1024 * 1024,  # in MB
         "debug": True,
-        "tmbDir": request.registry.settings["jupyter_elfinder_thumbnail_dir"],
+        "tmb_dir": request.registry.settings["jupyter_elfinder_thumbnail_dir"],
     }
-    elf = elfinder.Connector(options)
+    elf = elfinder.Connector(**options)
 
     # fetch only needed GET/POST parameters
     http_request = {}
@@ -102,7 +102,7 @@ def connector(request):
                 up_files = {}
                 cgi_upload_files = form.getall(field)
                 for up_ in cgi_upload_files:
-                    if isinstance(up_, FieldStorage):
+                    if isinstance(up_, FieldStorage) and up_.filename:
                         # pack dict(filename: filedescriptor)
                         up_files[up_.filename.encode("utf-8")] = up_.file
                 http_request[field] = up_files
