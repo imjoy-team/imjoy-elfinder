@@ -637,22 +637,27 @@ class Connector:
 
     def __duplicate(self):
         """Create copy of files/directories."""
-        if "current" in self._request and "target" in self._request:
+        if "current" in self._request and "targets[]" in self._request:
             cur_dir = self.__find_dir(self._request["current"], None)
-            target = self.__find(self._request["target"], cur_dir)
-            if not cur_dir or not target:
+            if not cur_dir:
                 self._response["error"] = "Invalid parameters"
                 return
-            if not self.__is_allowed(target, "read") or not self.__is_allowed(
-                cur_dir, "write"
-            ):
-                self._response["error"] = "Access denied"
-            new_name = _unique_name(target)
-            if not self.__copy(target, new_name):
-                self._response["error"] = "Unable to create file copy"
-                return
-
-        self.__content(cur_dir, True)
+            added = []
+            for target in self._request["targets[]"]:
+                target = self.__find(target, cur_dir)
+                if not self.__is_allowed(target, "read") or not self.__is_allowed(
+                    cur_dir, "write"
+                ):
+                    self._response["error"] = "Access denied"
+                    return
+                new_name = _unique_name(target)
+                if not self.__copy(target, new_name):
+                    self._response["error"] = "Unable to create file copy"
+                    return
+                added.append(self.__info(new_name))
+            self._response["added"] = added
+        else:
+            self._response["error"] = "Invalid parameters"
         return
 
     def __resize(self):

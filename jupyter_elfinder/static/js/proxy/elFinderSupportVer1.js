@@ -101,23 +101,8 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				opts.data.current = fm.file(opts.data.target).phash;
 				break;
 			case 'duplicate':
-				_opts = $.extend(true, {}, opts);
-
-				$.each(opts.data.targets, function(i, hash) {
-					$.ajax(Object.assign(_opts, {data : {cmd : 'duplicate', target : hash, current : fm.file(hash).phash}}))
-						.fail(function(error) {
-							fm.error(fm.res('error', 'connect'));
-						})
-						.done(function(data) {
-							data = self.normalize('duplicate', data);
-							if (data.error) {
-								fm.error(data.error);
-							} else if (data.added) {
-								fm.trigger('add', {added : data.added});
-							}
-						});
-				});
-				return dfrd.resolve({});
+				opts.data.current = fm.cwd().hash;
+				break
 				
 			case 'mkdir':
 			case 'mkfile':
@@ -159,7 +144,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				dfrd.reject(error);
 			})
 			.done(function(raw) {
-				if(cmd === 'rm' || cmd === 'paste' || cmd === 'rename' || cmd === 'search'){
+				if(cmd === 'rm' || cmd === 'paste' || cmd === 'rename' || cmd === 'search' || cmd === 'duplicate'){
 					dfrd.resolve(raw);
 					return;
 				}
