@@ -1192,7 +1192,7 @@ class Connector:
                     "ascii"
                 )
 
-    def __dim(self):
+    def __dim(self) -> None:
         current = self._request.get("current")
         target = self._request.get("target")
         if not current or not target:
