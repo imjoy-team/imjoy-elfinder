@@ -996,13 +996,15 @@ class Connector:
 
         return info
 
-    def __tree(self, path, depth=0):
+    def __tree(self, path: str, depth: int = 0) -> Dict[str, Any]:
         """Return directory tree starting from path."""
 
         if not os.path.isdir(path):
-            return ""
+            # pylint: disable=fixme
+            # TODO: Is it ok to return an empty dict instead of empty string
+            return {}
         if os.path.islink(path):
-            return ""
+            return {}
 
         if path == self._options["root"] and self._options["rootAlias"]:
             name = self._options["rootAlias"]
