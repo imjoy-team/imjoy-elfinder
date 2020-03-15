@@ -46,7 +46,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				return {error : ['errResponse', 'errDataNotJSON']};
 			}
 			
-			return data; //self.normalize('upload', data);
+			return data;
 		};
 	};
 	
