@@ -1047,8 +1047,6 @@ class Connector:
         """Return directory tree starting from path."""
 
         if not os.path.isdir(path):
-            # pylint: disable=fixme
-            # TODO: Is it ok to return an empty dict instead of empty string
             return {}
         if os.path.islink(path):
             return {}
