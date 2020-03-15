@@ -11,6 +11,7 @@ import json
 import os
 from cgi import FieldStorage
 
+from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
 
@@ -70,7 +71,7 @@ def make_response(filename: str) -> Response:
     route_name=JUPYTER_ELFINDER_CONNECTOR,
     permission=JUPYTER_ELFINDER_CONNECTOR,
 )
-def connector(request):
+def connector(request: Request) -> Response:
     """Handle the connector request."""
     # init connector and pass options
     root = request.registry.settings["jupyter_elfinder_root"]
@@ -144,6 +145,6 @@ def connector(request):
     permission=JUPYTER_ELFINDER_FILEBROWSER,
     renderer="templates/elfinder/filebrowser.jinja2",
 )
-def index(request):
+def index(request: Request) -> dict:
     """Handle the index request."""
     return {}
