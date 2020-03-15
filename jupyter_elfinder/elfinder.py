@@ -302,11 +302,12 @@ class Connector:
                 self._response["uplMaxSize"] = (
                     str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
                 )
-                thumbs_url = (
-                    self.__path2url(self._options["tmbDir"])
-                    if self._options["tmbDir"]
-                    else None
-                )
+                thumbs_dir = self._options["tmbDir"]
+                if thumbs_dir:
+                    thumbs_url = self.__path2url(thumbs_dir)
+                else:
+                    thumbs_dir = None
+
                 self._response["options"] = {
                     "path": self._response["cwd"]["rel"],
                     "separator": os.path.sep,
@@ -1588,7 +1589,7 @@ class Connector:
         self._cached_path[hash_code] = path
         return hash_code
 
-    def __path2url(self, path):
+    def __path2url(self, path: str) -> str:
         cur_dir = path
         length = len(self._options["root"])
         if self._options["URL"].startswith("http"):
