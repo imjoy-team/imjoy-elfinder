@@ -920,7 +920,7 @@ class Connector:
 
         if filetype == "dir":
             info["volumeid"] = self.volumeid
-            info["dirs"] = any(next(os.walk("."))[1])
+            info["dirs"] = any(next(os.walk(path))[1])
 
         if path != self._options["root"]:
             info["phash"] = self.__hash(os.path.dirname(path))
