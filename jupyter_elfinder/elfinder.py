@@ -512,7 +512,7 @@ class Connector:
                     total += 1
                     name = os.path.basename(name)
                     if not _check_name(name):
-                        self.__set_error_data(name, "Invalid name")
+                        self.__set_error_data(name, "Invalid name: " + name)
                     else:
                         name = os.path.join(cur_dir, name)
                         try:
@@ -1529,7 +1529,7 @@ class Connector:
         if isinstance(name, str):
             return name
         try:
-            name.decode("utf-8")
+            name = name.decode("utf-8")
         except UnicodeDecodeError:
             name = str(name, "utf-8", "replace")
             self.__debug("invalid encoding", name)
