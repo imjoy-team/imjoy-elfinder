@@ -848,7 +848,7 @@ class Connector:
         if tree:
             self._response["tree"] = self.__tree(self._options["root"])
 
-    def __cwd(self, path):
+    def __cwd(self, path: str) -> None:
         """Get Current Working Directory."""
         name = os.path.basename(path)
         if path == self._options["root"]:
