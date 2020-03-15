@@ -2668,7 +2668,7 @@ var elFinder = function(elm, opts, bootCallback) {
 					self.trigger(cmd + 'fail', response);
 					errMsg = (typeof error === 'object')? error.error : error;
 					if (errMsg) {
-						if(response.debug && response.debug.exception){
+						if(response && response.debug && response.debug.exception){
 							console.error(response.debug.exception)
 						}
 						deffail ? self.error(errMsg) : self.debug('error', self.i18n(errMsg));

@@ -109,6 +109,7 @@ def main(args=None):
 
 def setup_for_jupyter_server_proxy():
     """Set up jupyter server proxy."""
+
     return {
         "command": [
             "jupyter-elfinder",
@@ -118,7 +119,14 @@ def setup_for_jupyter_server_proxy():
             "{base_url}/elfinder",
             "--allow-origin",
             "https://lib.imjoy.io",
-        ]
+        ],
+        "environment": {},
+        "launcher_entry": {
+            "title": "Jupyter elFinder",
+            "icon_path": os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "static", "img", "icon.png"
+            ),
+        },
     }
 
 
