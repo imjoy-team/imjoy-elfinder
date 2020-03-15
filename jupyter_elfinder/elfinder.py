@@ -22,7 +22,7 @@ import uuid
 from datetime import datetime
 from collections.abc import Callable
 from types import ModuleType
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Literal, TypedDict
 
@@ -248,7 +248,9 @@ class Connector:
 
         self._response["debug"] = {}
 
-    def run(self, http_request=None):
+    def run(
+        self, http_request: Optional[Dict[str, Any]] = None
+    ) -> Tuple[int, Dict[str, str], Dict[str, Any]]:
         """Run main function."""
         if http_request is None:
             http_request = {}
