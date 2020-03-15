@@ -1055,7 +1055,7 @@ class Connector:
                 self.__set_error_data(target, "Remove failed")
                 return False
 
-    def __copy(self, src, dst):
+    def __copy(self, src: str, dst: str) -> bool:
         """Provide internal copy procedure."""
         dst_dir = os.path.dirname(dst)
         if not self.__is_allowed(src, "read"):
