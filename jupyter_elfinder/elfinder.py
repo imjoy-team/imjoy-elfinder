@@ -1440,7 +1440,7 @@ class Connector:
         # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
         return mime
 
-    def __tmb(self, path, tmb):
+    def __tmb(self, path: str, tmb: str) -> bool:
         """Provide internal thumbnail create procedure."""
         # pylint: disable=import-outside-toplevel
         from PIL import UnidentifiedImageError
