@@ -276,7 +276,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			return {
 					cwd     : files[phash] || this.normalizeFile(data.cwd),
 					files   : $.map(files, function(f) { return f; }),
-					options : self.normalizeOptions(data),
+					options : data.options,
 					init    : !!data.params,
 					debug   : data.debug
 				};
@@ -396,30 +396,5 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			info.resize = file.resize;
 		}
 		return info;
-	};
-	
-	this.normalizeOptions = function(data) {
-		var opts = {
-				path          : data.cwd && data.cwd.rel,
-				disabled      : $.merge((data.disabled || []), [ 'search', 'netmount', 'zipdl' ]),
-				tmb           : !!data.tmb,
-				copyOverwrite : true
-			};
-		
-		if (data.params) {
-			opts.api      = 1;
-			opts.url      = data.params.url;
-			opts.archivers = {
-				create  : data.params.archives || [],
-				extract : data.params.extract || []
-			};
-		}
-		
-		if (opts.path.indexOf('/') !== -1) {
-			opts.separator = '/';
-		} else if (opts.path.indexOf('\\') !== -1) {
-			opts.separator = '\\';
-		}
-		return opts;
 	};
 };

@@ -79,7 +79,7 @@ def connector(request):
     options = {
         "root": os.path.abspath(root),
         "URL": request.registry.settings["jupyter_elfinder_url"],
-        "uploadMaxSize": 1024 * 1024,  # in MB
+        "uploadMaxSize": 100 * 1024 * 1024 * 1024,  # 100GB
         "debug": True,
         "tmbDir": request.registry.settings["jupyter_elfinder_thumbnail_dir"],
     }

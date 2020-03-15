@@ -51,7 +51,7 @@ class Connector:
         "tmbAtOnce": 5,
         "tmbSize": 48,
         "fileURL": True,
-        "uploadMaxSize": 256,
+        "uploadMaxSize": 256 * 1024 * 1024,
         "uploadMaxConn": -1,
         "uploadWriteChunk": 8192,
         "uploadAllow": [],
@@ -63,7 +63,7 @@ class Connector:
         "perms": {},
         "archiveMimes": {},
         "archivers": {"create": {}, "extract": {}},
-        "disabled": [],
+        "disabled": ["netmount", "zipdl"],
         "debug": False,
     }
 
@@ -241,17 +241,42 @@ class Connector:
 
             if "init" in self._request:
                 self.__check_archivers()
-                self._response["disabled"] = self._options["disabled"]
                 if not self._options["fileURL"]:
                     url = ""
                 else:
                     url = self._options["URL"]
-                self._response["params"] = {
-                    "dotFiles": self._options["dotFiles"],
-                    "uplMaxSize": str(self._options["uploadMaxSize"]) + "M",
-                    "archives": list(self._options["archivers"]["create"].keys()),
-                    "extract": list(self._options["archivers"]["extract"].keys()),
+
+                self._response["api"] = 2.1
+                self._response["netDrivers"] = []
+                self._response["uplMaxFile"] = 1000
+                self._response["uplMaxSize"] = (
+                    str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
+                )
+                self._response["options"] = {
+                    "path": self._response["cwd"]["rel"],
+                    "separator": os.path.sep,
                     "url": url,
+                    "disabled": self._options["disabled"],
+                    "tmbURL": self.__path2url(self._options["tmbDir"])
+                    if self._options["tmbDir"]
+                    else None,
+                    "dotFiles": self._options["dotFiles"],
+                    "archives": {
+                        "create": list(self._options["archivers"]["create"].keys()),
+                        "extract": list(self._options["archivers"]["extract"].keys()),
+                    },
+                    "url": url,
+                    "copyOverwrite": True,
+                    "uploadMaxSize": self._options["uploadMaxSize"],
+                    "uploadOverwrite": True,
+                    "uploadMaxConn": 3,
+                    "uploadMime": {"allow": ["all"], "deny": [], "firstOrder": "deny"},
+                    "i18nFolderName": True,
+                    "dispInlineRegex": "^(?:image|text/plain$)",
+                    "jpgQuality": 100,
+                    "syncChkAsTs": 1,
+                    "syncMinMs": 30000,
+                    "uiCmdMap": {},
                 }
 
         if self._error_data:
@@ -512,7 +537,7 @@ class Connector:
             self._response["added"] = []
             total = 0
             up_size = 0
-            max_size = self._options["uploadMaxSize"] * 1024 * 1024
+            max_size = self._options["uploadMaxSize"]
             for name, data in up_files.items():
                 if name:
                     name = self.__check_utf8(name)
