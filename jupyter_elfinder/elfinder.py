@@ -1497,7 +1497,7 @@ class Connector:
                 break
             yield chunk
 
-    def __can_create_tmb(self, path=None):
+    def __can_create_tmb(self, path: Optional[str] = None) -> bool:
         if self._options["imgLib"] and self._options["tmbDir"]:
             if path is not None:
                 mime = self.__mimetype(path)
