@@ -1262,7 +1262,7 @@ class Connector:
         except OSError:
             self._response["error"] = "Unable to write to file"
 
-    def __archive(self):
+    def __archive(self) -> None:
         """Compress files/directories to archive."""
         self.__check_archivers()
 
@@ -1324,8 +1324,6 @@ class Connector:
             self._response["select"] = [self.__hash(archive_path)]
         else:
             self._response["error"] = "Unable to create archive"
-
-        return
 
     def __extract(self):
         """Uncompress archive."""
