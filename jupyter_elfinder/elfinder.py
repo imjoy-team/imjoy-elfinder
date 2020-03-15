@@ -21,6 +21,8 @@ import urllib.parse
 import uuid
 from datetime import datetime
 from collections.abc import Callable
+from types import ModuleType
+from typing import Any, Dict, Optional, Union, cast
 
 
 def exception_to_string(excp):
@@ -114,15 +116,14 @@ class Connector:
     }
 
     _time = 0
-    _request = {}
-    _response = {}
-    _error_data = {}
-    _form = {}
-    _img = None
+    _request = {}  # type: Dict[str, Any]
+    _response = {}  # type: Dict[str, Any]
+    _error_data = {}  # type: Dict[str, str]
+    _img = None  # type: Optional[ModuleType]
     _today = 0
     _yesterday = 0
 
-    _cached_path = {}
+    _cached_path = {}  # type: Dict[str, str]
 
     # public variables
     http_allowed_parameters = (
@@ -144,8 +145,8 @@ class Connector:
     )
     # return variables
     http_status_code = 0
-    http_header = {}
-    http_response = None
+    http_header = {}  # type: Dict[str, str]
+    http_response = None  # type: Union[str, Dict[str, str]]
 
     def __init__(self, opts):
         """Set up connector instance."""
@@ -188,7 +189,6 @@ class Connector:
         self._request = {}
         self._response = {}
         self._error_data = {}
-        self._form = {}
 
         self._time = time.time()
         dt_time = datetime.fromtimestamp(self._time)
@@ -966,7 +966,9 @@ class Connector:
 
         return True
 
-    def __find_dir(self, fhash, path, depth=0):
+    def __find_dir(
+        self, fhash: str, path: Optional[str] = None, depth: int = 0
+    ) -> Optional[str]:
         """Find directory by hash."""
         fhash = str(fhash)
         # try to get find it in the cache
@@ -975,7 +977,7 @@ class Connector:
             return cached_path
 
         if not path:
-            path = self._options["root"]
+            path = cast(str, self._options["root"])
             if fhash == self.__hash(path):
                 return path
 
@@ -983,7 +985,7 @@ class Connector:
             return None
 
         # limit the folder depth
-        if depth < self._options["maxFolderDepth"]:
+        if depth < cast(int, self._options["maxFolderDepth"]):
             try:
                 for directory in os.listdir(path):
                     dir_path = os.path.join(path, directory)
@@ -1375,7 +1377,7 @@ class Connector:
         url = urllib.parse.quote(url, "/:~")
         return url
 
-    def __set_error_data(self, path, msg):
+    def __set_error_data(self, path: str, msg: str) -> None:
         """Collect error/warning messages."""
         self._error_data[path] = msg
 
@@ -1590,8 +1592,6 @@ def _unique_name(path, copy=" copy"):
         if not os.path.exists(new_path):
             return new_path
         # if idx >= 1000: break # possible loop
-
-    return None
 
 
 def _run_sub_process(cmd, valid_return=None):
