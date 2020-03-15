@@ -1477,7 +1477,7 @@ class Connector:
                 return target
         return None
 
-    def __dir_size(self, path):
+    def __dir_size(self, path: str) -> int:
         total_size = 0
         if self._options["dirSize"]:
             for dirpath, _, filenames in os.walk(path):
