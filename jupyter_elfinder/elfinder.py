@@ -408,7 +408,7 @@ class Connector:
                 return
 
             if os.path.islink(cur_file):
-                cur_file = self.__readlink(cur_file)
+                cur_file = self.__read_link(cur_file)
                 if not cur_file or os.path.isdir(cur_file):
                     self.http_status_code = 404
                     self.http_header["Content-type"] = "text/html"
@@ -979,7 +979,7 @@ class Connector:
             info["phash"] = self.__hash(os.path.dirname(path))
 
         if filetype == "link":
-            lpath = self.__readlink(path)
+            lpath = self.__read_link(path)
             if not lpath:
                 info["mime"] = "symlink-broken"
                 return info
@@ -1489,7 +1489,7 @@ class Connector:
                 except OSError:
                     pass
 
-    def __readlink(self, path: str) -> Optional[str]:
+    def __read_link(self, path: str) -> Optional[str]:
         """Read link and return real path if not broken."""
         target = os.readlink(path)
         if not target[0] == "/":
