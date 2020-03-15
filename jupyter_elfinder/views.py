@@ -102,7 +102,7 @@ def connector(request):
                 up_files = {}
                 cgi_upload_files = form.getall(field)
                 for up_ in cgi_upload_files:
-                    if isinstance(up_, FieldStorage):
+                    if isinstance(up_, FieldStorage) and up_.filename:
                         # pack dict(filename: filedescriptor)
                         up_files[up_.filename.encode("utf-8")] = up_.file
                 http_request[field] = up_files
