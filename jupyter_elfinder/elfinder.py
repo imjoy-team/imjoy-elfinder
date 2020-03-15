@@ -1822,7 +1822,7 @@ def _unique_name(path: str, copy: str = " copy") -> str:
         # if idx >= 1000: break # possible loop
 
 
-def _run_sub_process(cmd, valid_return=None):
+def _run_sub_process(cmd: List[str], valid_return: Optional[List[int]] = None) -> bool:
     if valid_return is None:
         valid_return = [0]
     try:
