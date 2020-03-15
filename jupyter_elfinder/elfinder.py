@@ -1551,7 +1551,7 @@ class Connector:
             return False
         return True
 
-    def __is_allowed(self, path, access):
+    def __is_allowed(self, path: str, access: str) -> bool:
         if not os.path.exists(path):
             return False
 
