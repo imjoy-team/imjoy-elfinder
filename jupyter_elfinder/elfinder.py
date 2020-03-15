@@ -1755,15 +1755,15 @@ class Connector:
 
         self._options["archivers"] = archive
 
-    def __check_utf8(self, name):
+    def __check_utf8(self, name: Union[str, bytes]) -> str:
         if isinstance(name, str):
             return name
         try:
-            name = name.decode("utf-8")
+            str_name = name.decode("utf-8")
         except UnicodeDecodeError:
-            name = str(name, "utf-8", "replace")
-            self.__debug("invalid encoding", name)
-        return name
+            str_name = str(name, "utf-8", "replace")
+            self.__debug("invalid encoding", str_name)
+        return str_name
 
 
 def _check_name(name: str) -> bool:
