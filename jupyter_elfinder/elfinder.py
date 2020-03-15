@@ -1641,7 +1641,7 @@ class Connector:
         if self._options["debug"]:
             self._response["debug"].update({key: val})
 
-    def __check_archivers(self):
+    def __check_archivers(self) -> None:
         # import subprocess
         # proc = subprocess.Popen(['tar', '--version'], shell = False,
         # stdout = subprocess.PIPE, stderr=subprocess.PIPE)
