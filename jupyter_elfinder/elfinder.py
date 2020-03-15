@@ -1035,12 +1035,14 @@ class Connector:
             name = self._options["rootAlias"]
         else:
             name = os.path.basename(path)
+
+        dirs = []  # type: List[Dict[str, Any]]
         tree = {
             "hash": self.__hash(path),
             "name": self.__check_utf8(name),
             "read": self.__is_allowed(path, "read"),
             "write": self.__is_allowed(path, "write"),
-            "dirs": [],
+            "dirs": dirs,
             "volumeid": self.volumeid,
         }
 
@@ -1053,7 +1055,7 @@ class Connector:
                     and not os.path.islink(dir_path)
                     and self.__is_accepted(directory)
                 ):
-                    tree["dirs"].append(self.__tree(dir_path, depth + 1))
+                    dirs.append(self.__tree(dir_path, depth + 1))
         return tree
 
     def __remove(self, target: str) -> bool:
