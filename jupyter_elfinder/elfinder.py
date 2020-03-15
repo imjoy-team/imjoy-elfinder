@@ -1378,7 +1378,7 @@ class Connector:
         self.http_status_code = 200
         self.http_header["Connection"] = "close"
 
-    def __search(self):
+    def __search(self) -> None:
         if "q" not in self._request:
             self._response["error"] = "Invalid parameters"
             return
