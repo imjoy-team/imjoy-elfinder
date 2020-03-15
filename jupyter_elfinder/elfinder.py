@@ -22,7 +22,46 @@ import uuid
 from datetime import datetime
 from collections.abc import Callable
 from types import ModuleType
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union
+
+from typing_extensions import Literal, TypedDict
+
+Archivers = TypedDict(  # pylint: disable=invalid-name
+    "Archivers",
+    {"create": Dict[str, Dict[str, str]], "extract": Dict[str, Dict[str, str]]},
+)
+Defaults = TypedDict(  # pylint: disable=invalid-name
+    "Defaults", {"read": bool, "write": bool, "rm": bool}
+)
+Options = TypedDict(  # pylint: disable=invalid-name
+    "Options",
+    {
+        "root": str,
+        "URL": str,
+        "maxFolderDepth": int,
+        "rootAlias": str,
+        "dotFiles": bool,
+        "dirSize": bool,
+        "fileMode": Literal[420],
+        "dirMode": Literal[493],
+        "imgLib": str,
+        "tmbDir": Optional[str],
+        "tmbAtOnce": int,
+        "tmbSize": int,
+        "fileURL": bool,
+        "uploadMaxSize": int,
+        "uploadWriteChunk": int,
+        "uploadAllow": List[str],
+        "uploadDeny": List[str],
+        "uploadOrder": List[Literal["deny", "allow"]],
+        "defaults": Defaults,
+        "perms": Dict[str, Dict[str, bool]],
+        "archiveMimes": List[str],
+        "archivers": Archivers,
+        "disabled": List[str],
+        "debug": bool,
+    },
+)
 
 
 def exception_to_string(excp):
@@ -37,7 +76,7 @@ def exception_to_string(excp):
 class Connector:
     """Connector for elFinder."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, too-many-arguments
 
     _options = {
         "root": "",
@@ -62,11 +101,11 @@ class Connector:
         # 'aclRole': 'user', # TODO  # pylint: disable=fixme
         "defaults": {"read": True, "write": True, "rm": True},
         "perms": {},
-        "archiveMimes": {},
+        "archiveMimes": [],
         "archivers": {"create": {}, "extract": {}},
         "disabled": [],
         "debug": False,
-    }
+    }  # type: Options
 
     _commands = {
         "open": "__open",
@@ -148,10 +187,16 @@ class Connector:
     http_header = {}  # type: Dict[str, str]
     http_response = None  # type: Union[str, Dict[str, str]]
 
-    def __init__(self, opts):
+    def __init__(
+        self, root: str, url: str, upload_max_size: int, debug: bool, tmb_dir: str
+    ) -> None:
         """Set up connector instance."""
-        for opt in opts:
-            self._options[opt] = opts.get(opt)
+        self._options["root"] = root
+        self._options["URL"] = url
+        self._options["uploadMaxSize"] = upload_max_size
+        self._options["debug"] = debug
+        self._options["tmbDir"] = tmb_dir
+
         self._response["debug"] = {}
         self._options["URL"] = self.__check_utf8(self._options["URL"])
         self._options["URL"] = self._options["URL"].rstrip("/")
@@ -167,8 +212,11 @@ class Connector:
             if cmd in self._commands:
                 del self._commands[cmd]
 
-        if self._options["tmbDir"]:
-            thumbs_dir = os.path.join(self._options["root"], self._options["tmbDir"])
+        thumbs_dir = self._options["tmbDir"]
+
+        if thumbs_dir:
+            assert thumbs_dir  # typing
+            thumbs_dir = os.path.join(self._options["root"], thumbs_dir)
             try:
                 if not os.path.exists(thumbs_dir):
                     os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
@@ -977,7 +1025,7 @@ class Connector:
             return cached_path
 
         if not path:
-            path = cast(str, self._options["root"])
+            path = self._options["root"]
             if fhash == self.__hash(path):
                 return path
 
@@ -985,7 +1033,7 @@ class Connector:
             return None
 
         # limit the folder depth
-        if depth < cast(int, self._options["maxFolderDepth"]):
+        if depth < self._options["maxFolderDepth"]:
             try:
                 for directory in os.listdir(path):
                     dir_path = os.path.join(path, directory)
@@ -1349,10 +1397,10 @@ class Connector:
             return False
 
         path = path[len(os.path.normpath(self._options["root"])) :]
-        for ppath in self._options["perms"]:
+        for ppath, permissions in self._options["perms"].items():
             regex = r"" + ppath
-            if re.search(regex, path) and access in self._options["perms"][ppath]:
-                return self._options["perms"][ppath][access]
+            if re.search(regex, path) and access in permissions:
+                return permissions[access]
 
         return self._options["defaults"][access]
 
