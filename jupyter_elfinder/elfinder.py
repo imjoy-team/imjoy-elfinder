@@ -1578,7 +1578,7 @@ class Connector:
 
         return self._options["defaults"][access]
 
-    def __hash(self, path):
+    def __hash(self, path: str) -> str:
         """Hash of the path."""
         hash_obj = hashlib.md5()
         hash_obj.update(path.encode("utf-8"))
