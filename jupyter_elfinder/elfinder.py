@@ -571,7 +571,7 @@ class Connector:
 
         self._response["removed"] = removed
 
-    def __upload(self):
+    def __upload(self) -> None:
         """Upload files."""
         try:  # Windows needs stdio set for binary mode.
             import msvcrt  # pylint: disable=import-outside-toplevel
@@ -652,8 +652,6 @@ class Connector:
                     self._response["warning"] = "Unable to upload files"
                 else:
                     self._response["warning"] = "Some files was not uploaded"
-
-            return
 
     def __paste(self):
         """Copy or cut files/directories."""
