@@ -1774,7 +1774,7 @@ def _check_name(name: str) -> bool:
     return True
 
 
-def _unique_name(path, copy=" copy"):
+def _unique_name(path: str, copy: str = " copy") -> str:
     """Generate unique name for file copied file."""
     cur_dir = os.path.dirname(path)
     cur_name = os.path.basename(path)
