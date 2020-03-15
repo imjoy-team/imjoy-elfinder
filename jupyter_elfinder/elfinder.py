@@ -840,7 +840,7 @@ class Connector:
                 self._response["tmb"] = True
                 break
 
-    def __content(self, path, tree):
+    def __content(self, path: str, tree: bool) -> None:
         """CWD + CDC + maybe(TREE)."""
         self.__cwd(path)
         self.__cdc(path)
