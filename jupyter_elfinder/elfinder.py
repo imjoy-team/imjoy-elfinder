@@ -1160,7 +1160,7 @@ class Connector:
 
         return None
 
-    def __read(self):
+    def __read(self) -> None:
         current = self._request.get("current")
         target = self._request.get("target")
         if not current or not target:
