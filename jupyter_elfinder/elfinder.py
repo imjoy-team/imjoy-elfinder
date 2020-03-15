@@ -390,7 +390,6 @@ class Connector:
                 os.rename(cur_name, new_name)
                 self._response["added"] = [self.__info(new_name)]
                 self._response["removed"] = [target]
-                # self.__content(cur_dir, os.path.isdir(new_name))
             except OSError:
                 self._response["error"] = "Unable to rename file"
 
@@ -479,8 +478,6 @@ class Connector:
                 return
 
         self._response["removed"] = removed
-        # TODO if error_data not empty return error  # pylint: disable=fixme
-        # self.__content(cur_dir, False)
 
     def __upload(self):
         """Upload files."""
@@ -561,7 +558,6 @@ class Connector:
                 else:
                     self._response["warning"] = "Some files was not uploaded"
 
-            # self.__content(cur_dir, False)
             return
 
     def __paste(self):
@@ -608,7 +604,6 @@ class Connector:
                     if not self.__is_allowed(fil, "rm"):
                         self._response["error"] = "Move failed"
                         self.__set_error_data(fil, "Access denied")
-                        # self.__content(cur_dir, True)
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
@@ -616,7 +611,6 @@ class Connector:
                         self.__set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
-                        # self.__content(cur_dir, True)
                         return
                     try:
                         os.rename(fil, new_dst)
@@ -638,7 +632,6 @@ class Connector:
                     continue
             self._response["added"] = added
             self._response["removed"] = removed
-            # self.__content(cur_dir, True)
         else:
             self._response["error"] = "Invalid parameters"
 
