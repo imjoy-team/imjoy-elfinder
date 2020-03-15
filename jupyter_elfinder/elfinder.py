@@ -760,7 +760,7 @@ class Connector:
             added.append(self.__info(new_name))
         self._response["added"] = added
 
-    def __resize(self):
+    def __resize(self) -> None:
         """Scale image size."""
         if not (
             "current" in self._request
@@ -807,7 +807,6 @@ class Connector:
 
         self._response["select"] = [self.__hash(cur_file)]
         self.__content(cur_dir, False)
-        return
 
     def __thumbnails(self):
         """Create previews for images."""
