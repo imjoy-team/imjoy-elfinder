@@ -899,7 +899,7 @@ class Connector:
         dirs.extend(files)
         self._response["cdc"] = dirs
 
-    def __info(self, path):
+    def __info(self, path: str) -> Dict[str, Union[str, bool]]:
         # mime = ''
         filetype = "file"
         if os.path.isfile(path):
