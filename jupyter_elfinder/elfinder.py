@@ -1373,7 +1373,7 @@ class Connector:
 
         self._response["error"] = "Unable to extract files from archive"
 
-    def __ping(self):
+    def __ping(self) -> None:
         """Workaround for Safari."""
         self.http_status_code = 200
         self.http_header["Connection"] = "close"
