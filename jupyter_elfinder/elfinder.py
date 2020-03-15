@@ -1376,7 +1376,7 @@ class Connector:
                 img = img.crop(box)
             img.thumbnail(size, self._img.ANTIALIAS)  # type: ignore
             img.save(tmb, "PNG")
-        except (UnidentifiedImageError, OSError) as exc:
+        except (UnidentifiedImageError, OSError, ValueError) as exc:
             self.__debug("tmbFailed_" + path, str(exc))
             return False
         return True
@@ -1550,9 +1550,9 @@ class Connector:
             return False
         if self.__can_create_tmb():
             # pylint: disable=import-outside-toplevel
-            try:
-                from PIL import UnidentifiedImageError
+            from PIL import UnidentifiedImageError
 
+            try:
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
             except (UnidentifiedImageError, FileNotFoundError):
