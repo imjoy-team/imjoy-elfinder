@@ -510,7 +510,7 @@ class Connector:
             except OSError:
                 self._response["error"] = "Unable to create folder"
 
-    def __mkfile(self):
+    def __mkfile(self) -> None:
         """Create new file."""
         name = current = None
         cur_dir = new_file = None
