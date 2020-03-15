@@ -361,9 +361,16 @@ class Connector:
         # try to open file
         if "tree" not in self._request and "current" in self._request:
             cur_dir = self.__find_dir(self._request["current"], None)
+
+            if not cur_dir:
+                self.http_status_code = 404
+                self.http_header["Content-type"] = "text/html"
+                self.http_response = "File not found"
+                return
+
             cur_file = self.__find(self._request["target"], cur_dir)
 
-            if not cur_dir or not cur_file or os.path.isdir(cur_file):
+            if not cur_file or os.path.isdir(cur_file):
                 self.http_status_code = 404
                 self.http_header["Content-type"] = "text/html"
                 self.http_response = "File not found"
@@ -434,21 +441,23 @@ class Connector:
 
     def __rename(self) -> None:
         """Rename file or dir."""
-        current = name = target = None
-        cur_dir = cur_name = new_name = None
-        if (
-            "name" in self._request
-            and "current" in self._request
-            and "target" in self._request
-        ):
-            name = self._request["name"]
-            current = self._request["current"]
-            target = self._request["target"]
-            cur_dir = self.__find_dir(current, None)
-            cur_name = self.__find(target, cur_dir)
-            name = self.__check_utf8(name)
+        name = self._request.get("name")
+        current = self._request.get("current")
+        target = self._request.get("target")
 
-        if not cur_dir or not cur_name:
+        if not (name and current and target):
+            self._response["error"] = "Invalid parameters"
+            return
+
+        cur_dir = self.__find_dir(current, None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
+        cur_name = self.__find(target, cur_dir)
+
+        if not cur_name:
             self._response["error"] = "File not found"
             return
         if not self.__is_allowed(cur_dir, "write") and self.__is_allowed(
@@ -456,6 +465,9 @@ class Connector:
         ):
             self._response["error"] = "Access denied"
             return
+
+        name = self.__check_utf8(name)
+
         if not name or not _check_name(name):
             self._response["error"] = "Invalid name"
             return
@@ -466,14 +478,15 @@ class Connector:
             self._response["error"] = (
                 "File or folder with the same name" + "already exists"
             )
-        else:
-            self.__rm_tmb(cur_name)
-            try:
-                os.rename(cur_name, new_name)
-                self._response["added"] = [self.__info(new_name)]
-                self._response["removed"] = [target]
-            except OSError:
-                self._response["error"] = "Unable to rename file"
+            return
+
+        self.__rm_tmb(cur_name)
+        try:
+            os.rename(cur_name, new_name)
+            self._response["added"] = [self.__info(new_name)]
+            self._response["removed"] = [target]
+        except OSError:
+            self._response["error"] = "Unable to rename file"
 
     def __mkdir(self) -> None:
         """Create new directory."""
@@ -762,23 +775,33 @@ class Connector:
 
     def __resize(self) -> None:
         """Scale image size."""
-        if not (
-            "current" in self._request
-            and "target" in self._request
-            and "width" in self._request
-            and "height" in self._request
-        ):
+        current = self._request.get("current")
+        target = self._request.get("target")
+        width = self._request.get("width")
+        height = self._request.get("height")
+        if not (current and target and width is not None and height is not None):
             self._response["error"] = "Invalid parameters"
             return
 
-        width = int(self._request["width"])
-        height = int(self._request["height"])
-        cur_dir = self.__find_dir(self._request["current"], None)
-        cur_file = self.__find(self._request["target"], cur_dir)
+        width = int(width)
+        height = int(height)
 
-        if width < 1 or height < 1 or not cur_dir or not cur_file:
+        if width < 1 or height < 1:
             self._response["error"] = "Invalid parameters"
             return
+
+        cur_dir = self.__find_dir(current, None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
+        cur_file = self.__find(target, cur_dir)
+
+        if not cur_file:
+            self._response["error"] = "File not found"
+            return
+
         if not self.__is_allowed(cur_file, "write"):
             self._response["error"] = "Access denied"
             return
@@ -811,9 +834,10 @@ class Connector:
     def __thumbnails(self) -> None:
         """Create previews for images."""
         thumbs_dir = self._options["tmbDir"]
-        if "current" not in self._request:
+        current = self._request.get("current")
+        if not current:
             return
-        cur_dir = self.__find_dir(self._request["current"], None)
+        cur_dir = self.__find_dir(current, None)
         if not cur_dir or cur_dir == thumbs_dir:
             return
 
@@ -1120,7 +1144,7 @@ class Connector:
                     return folder_path
         return None
 
-    def __find(self, fhash, parent):
+    def __find(self, fhash: str, parent: str) -> Optional[str]:
         """Find file/dir by hash."""
         fhash = str(fhash)
         if os.path.isdir(parent):
@@ -1137,77 +1161,106 @@ class Connector:
         return None
 
     def __read(self):
-        if "current" in self._request and "target" in self._request:
-            cur_dir = self.__find_dir(self._request["current"], None)
-            cur_file = self.__find(self._request["target"], cur_dir)
-            if cur_dir and cur_file:
-                if self.__is_allowed(cur_file, "read"):
-                    try:
-                        with open(cur_file, "r") as text_fil:
-                            self._response["content"] = text_fil.read()
-                    except UnicodeDecodeError:
-                        with open(cur_file, "rb") as bin_fil:
-                            self._response["content"] = base64.b64encode(
-                                bin_fil.read()
-                            ).decode("ascii")
-
-                else:
-                    self._response["error"] = "Access denied"
-                return
-
-        self._response["error"] = "Invalid parameters"
-        return
-
-    def __dim(self):
-        if "current" in self._request and "target" in self._request:
-            cur_dir = self.__find_dir(self._request["current"], None)
-            cur_file = self.__find(self._request["target"], cur_dir)
-            if cur_file and cur_dir:
-                if self.__is_allowed(cur_file, "read"):
-                    dim = self.__get_img_size(cur_file)
-                    if dim:
-                        self._response["dim"] = str(dim)
-                    else:
-                        self._response["dim"] = None
-                else:
-                    self._response["error"] = "Access denied"
+        current = self._request.get("current")
+        target = self._request.get("target")
+        if not current or not target:
+            self._response["error"] = "Invalid parameters"
             return
 
-        self._response["error"] = "Invalid parameters"
-        return
+        cur_dir = self.__find_dir(self._request["current"], None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
+        cur_file = self.__find(self._request["target"], cur_dir)
+
+        if not cur_file:
+            self._response["error"] = "File not found"
+            return
+
+        if not self.__is_allowed(cur_file, "read"):
+            self._response["error"] = "Access denied"
+            return
+
+        try:
+            with open(cur_file, "r") as text_fil:
+                self._response["content"] = text_fil.read()
+        except UnicodeDecodeError:
+            with open(cur_file, "rb") as bin_fil:
+                self._response["content"] = base64.b64encode(bin_fil.read()).decode(
+                    "ascii"
+                )
+
+    def __dim(self):
+        current = self._request.get("current")
+        target = self._request.get("target")
+        if not current or not target:
+            self._response["error"] = "Invalid parameters"
+            return
+
+        cur_dir = self.__find_dir(current, None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
+        cur_file = self.__find(target, cur_dir)
+
+        if not cur_file:
+            self._response["error"] = "File not found"
+            return
+
+        if not self.__is_allowed(cur_file, "read"):
+            self._response["error"] = "Access denied"
+            return
+
+        dim = self.__get_img_size(cur_file)
+        if dim:
+            self._response["dim"] = str(dim)
+        else:
+            self._response["dim"] = None
 
     def __edit(self):
         """Save content in file."""
-        if (
-            "current" in self._request
-            and "target" in self._request
-            and "content" in self._request
-        ):
-            cur_dir = self.__find_dir(self._request["current"], None)
-            cur_file = self.__find(self._request["target"], cur_dir)
-            if cur_file and cur_dir:
-                if self.__is_allowed(cur_file, "write"):
-                    try:
-                        if (
-                            self._request["content"].startswith("data:")
-                            and ";base64," in self._request["content"][:100]
-                        ):
-                            img_data = self._request["content"].split(";base64,")[1]
-                            img_data = base64.b64decode(img_data)
-                            with open(cur_file, "wb") as bin_fil:
-                                bin_fil.write(img_data)
-                        else:
-                            with open(cur_file, "w+") as text_fil:
-                                text_fil.write(self._request["content"])
-                        self._response["target"] = self.__info(cur_file)
-                    except OSError:
-                        self._response["error"] = "Unable to write to file"
-                else:
-                    self._response["error"] = "Access denied"
+        current = self._request.get("current")
+        target = self._request.get("target")
+        content = self._request.get("content")
+        if not current or not target or not content:
+            self._response["error"] = "Invalid parameters"
             return
 
-        self._response["error"] = "Invalid parameters"
-        return
+        cur_dir = self.__find_dir(self._request["current"], None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
+        cur_file = self.__find(self._request["target"], cur_dir)
+
+        if not cur_file:
+            self._response["error"] = "File not found"
+            return
+
+        if not self.__is_allowed(cur_file, "write"):
+            self._response["error"] = "Access denied"
+            return
+
+        try:
+            if (
+                self._request["content"].startswith("data:")
+                and ";base64," in self._request["content"][:100]
+            ):
+                img_data = self._request["content"].split(";base64,")[1]
+                img_data = base64.b64decode(img_data)
+                with open(cur_file, "wb") as bin_fil:
+                    bin_fil.write(img_data)
+            else:
+                with open(cur_file, "w+") as text_fil:
+                    text_fil.write(self._request["content"])
+            self._response["target"] = self.__info(cur_file)
+        except OSError:
+            self._response["error"] = "Unable to write to file"
 
     def __archive(self):
         """Compress files/directories to archive."""
@@ -1276,19 +1329,29 @@ class Connector:
 
     def __extract(self):
         """Uncompress archive."""
-        if "current" not in self._request or "target" not in self._request:
+        current = self._request.get("current")
+        target = self._request.get("target")
+        if not current or not target:
             self._response["error"] = "Invalid parameters"
             return
 
         cur_dir = self.__find_dir(self._request["current"], None)
+
+        if not cur_dir:
+            self._response["error"] = "File not found"
+            return
+
         cur_file = self.__find(self._request["target"], cur_dir)
+
+        if not cur_file:
+            self._response["error"] = "File not found"
+            return
+
         mime = self.__mimetype(cur_file)
         self.__check_archivers()
 
         if (
             mime not in self._options["archivers"]["extract"]
-            or not cur_dir
-            or not cur_file
             or not self.__is_allowed(cur_dir, "write")
         ):
             self._response["error"] = "Invalid parameters"
