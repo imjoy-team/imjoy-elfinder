@@ -1622,9 +1622,9 @@ class Connector:
         self.__debug("imgLib", self._options["imgLib"])
         return self._options["imgLib"]
 
-    def __get_img_size(self, path):
+    def __get_img_size(self, path: str) -> Optional[str]:
         if not self.__init_img_lib():
-            return False
+            return None
         if self.__can_create_tmb():
             # pylint: disable=import-outside-toplevel
             from PIL import UnidentifiedImageError
@@ -1635,7 +1635,7 @@ class Connector:
             except (UnidentifiedImageError, FileNotFoundError):
                 print("WARNING: unidentified image or file not found error: " + path)
 
-        return False
+        return None
 
     def __debug(self, key, val):
         if self._options["debug"]:
