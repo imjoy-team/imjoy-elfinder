@@ -423,7 +423,6 @@ class Connector:
                 self._response["error"] = "Access denied"
             else:
                 path = target
-
         self.__content(path, False)
 
     def __rename(self):
@@ -807,8 +806,7 @@ class Connector:
         if not cur_dir or cur_dir == thumbs_dir:
             return
 
-        self.__init_img_lib()
-        if not self.__can_create_tmb():
+        if not self.__init_img_lib() or not self.__can_create_tmb():
             return
         assert thumbs_dir  # typing
         if self._options["tmbAtOnce"] > 0:
@@ -1530,30 +1528,35 @@ class Connector:
         self._error_data[path] = msg
 
     def __init_img_lib(self):
-        if not self._options["imgLib"] and self._img is None:
+        if not self._options["imgLib"] or self._options["imgLib"] == "auto":
+            self._options["imgLib"] = "PIL"
+
+        if self._options["imgLib"] == "PIL":
             try:
                 from PIL import Image  # pylint: disable=import-outside-toplevel
 
                 self._img = Image
-                self._options["imgLib"] = "PIL"
             except ImportError:
-                self._options["imgLib"] = None
                 self._img = None
+                self._options["imgLib"] = None
+        else:
+            raise NotImplementedError
 
         self.__debug("imgLib", self._options["imgLib"])
         return self._options["imgLib"]
 
     def __get_img_size(self, path):
-        self.__init_img_lib()
+        if not self.__init_img_lib():
+            return False
         if self.__can_create_tmb():
             # pylint: disable=import-outside-toplevel
-            from PIL import UnidentifiedImageError
-
             try:
+                from PIL import UnidentifiedImageError
+
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
             except (UnidentifiedImageError, FileNotFoundError):
-                pass
+                print("WARNING: unidentified image or file not found error: " + path)
 
         return False
 

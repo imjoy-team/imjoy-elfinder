@@ -103,7 +103,6 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			case 'duplicate':
 				opts.data.current = fm.cwd().hash;
 				break
-				
 			case 'mkdir':
 			case 'mkfile':
 				opts.data.current = opts.data.target;
