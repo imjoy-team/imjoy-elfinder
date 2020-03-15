@@ -52,6 +52,7 @@ class Connector:
         "tmbSize": 48,
         "fileURL": True,
         "uploadMaxSize": 256,
+        "uploadMaxConn": -1,
         "uploadWriteChunk": 8192,
         "uploadAllow": [],
         "uploadDeny": [],
@@ -386,8 +387,9 @@ class Connector:
             self.__rm_tmb(cur_name)
             try:
                 os.rename(cur_name, new_name)
-                self._response["select"] = [self.__hash(new_name)]
-                self.__content(cur_dir, os.path.isdir(new_name))
+                self._response["added"] = [self.__info(new_name)]
+                self._response["removed"] = [target]
+                # self.__content(cur_dir, os.path.isdir(new_name))
             except OSError:
                 self._response["error"] = "Unable to rename file"
 
@@ -464,13 +466,20 @@ class Connector:
         if not isinstance(rm_list, list):
             rm_list = [rm_list]
 
+        removed = []
         for rm_hash in rm_list:
             rm_file = self.__find(rm_hash, cur_dir)
             if not rm_file:
                 continue
-            self.__remove(rm_file)
+            if self.__remove(rm_file):
+                removed.append(rm_hash)
+            else:
+                self._response["error"] = "Failed to remove: " + rm_file
+                return
+        
+        self._response["removed"] = removed 
         # TODO if error_data not empty return error  # pylint: disable=fixme
-        self.__content(cur_dir, True)
+        # self.__content(cur_dir, False)
 
     def __upload(self):
         """Upload files."""
@@ -502,7 +511,7 @@ class Connector:
                 self._response["error"] = "Invalid parameters"
                 return
 
-            self._response["select"] = []
+            self._response["added"] = []
             total = 0
             up_size = 0
             max_size = self._options["uploadMaxSize"] * 1024 * 1024
@@ -523,7 +532,7 @@ class Connector:
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
                                 os.chmod(name, self._options["fileMode"])
-                                self._response["select"].append(self.__hash(name))
+                                self._response["added"].append(self.__info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
                                 try:
@@ -547,11 +556,11 @@ class Connector:
 
             if self._error_data:
                 if len(self._error_data) == total:
-                    self._response["error"] = "Unable to upload files"
+                    self._response["warning"] = "Unable to upload files"
                 else:
-                    self._response["error"] = "Some files was not uploaded"
+                    self._response["warning"] = "Some files was not uploaded"
 
-            self.__content(cur_dir, False)
+            # self.__content(cur_dir, False)
             return
 
     def __paste(self):
@@ -561,9 +570,9 @@ class Connector:
             and "src" in self._request
             and "dst" in self._request
         ):
-            cur_dir = self.__find_dir(self._request["current"], None)
             src = self.__find_dir(self._request["src"], None)
             dst = self.__find_dir(self._request["dst"], None)
+            cur_dir = dst
             if not cur_dir or not src or not dst or "targets[]" not in self._request:
                 self._response["error"] = "Invalid parameters"
                 return
@@ -582,6 +591,8 @@ class Connector:
                 self._response["error"] = "Access denied"
                 return
 
+            added = []
+            removed = []
             for fhash in files:
                 fil = self.__find(fhash, src)
                 if not fil:
@@ -596,7 +607,7 @@ class Connector:
                     if not self.__is_allowed(fil, "rm"):
                         self._response["error"] = "Move failed"
                         self.__set_error_data(fil, "Access denied")
-                        self.__content(cur_dir, True)
+                        # self.__content(cur_dir, True)
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
@@ -604,11 +615,13 @@ class Connector:
                         self.__set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
-                        self.__content(cur_dir, True)
+                        # self.__content(cur_dir, True)
                         return
                     try:
                         os.rename(fil, new_dst)
                         self.__rm_tmb(fil)
+                        added.append(self.__info(new_dst))
+                        removed.append(fhash)
                         continue
                     except OSError:
                         self._response["error"] = "Unable to move files"
@@ -620,8 +633,11 @@ class Connector:
                         self._response["error"] = "Unable to copy files"
                         self.__content(cur_dir, True)
                         return
+                    added.append(self.__info(new_dst))
                     continue
-            self.__content(cur_dir, True)
+            self._response["added"] = added
+            self._response["removed"] = removed
+            # self.__content(cur_dir, True)
         else:
             self._response["error"] = "Invalid parameters"
 
@@ -815,6 +831,9 @@ class Connector:
         if filetype == "dir":
             info["volumeid"] = self.volumeid
 
+        if path != self._options["root"]:
+            info["phash"] = self.__hash(os.path.dirname(path))
+
         if filetype == "link":
             lpath = self.__readlink(path)
             if not lpath:
@@ -824,7 +843,6 @@ class Connector:
             if os.path.isdir(lpath):
                 info["mime"] = "directory"
             else:
-                info["phash"] = self.__hash(os.path.dirname(lpath))
                 info["mime"] = self.__mimetype(lpath)
 
             if self._options["rootAlias"]:

@@ -46,7 +46,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				return {error : ['errResponse', 'errDataNotJSON']};
 			}
 			
-			return self.normalize('upload', data);
+			return data; //self.normalize('upload', data);
 		};
 	};
 	
@@ -160,8 +160,15 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				dfrd.reject(error);
 			})
 			.done(function(raw) {
-				data = self.normalize(cmd, raw);
-				dfrd.resolve(data);
+				if(cmd === 'rm' || cmd === 'paste' || cmd === 'rename'){
+					dfrd.resolve(raw);
+					return;
+				}
+				else{
+					data = self.normalize(cmd, raw);
+					dfrd.resolve(data);
+				}
+				
 			});
 			
 		return dfrd;
@@ -244,7 +251,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			return {changed : [this.normalizeFile(data.target, phash)]};
 		}
 		
-		phash = data.cwd.hash;
+		phash = data.cwd && data.cwd.hash;
 
 		isCwd = (phash == fm.cwd().hash);
 		
@@ -309,7 +316,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		}
 		
 		return Object.assign({
-			current : data.cwd.hash,
+			current : data.cwd && data.cwd.hash,
 			error   : data.error,
 			warning : data.warning,
 			options : {tmb : !!data.tmb}
@@ -409,7 +416,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 	
 	this.normalizeOptions = function(data) {
 		var opts = {
-				path          : data.cwd.rel,
+				path          : data.cwd && data.cwd.rel,
 				disabled      : $.merge((data.disabled || []), [ 'search', 'netmount', 'zipdl' ]),
 				tmb           : !!data.tmb,
 				copyOverwrite : true
