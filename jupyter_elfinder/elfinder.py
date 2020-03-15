@@ -879,7 +879,7 @@ class Connector:
             "volumeid": self.volumeid,
         }
 
-    def __cdc(self, path):
+    def __cdc(self, path: str) -> None:
         """Get Current Directory Content."""
         files = []
         dirs = []
