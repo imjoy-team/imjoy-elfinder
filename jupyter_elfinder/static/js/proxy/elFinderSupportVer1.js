@@ -138,8 +138,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			case 'size':
 				return dfrd.resolve({error : fm.res('error', 'cmdsupport')});
 			case 'search':
-				return dfrd.resolve({error : fm.res('error', 'cmdsupport')});
-				
+				break;
 			case 'file':
 				opts.data.cmd = 'open';
 				opts.data.current = fm.file(opts.data.target).phash;
@@ -160,7 +159,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				dfrd.reject(error);
 			})
 			.done(function(raw) {
-				if(cmd === 'rm' || cmd === 'paste' || cmd === 'rename'){
+				if(cmd === 'rm' || cmd === 'paste' || cmd === 'rename' || cmd === 'search'){
 					dfrd.resolve(raw);
 					return;
 				}
@@ -423,7 +422,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			};
 		
 		if (data.params) {
-			opts.api      = 1;
+			opts.api      = 2.1;
 			opts.url      = data.params.url;
 			opts.archivers = {
 				create  : data.params.archives || [],

@@ -85,6 +85,7 @@ class Connector:
         "resize": "__resize",
         "tmb": "__thumbnails",
         "ping": "__ping",
+        "search": "__search",
     }
 
     _mimeType = {
@@ -476,8 +477,8 @@ class Connector:
             else:
                 self._response["error"] = "Failed to remove: " + rm_file
                 return
-        
-        self._response["removed"] = removed 
+
+        self._response["removed"] = removed
         # TODO if error_data not empty return error  # pylint: disable=fixme
         # self.__content(cur_dir, False)
 
@@ -1209,6 +1210,33 @@ class Connector:
         """Workaround for Safari."""
         self.http_status_code = 200
         self.http_header["Connection"] = "close"
+
+    def __search(self):
+        if "q" not in self._request:
+            self._response["error"] = "Invalid parameters"
+            return
+
+        if "target" in self._request:
+            search_path = self.__find_dir(self._request["target"], None)
+        else:
+            search_path = self._options["root"]
+
+        if "mimes" in self._request:
+            mimes = self._request["mimes"]
+        else:
+            mimes = None
+
+        result = []
+        query = self._request["q"]
+        for root, dir, files in os.walk(search_path):
+            if query in files:
+                file_path = os.path.join(root, query)
+                if mimes is None:
+                    result.append(self.__info(file_path))
+                else:
+                    if self.__mimetype(file_path) in mimes:
+                        result.append(self.__info(file_path))
+        self._response["files"] = result
 
     def __mimetype(self, path):
         """Detect mimetype of file."""
