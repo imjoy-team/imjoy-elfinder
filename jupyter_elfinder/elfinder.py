@@ -249,7 +249,7 @@ class Connector:
     def run(self, http_request=None):
         """Run main function."""
         if http_request is None:
-            http_request = []
+            http_request = {}
         self.__reset()
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
