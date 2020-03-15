@@ -1604,7 +1604,7 @@ class Connector:
         """Collect error/warning messages."""
         self._error_data[path] = msg
 
-    def __init_img_lib(self):
+    def __init_img_lib(self) -> Optional[str]:
         if not self._options["imgLib"] or self._options["imgLib"] == "auto":
             self._options["imgLib"] = "PIL"
 
