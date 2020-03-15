@@ -1221,7 +1221,7 @@ class Connector:
         else:
             self._response["dim"] = None
 
-    def __edit(self):
+    def __edit(self) -> None:
         """Save content in file."""
         current = self._request.get("current")
         target = self._request.get("target")
