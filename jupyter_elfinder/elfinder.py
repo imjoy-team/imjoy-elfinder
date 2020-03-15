@@ -816,8 +816,8 @@ class Connector:
         self._response["current"] = self.__hash(cur_dir)
         self._response["images"] = {}
         i = 0
-        for fil in os.listdir(cur_dir):
-            path = os.path.join(cur_dir, fil)
+        for entry in os.scandir(cur_dir):
+            path = entry.path
             fhash = self.__hash(path)
             if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
@@ -1112,10 +1112,16 @@ class Connector:
         """Find file/dir by hash."""
         fhash = str(fhash)
         if os.path.isdir(parent):
-            for i in os.listdir(parent):
-                path = os.path.join(parent, i)
-                if fhash == self.__hash(path):
-                    return path
+            for root, dirs, files in os.walk(parent, topdown=True):
+                for folder in dirs:
+                    folder_path = os.path.join(root, folder)
+                    if fhash == self.__hash(folder_path):
+                        return folder_path
+                for fil in files:
+                    file_path = os.path.join(root, fil)
+                    if fhash == self.__hash(file_path):
+                        return file_path
+
         return None
 
     def __read(self):
