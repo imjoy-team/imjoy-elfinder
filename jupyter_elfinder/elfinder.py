@@ -555,7 +555,7 @@ class Connector:
             except OSError:
                 self._response["error"] = "Unable to create file"
 
-    def __rm(self):
+    def __rm(self) -> None:
         """Delete files and directories."""
         current = rm_list = None
         cur_dir = rm_file = None
