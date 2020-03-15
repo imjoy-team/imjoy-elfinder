@@ -212,7 +212,12 @@ class Connector:
     http_response = None  # type: Optional[Union[str, Dict[str, str]]]
 
     def __init__(
-        self, root: str, url: str, upload_max_size: int, debug: bool, tmb_dir: str
+        self,
+        root: str,
+        url: str,
+        upload_max_size: int,
+        debug: bool,
+        tmb_dir: Optional[str],
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = root

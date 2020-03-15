@@ -5,14 +5,16 @@ import os
 import sys
 from wsgiref.simple_server import make_server, WSGIServer
 from socketserver import ThreadingMixIn
+from typing import Dict, List, Optional
 
 from pyramid.config import Configurator
 from pyramid.events import BeforeRender, NewRequest
+from pyramid.router import Router
 
 from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
 
 
-def build_app(opt, **settings):
+def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
     """Build the app."""
     config = Configurator(settings=settings)
     config.include("jupyter_elfinder")
@@ -60,7 +62,7 @@ class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Represent a threading WSGI server."""
 
 
-def main(args=None):
+def main(args: Optional[List[str]] = None) -> None:
     """Run the app."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -90,14 +92,16 @@ def main(args=None):
     )
 
     opt = parser.parse_args(args=args)
+
     settings = {
         "jupyter_elfinder_root": opt.root_dir or os.getcwd(),
         "jupyter_elfinder_url": "/static",
         "jupyter_base_url": opt.base_url or "",
-        "jupyter_elfinder_thumbnail_dir": ".tmb" if opt.thumbnail else None,
-    }
+    }  # type: Dict[str, str]
+    if opt.thumbnail:
+        settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
 
-    app = build_app(opt, **settings)
+    app = build_app(opt, settings)
 
     httpd = make_server(opt.host, opt.port, app, ThreadingWSGIServer)
 
@@ -112,7 +116,7 @@ def main(args=None):
     httpd.serve_forever()
 
 
-def setup_for_jupyter_server_proxy():
+def setup_for_jupyter_server_proxy() -> dict:
     """Set up jupyter server proxy."""
 
     return {
