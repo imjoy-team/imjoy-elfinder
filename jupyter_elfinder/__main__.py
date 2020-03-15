@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import sys
-from wsgiref.simple_server import make_server
 from wsgiref.simple_server import make_server, WSGIServer
 from socketserver import ThreadingMixIn
 
@@ -58,7 +57,7 @@ def build_app(opt, **settings):
 
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
-    pass
+    """Represent a threading WSGI server."""
 
 
 def main(args=None):
