@@ -1325,7 +1325,7 @@ class Connector:
         else:
             self._response["error"] = "Unable to create archive"
 
-    def __extract(self):
+    def __extract(self) -> None:
         """Uncompress archive."""
         current = self._request.get("current")
         target = self._request.get("target")
