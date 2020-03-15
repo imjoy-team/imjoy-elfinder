@@ -1637,7 +1637,7 @@ class Connector:
 
         return None
 
-    def __debug(self, key, val):
+    def __debug(self, key: str, val: Any) -> None:
         if self._options["debug"]:
             self._response["debug"].update({key: val})
 
