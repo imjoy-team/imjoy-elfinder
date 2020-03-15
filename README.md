@@ -25,8 +25,10 @@ pip install -U jupyter-elfinder
 
 In your terminal, run the following command:
 ```sh
-jupyter-elfinder
+jupyter-elfinder --thumbnail
 ```
+(The thumbnail option enables thumbnail for images, it will create a folder named `.tmb` under your current folder, you can also disable that by remove the `--thumbnail` option.)
+
 
 You will then see the following message:
 
