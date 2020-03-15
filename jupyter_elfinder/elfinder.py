@@ -408,8 +408,8 @@ class Connector:
             return
         # try dir
         path = self._options["root"]
-        initialized = len(self._cached_path) > 0
-        if initialized and "target" in self._request and self._request["target"]:
+        # initialized = len(self._cached_path) > 0
+        if "target" in self._request and self._request["target"]:
             if "current" in self._request:
                 cur_dir = self.__find_dir(self._request["current"], None)
                 target = self.__find_dir(self._request["target"], cur_dir)
@@ -1017,7 +1017,6 @@ class Connector:
                     and self.__is_accepted(directory)
                 ):
                     tree["dirs"].append(self.__tree(dir_path, depth + 1))
-
         return tree
 
     def __remove(self, target):
@@ -1084,9 +1083,7 @@ class Connector:
 
         return True
 
-    def __find_dir(
-        self, fhash: str, path: Optional[str] = None, depth: int = 0
-    ) -> Optional[str]:
+    def __find_dir(self, fhash: str, path: Optional[str] = None) -> Optional[str]:
         """Find directory by hash."""
         fhash = str(fhash)
         # try to get find it in the cache
@@ -1102,23 +1099,13 @@ class Connector:
         if not os.path.isdir(path):
             return None
 
-        # limit the folder depth
-        if depth < self._options["maxFolderDepth"]:
-            try:
-                for directory in os.listdir(path):
-                    dir_path = os.path.join(path, directory)
-                    if os.path.isdir(dir_path) and not os.path.islink(dir_path):
-                        if fhash == self.__hash(dir_path):
-                            return dir_path
-                        ret = self.__find_dir(fhash, dir_path, depth + 1)
-                        if ret:
-                            return ret
-            except PermissionError:
-                if depth == 0:
-                    raise
-                self.__debug("permission error", path)
-                print("WARNING: permission error: " + path)
-
+        for root, dirs, _ in os.walk(path, topdown=True):
+            for folder in dirs:
+                folder_path = os.path.join(root, folder)
+                if not os.path.islink(folder_path) and fhash == self.__hash(
+                    folder_path
+                ):
+                    return folder_path
         return None
 
     def __find(self, fhash, parent):
