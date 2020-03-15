@@ -1766,7 +1766,7 @@ class Connector:
         return name
 
 
-def _check_name(name):
+def _check_name(name: str) -> bool:
     """Check for valid file/dir name."""
     pattern = r"[\/\\\:\<\>]"
     if re.search(pattern, name):
