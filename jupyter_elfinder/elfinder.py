@@ -1514,7 +1514,7 @@ class Connector:
                 tmb = os.path.join(thumbs_dir, self.__hash(path) + ".png")
         return tmb
 
-    def __is_upload_allow(self, name):
+    def __is_upload_allow(self, name: str) -> bool:
         allow = False
         deny = False
         mime = self.__mimetype(name)
