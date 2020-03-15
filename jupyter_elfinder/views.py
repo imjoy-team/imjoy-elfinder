@@ -17,43 +17,41 @@ from pyramid.view import view_config
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
 
 
-class FileIterable:
-    """Represent a file iterable."""
-
-    def __init__(self, filename):
-        """Set up file iterable instance."""
-        self.filename = filename
-
-    def __iter__(self):
-        """Return the file iterator."""
-        return FileIterator(self.filename)
-
-
 class FileIterator:
     """Represent a file iterator."""
 
     chunk_size = 32768
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         """Set up the file iterator instance."""
         self.filename = filename
         self.fileobj = open(self.filename, "rb")
 
-    def __iter__(self):
+    def __iter__(self) -> "FileIterator":
         """Return the file iterator."""
         return self
 
-    def next(self):
+    def __next__(self) -> bytes:
         """Return the next item."""
         chunk = self.fileobj.read(self.chunk_size)
         if not chunk:
             raise StopIteration
         return chunk
 
-    __next__ = next  # py3 compat
+
+class FileIterable:
+    """Represent a file iterable."""
+
+    def __init__(self, filename: str) -> None:
+        """Set up file iterable instance."""
+        self.filename = filename
+
+    def __iter__(self) -> FileIterator:
+        """Return the file iterator."""
+        return FileIterator(self.filename)
 
 
-def make_response(filename):
+def make_response(filename: str) -> Response:
     """Return a response."""
     res = Response(conditional_response=True)
     res.app_iter = FileIterable(filename)
