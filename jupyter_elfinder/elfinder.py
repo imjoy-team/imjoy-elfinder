@@ -708,9 +708,6 @@ class Connector:
 
     def __resize(self):
         """Scale image size."""
-        # pylint: disable=import-outside-toplevel
-        from PIL import UnidentifiedImageError
-
         if not (
             "current" in self._request
             and "target" in self._request
@@ -736,10 +733,17 @@ class Connector:
             return
 
         self.__debug("resize " + cur_file, str(width) + ":" + str(height))
-        self.__init_img_lib()
+        if not self.__init_img_lib():
+            return
+
+        # pylint: disable=import-outside-toplevel
+        from PIL import UnidentifiedImageError
+
         try:
-            img = self._img.open(cur_file)
-            img_resized = img.resize((width, height), self._img.ANTIALIAS)
+            img = self._img.open(cur_file)  # type: ignore
+            img_resized = img.resize(
+                (width, height), self._img.ANTIALIAS  # type: ignore
+            )
             img_resized.save(cur_file)
         except (UnidentifiedImageError, OSError) as exc:
             # self.__debug('resizeFailed_' + path, str(exc))
@@ -1289,12 +1293,12 @@ class Connector:
         from PIL import UnidentifiedImageError
 
         try:
-            img = self._img.open(path).copy()
+            img = self._img.open(path).copy()  # type: ignore
             size = self._options["tmbSize"], self._options["tmbSize"]
             box = _crop_tuple(img.size)
             if box:
                 img = img.crop(box)
-            img.thumbnail(size, self._img.ANTIALIAS)
+            img.thumbnail(size, self._img.ANTIALIAS)  # type: ignore
             img.save(tmb, "PNG")
         except (UnidentifiedImageError, OSError) as exc:
             self.__debug("tmbFailed_" + path, str(exc))
@@ -1468,7 +1472,7 @@ class Connector:
             from PIL import UnidentifiedImageError
 
             try:
-                img = self._img.open(path)
+                img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
             except (UnidentifiedImageError, FileNotFoundError):
                 pass
