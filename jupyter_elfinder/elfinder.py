@@ -30,9 +30,6 @@ Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
     {"create": Dict[str, Dict[str, str]], "extract": Dict[str, Dict[str, str]]},
 )
-Defaults = TypedDict(  # pylint: disable=invalid-name
-    "Defaults", {"read": bool, "write": bool, "rm": bool}
-)
 Options = TypedDict(  # pylint: disable=invalid-name
     "Options",
     {
@@ -44,7 +41,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "dirSize": bool,
         "fileMode": Literal[420],
         "dirMode": Literal[493],
-        "imgLib": str,
+        "imgLib": Optional[str],
         "tmbDir": Optional[str],
         "tmbAtOnce": int,
         "tmbSize": int,
@@ -54,7 +51,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "uploadAllow": List[str],
         "uploadDeny": List[str],
         "uploadOrder": List[Literal["deny", "allow"]],
-        "defaults": Defaults,
+        "defaults": Dict[str, bool],
         "perms": Dict[str, Dict[str, bool]],
         "archiveMimes": List[str],
         "archivers": Archivers,
@@ -154,13 +151,13 @@ class Connector:
         "mkv": "video/x-matroska",
     }
 
-    _time = 0
+    _time = 0.0
     _request = {}  # type: Dict[str, Any]
     _response = {}  # type: Dict[str, Any]
     _error_data = {}  # type: Dict[str, str]
     _img = None  # type: Optional[ModuleType]
-    _today = 0
-    _yesterday = 0
+    _today = 0.0
+    _yesterday = 0.0
 
     _cached_path = {}  # type: Dict[str, str]
 
@@ -185,7 +182,7 @@ class Connector:
     # return variables
     http_status_code = 0
     http_header = {}  # type: Dict[str, str]
-    http_response = None  # type: Union[str, Dict[str, str]]
+    http_response = None  # type: Optional[Union[str, Dict[str, str]]]
 
     def __init__(
         self, root: str, url: str, upload_max_size: int, debug: bool, tmb_dir: str
@@ -269,7 +266,8 @@ class Connector:
                 if self._request["cmd"] in self._commands:
                     cmd = self._commands[self._request["cmd"]]
                     func = getattr(self, "_" + self.__class__.__name__ + cmd, None)
-                    is_callable = isinstance(func, Callable)
+                    # https://github.com/python/mypy/issues/6864
+                    is_callable = isinstance(func, Callable)  # type: ignore
 
                     if is_callable:
                         try:
@@ -416,17 +414,22 @@ class Connector:
             cur_dir = self.__find_dir(current, None)
             cur_name = self.__find(target, cur_dir)
             name = self.__check_utf8(name)
-            new_name = os.path.join(cur_dir, name)
 
         if not cur_dir or not cur_name:
             self._response["error"] = "File not found"
-        elif not self.__is_allowed(cur_dir, "write") and self.__is_allowed(
+            return
+        if not self.__is_allowed(cur_dir, "write") and self.__is_allowed(
             cur_name, "rm"
         ):
             self._response["error"] = "Access denied"
-        elif not _check_name(name):
+            return
+        if not name or not _check_name(name):
             self._response["error"] = "Invalid name"
-        elif os.path.exists(new_name):
+            return
+
+        new_name = os.path.join(cur_dir, name)
+
+        if os.path.exists(new_name):
             self._response["error"] = (
                 "File or folder with the same name" + "already exists"
             )
@@ -449,15 +452,20 @@ class Connector:
             current = self._request["current"]
             path = self.__find_dir(current, None)
             name = self.__check_utf8(name)
-            new_dir = os.path.join(path, name)
 
         if not path:
             self._response["error"] = "Invalid parameters"
-        elif not self.__is_allowed(path, "write"):
+            return
+        if not self.__is_allowed(path, "write"):
             self._response["error"] = "Access denied"
-        elif not _check_name(name):
+            return
+        if not _check_name(name):
             self._response["error"] = "Invalid name"
-        elif os.path.exists(new_dir):
+            return
+
+        new_dir = os.path.join(path, name)
+
+        if os.path.exists(new_dir):
             self._response["error"] = (
                 "File or folder with the same name" + " already exists"
             )
@@ -478,15 +486,20 @@ class Connector:
             current = self._request["current"]
             cur_dir = self.__find_dir(current, None)
             name = self.__check_utf8(name)
-            new_file = os.path.join(cur_dir, name)
 
         if not cur_dir or not name:
             self._response["error"] = "Invalid parameters"
-        elif not self.__is_allowed(cur_dir, "write"):
+            return
+        if not self.__is_allowed(cur_dir, "write"):
             self._response["error"] = "Access denied"
-        elif not _check_name(name):
+            return
+        if not _check_name(name):
             self._response["error"] = "Invalid name"
-        elif os.path.exists(new_file):
+            return
+
+        new_file = os.path.join(cur_dir, name)
+
+        if os.path.exists(new_file):
             self._response["error"] = "File or folder with the same name already exists"
         else:
             try:
@@ -740,15 +753,17 @@ class Connector:
 
     def __thumbnails(self):
         """Create previews for images."""
+        thumbs_dir = self._options["tmbDir"]
         if "current" not in self._request:
             return
         cur_dir = self.__find_dir(self._request["current"], None)
-        if not cur_dir or cur_dir == self._options["tmbDir"]:
+        if not cur_dir or cur_dir == thumbs_dir:
             return
 
         self.__init_img_lib()
         if not self.__can_create_tmb():
             return
+        assert thumbs_dir  # typing
         if self._options["tmbAtOnce"] > 0:
             tmb_max = self._options["tmbAtOnce"]
         else:
@@ -760,7 +775,7 @@ class Connector:
             path = os.path.join(cur_dir, fil)
             fhash = self.__hash(path)
             if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
-                tmb = os.path.join(self._options["tmbDir"], fhash + ".png")
+                tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
                     if self.__tmb(path, tmb):
                         self._response["images"].update({fhash: self.__path2url(tmb)})
@@ -895,18 +910,20 @@ class Connector:
                 else:
                     info["url"] = self.__path2url(path)
             if info["mime"][0:5] == "image":
+                thumbs_dir = self._options["tmbDir"]
                 if self.__can_create_tmb():
+                    assert thumbs_dir  # typing
                     dim = self.__get_img_size(path)
                     if dim:
                         info["dim"] = dim
                         info["resize"] = True
 
                     # if we are in tmb dir, files are thumbs itself
-                    if os.path.dirname(path) == self._options["tmbDir"]:
+                    if os.path.dirname(path) == thumbs_dir:
                         info["tmb"] = self.__path2url(path)
                         return info
 
-                    tmb = os.path.join(self._options["tmbDir"], info["hash"] + ".png")
+                    tmb = os.path.join(thumbs_dir, info["hash"] + ".png")
 
                     if os.path.exists(tmb):
                         tmb_url = self.__path2url(tmb)
@@ -1068,12 +1085,12 @@ class Connector:
             if cur_dir and cur_file:
                 if self.__is_allowed(cur_file, "read"):
                     try:
-                        with open(cur_file, "r") as fil:
-                            self._response["content"] = fil.read()
+                        with open(cur_file, "r") as text_fil:
+                            self._response["content"] = text_fil.read()
                     except UnicodeDecodeError:
-                        with open(cur_file, "rb") as fil:
+                        with open(cur_file, "rb") as bin_fil:
                             self._response["content"] = base64.b64encode(
-                                fil.read()
+                                bin_fil.read()
                             ).decode("ascii")
 
                 else:
@@ -1119,11 +1136,11 @@ class Connector:
                         ):
                             img_data = self._request["content"].split(";base64,")[1]
                             img_data = base64.b64decode(img_data)
-                            with open(cur_file, "wb") as fil:
-                                fil.write(img_data)
+                            with open(cur_file, "wb") as bin_fil:
+                                bin_fil.write(img_data)
                         else:
-                            with open(cur_file, "w+") as fil:
-                                fil.write(self._request["content"])
+                            with open(cur_file, "w+") as text_fil:
+                                text_fil.write(self._request["content"])
                         self._response["target"] = self.__info(cur_file)
                     except OSError:
                         self._response["error"] = "Unable to write to file"
@@ -1286,7 +1303,7 @@ class Connector:
 
     def __rm_tmb(self, path):
         tmb = self.__tmb_path(path)
-        if self._options["tmbDir"]:
+        if tmb and self._options["tmbDir"]:
             if os.path.exists(tmb):
                 try:
                     os.unlink(tmb)
@@ -1333,11 +1350,12 @@ class Connector:
             return True
         return False
 
-    def __tmb_path(self, path):
-        tmb = False
-        if self._options["tmbDir"]:
-            if not os.path.dirname(path) == self._options["tmbDir"]:
-                tmb = os.path.join(self._options["tmbDir"], self.__hash(path) + ".png")
+    def __tmb_path(self, path: str) -> Optional[str]:
+        tmb = None
+        thumbs_dir = self._options["tmbDir"]
+        if thumbs_dir:
+            if not os.path.dirname(path) == thumbs_dir:
+                tmb = os.path.join(thumbs_dir, self.__hash(path) + ".png")
         return tmb
 
     def __is_upload_allow(self, name):
@@ -1437,8 +1455,8 @@ class Connector:
                 self._img = Image
                 self._options["imgLib"] = "PIL"
             except ImportError:
-                self._options["imgLib"] = False
-                self._img = False
+                self._options["imgLib"] = None
+                self._img = None
 
         self.__debug("imgLib", self._options["imgLib"])
         return self._options["imgLib"]
@@ -1467,7 +1485,7 @@ class Connector:
         # stdout = subprocess.PIPE, stderr=subprocess.PIPE)
         # out, err = proc.communicate()
         # print 'out:', out, '\nerr:', err, '\n'
-        archive = {"create": {}, "extract": {}}
+        archive = {"create": {}, "extract": {}}  # type: Archivers
 
         if (
             "archive" in self._options["disabled"]
