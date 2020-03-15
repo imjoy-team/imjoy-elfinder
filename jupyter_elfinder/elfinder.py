@@ -230,7 +230,7 @@ class Connector:
                     "due to permission denied, it will be disabled."
                 )
 
-    def __reset(self):
+    def __reset(self) -> None:
         """Flush per request variables."""
         self.http_status_code = 0
         self.http_header = {}
