@@ -808,7 +808,7 @@ class Connector:
         self._response["select"] = [self.__hash(cur_file)]
         self.__content(cur_dir, False)
 
-    def __thumbnails(self):
+    def __thumbnails(self) -> None:
         """Create previews for images."""
         thumbs_dir = self._options["tmbDir"]
         if "current" not in self._request:
