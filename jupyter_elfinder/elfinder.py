@@ -1544,7 +1544,7 @@ class Connector:
             return False
         return True
 
-    def __is_accepted(self, target):
+    def __is_accepted(self, target: str) -> bool:
         if target in (".", ".."):
             return False
         if target[0:1] == "." and not self._options["dotFiles"]:
