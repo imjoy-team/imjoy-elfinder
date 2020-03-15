@@ -30,6 +30,29 @@ Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
     {"create": Dict[str, Dict[str, str]], "extract": Dict[str, Dict[str, str]]},
 )
+Info = TypedDict(  # pylint: disable=invalid-name
+    "Info",
+    {
+        "name": str,
+        "hash": str,
+        "mime": str,
+        "read": bool,
+        "write": bool,
+        "locked": bool,
+        "ts": float,
+        "volumeid": str,
+        "dirs": bool,
+        "phash": str,
+        "link": str,
+        "alias": str,
+        "size": int,
+        "url": str,
+        "dim": str,
+        "resize": bool,
+        "tmb": Union[str, int],
+    },
+    total=False,
+)
 Options = TypedDict(  # pylint: disable=invalid-name
     "Options",
     {
@@ -913,7 +936,6 @@ class Connector:
             if not self.__is_accepted(fil):
                 continue
             file_path = os.path.join(path, fil)
-            info = {}
             info = self.__info(file_path)
             info["hash"] = self.__hash(file_path)
             if info["mime"] == "directory":
@@ -924,7 +946,7 @@ class Connector:
         dirs.extend(files)
         self._response["cdc"] = dirs
 
-    def __info(self, path: str) -> Dict[str, Union[str, bool]]:
+    def __info(self, path: str) -> Info:
         # mime = ''
         filetype = "file"
         if os.path.isfile(path):
@@ -947,7 +969,7 @@ class Connector:
             "write": writable,
             "locked": not readable and not writable and not deletable,
             "ts": stat.st_mtime,
-        }
+        }  # type: Info
 
         if filetype == "dir":
             info["volumeid"] = self.volumeid
