@@ -124,6 +124,7 @@ def setup_for_jupyter_server_proxy():
             "{base_url}/elfinder",
             "--allow-origin",
             "https://lib.imjoy.io",
+            "--thumbnail",
         ],
         "environment": {},
         "launcher_entry": {

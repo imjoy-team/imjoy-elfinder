@@ -322,7 +322,8 @@ class Connector:
                     "uploadMaxConn": 3,
                     "uploadMime": {"allow": ["all"], "deny": [], "firstOrder": "deny"},
                     "i18nFolderName": True,
-                    "dispInlineRegex": "^(?:image|text/plain$)",
+                    "dispInlineRegex": "^(?:(?:image|video|audio)|application/"
+                    + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
                     "jpgQuality": 100,
                     "syncChkAsTs": 1,
                     "syncMinMs": 30000,
