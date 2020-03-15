@@ -1348,9 +1348,8 @@ class Connector:
         mime = self.__mimetype(cur_file)
         self.__check_archivers()
 
-        if (
-            mime not in self._options["archivers"]["extract"]
-            or not self.__is_allowed(cur_dir, "write")
+        if mime not in self._options["archivers"]["extract"] or not self.__is_allowed(
+            cur_dir, "write"
         ):
             self._response["error"] = "Invalid parameters"
             return
@@ -1458,7 +1457,7 @@ class Connector:
             return False
         return True
 
-    def __rm_tmb(self, path):
+    def __rm_tmb(self, path: str) -> None:
         tmb = self.__tmb_path(path)
         if tmb and self._options["tmbDir"]:
             if os.path.exists(tmb):
