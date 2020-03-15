@@ -1313,25 +1313,29 @@ class Connector:
             return
 
         if "target" in self._request:
-            search_path = self.__find_dir(self._request["target"], None)
+            target = self._request["target"]
+            if not target:
+                self._response["error"] = "Invalid parameters"
+                return
+            search_path = self.__find_dir(target, None)
         else:
             search_path = self._options["root"]
 
-        if "mimes" in self._request:
-            mimes = self._request["mimes"]
-        else:
-            mimes = None
+        if not search_path:
+            self._response["error"] = "File not found"
+            return
+
+        mimes = self._request.get("mimes")
 
         result = []
         query = self._request["q"]
         for root, _, files in os.walk(search_path):
-            if query in files:
-                file_path = os.path.join(root, query)
-                if mimes is None:
-                    result.append(self.__info(file_path))
-                else:
-                    if self.__mimetype(file_path) in mimes:
-                        result.append(self.__info(file_path))
+            if query not in files:
+                continue
+            file_path = os.path.join(root, query)
+            if mimes is not None and self.__mimetype(file_path) not in mimes:
+                continue
+            result.append(self.__info(file_path))
         self._response["files"] = result
 
     def __mimetype(self, path):
