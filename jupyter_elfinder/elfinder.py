@@ -180,6 +180,7 @@ class Connector:
         "width",
         "height",
         "upload[]",
+        "q",
     )
     # return variables
     http_status_code = 0
@@ -1322,13 +1323,19 @@ class Connector:
 
         result = []
         query = self._request["q"]
-        for root, dir, files in os.walk(search_path):
-            if query in files:
-                file_path = os.path.join(root, query)
-                if mimes is None:
-                    result.append(self.__info(file_path))
-                else:
-                    if self.__mimetype(file_path) in mimes:
+        for root, dirs, files in os.walk(search_path):
+            for fil in files:
+                if query in fil:
+                    file_path = os.path.join(root, fil)
+                    if mimes is None:
+                        result.append(self.__info(file_path))
+                    else:
+                        if self.__mimetype(file_path) in mimes:
+                            result.append(self.__info(file_path))
+            if mimes is None:
+                for folder in dirs:
+                    file_path = os.path.join(root, folder)
+                    if query in folder:
                         result.append(self.__info(file_path))
         self._response["files"] = result
 
