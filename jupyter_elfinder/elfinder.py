@@ -982,7 +982,7 @@ class Connector:
             )
             info["size"] = 0
         else:
-            lpath = False
+            lpath = None
             info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
@@ -1466,7 +1466,7 @@ class Connector:
                 except OSError:
                     pass
 
-    def __readlink(self, path):
+    def __readlink(self, path: str) -> Optional[str]:
         """Read link and return real path if not broken."""
         target = os.readlink(path)
         if not target[0] == "/":
@@ -1475,7 +1475,7 @@ class Connector:
         if os.path.exists(target):
             if not target.find(self._options["root"]) == -1:
                 return target
-        return False
+        return None
 
     def __dir_size(self, path):
         total_size = 0
