@@ -3,7 +3,8 @@ import argparse
 import json
 import os
 import sys
-from wsgiref.simple_server import make_server
+from wsgiref.simple_server import make_server, WSGIServer
+from socketserver import ThreadingMixIn
 
 from pyramid.config import Configurator
 from pyramid.events import BeforeRender, NewRequest
@@ -55,6 +56,10 @@ def build_app(opt, **settings):
     return config.make_wsgi_app()
 
 
+class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
+    """Represent a threading WSGI server."""
+
+
 def main(args=None):
     """Run the app."""
     parser = argparse.ArgumentParser()
@@ -94,7 +99,7 @@ def main(args=None):
 
     app = build_app(opt, **settings)
 
-    httpd = make_server(opt.host, opt.port, app)
+    httpd = make_server(opt.host, opt.port, app, ThreadingWSGIServer)
 
     if opt.base_url and opt.base_url.startswith("http"):
         url = opt.base_url

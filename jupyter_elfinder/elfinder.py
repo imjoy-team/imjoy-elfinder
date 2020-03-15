@@ -47,6 +47,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "tmbSize": int,
         "fileURL": bool,
         "uploadMaxSize": int,
+        "uploadMaxConn": int,
         "uploadWriteChunk": int,
         "uploadAllow": List[str],
         "uploadDeny": List[str],
@@ -89,7 +90,8 @@ class Connector:
         "tmbAtOnce": 5,
         "tmbSize": 48,
         "fileURL": True,
-        "uploadMaxSize": 256,
+        "uploadMaxSize": 256 * 1024 * 1024,
+        "uploadMaxConn": -1,
         "uploadWriteChunk": 8192,
         "uploadAllow": [],
         "uploadDeny": [],
@@ -100,7 +102,7 @@ class Connector:
         "perms": {},
         "archiveMimes": [],
         "archivers": {"create": {}, "extract": {}},
-        "disabled": [],
+        "disabled": ["netmount", "zipdl"],
         "debug": False,
     }  # type: Options
 
@@ -122,6 +124,7 @@ class Connector:
         "resize": "__resize",
         "tmb": "__thumbnails",
         "ping": "__ping",
+        "search": "__search",
     }
 
     _mimeType = {
@@ -178,6 +181,7 @@ class Connector:
         "width",
         "height",
         "upload[]",
+        "q",
     )
     # return variables
     http_status_code = 0
@@ -247,7 +251,7 @@ class Connector:
     def run(self, http_request=None):
         """Run main function."""
         if http_request is None:
-            http_request = []
+            http_request = {}
         self.__reset()
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
@@ -285,17 +289,44 @@ class Connector:
 
             if "init" in self._request:
                 self.__check_archivers()
-                self._response["disabled"] = self._options["disabled"]
                 if not self._options["fileURL"]:
                     url = ""
                 else:
                     url = self._options["URL"]
-                self._response["params"] = {
-                    "dotFiles": self._options["dotFiles"],
-                    "uplMaxSize": str(self._options["uploadMaxSize"]) + "M",
-                    "archives": list(self._options["archivers"]["create"].keys()),
-                    "extract": list(self._options["archivers"]["extract"].keys()),
+
+                self._response["api"] = 2.1
+                self._response["netDrivers"] = []
+                self._response["uplMaxFile"] = 1000
+                self._response["uplMaxSize"] = (
+                    str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
+                )
+                thumbs_url = (
+                    self.__path2url(self._options["tmbDir"])
+                    if self._options["tmbDir"]
+                    else None
+                )
+                self._response["options"] = {
+                    "path": self._response["cwd"]["rel"],
+                    "separator": os.path.sep,
                     "url": url,
+                    "disabled": self._options["disabled"],
+                    "tmbURL": thumbs_url,
+                    "dotFiles": self._options["dotFiles"],
+                    "archives": {
+                        "create": list(self._options["archivers"]["create"].keys()),
+                        "extract": list(self._options["archivers"]["extract"].keys()),
+                    },
+                    "copyOverwrite": True,
+                    "uploadMaxSize": self._options["uploadMaxSize"],
+                    "uploadOverwrite": True,
+                    "uploadMaxConn": 3,
+                    "uploadMime": {"allow": ["all"], "deny": [], "firstOrder": "deny"},
+                    "i18nFolderName": True,
+                    "dispInlineRegex": "^(?:image|text/plain$)",
+                    "jpgQuality": 100,
+                    "syncChkAsTs": 1,
+                    "syncMinMs": 30000,
+                    "uiCmdMap": {},
                 }
 
         if self._error_data:
@@ -381,8 +412,8 @@ class Connector:
             return
         # try dir
         path = self._options["root"]
-        initialized = len(self._cached_path) > 0
-        if initialized and "target" in self._request and self._request["target"]:
+        # initialized = len(self._cached_path) > 0
+        if "target" in self._request and self._request["target"]:
             if "current" in self._request:
                 cur_dir = self.__find_dir(self._request["current"], None)
                 target = self.__find_dir(self._request["target"], cur_dir)
@@ -396,7 +427,6 @@ class Connector:
                 self._response["error"] = "Access denied"
             else:
                 path = target
-
         self.__content(path, False)
 
     def __rename(self):
@@ -437,8 +467,8 @@ class Connector:
             self.__rm_tmb(cur_name)
             try:
                 os.rename(cur_name, new_name)
-                self._response["select"] = [self.__hash(new_name)]
-                self.__content(cur_dir, os.path.isdir(new_name))
+                self._response["added"] = [self.__info(new_name)]
+                self._response["removed"] = [target]
             except OSError:
                 self._response["error"] = "Unable to rename file"
 
@@ -525,13 +555,18 @@ class Connector:
         if not isinstance(rm_list, list):
             rm_list = [rm_list]
 
+        removed = []
         for rm_hash in rm_list:
             rm_file = self.__find(rm_hash, cur_dir)
             if not rm_file:
                 continue
-            self.__remove(rm_file)
-        # TODO if error_data not empty return error  # pylint: disable=fixme
-        self.__content(cur_dir, True)
+            if self.__remove(rm_file):
+                removed.append(rm_hash)
+            else:
+                self._response["error"] = "Failed to remove: " + rm_file
+                return
+
+        self._response["removed"] = removed
 
     def __upload(self):
         """Upload files."""
@@ -566,10 +601,10 @@ class Connector:
                 self._response["error"] = "Invalid parameters"
                 return
 
-            self._response["select"] = []
+            self._response["added"] = []
             total = 0
             up_size = 0
-            max_size = self._options["uploadMaxSize"] * 1024 * 1024
+            max_size = self._options["uploadMaxSize"]
             for name, data in up_files.items():
                 if name:
                     name = self.__check_utf8(name)
@@ -587,7 +622,7 @@ class Connector:
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
                                 os.chmod(name, self._options["fileMode"])
-                                self._response["select"].append(self.__hash(name))
+                                self._response["added"].append(self.__info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
                                 try:
@@ -611,11 +646,10 @@ class Connector:
 
             if self._error_data:
                 if len(self._error_data) == total:
-                    self._response["error"] = "Unable to upload files"
+                    self._response["warning"] = "Unable to upload files"
                 else:
-                    self._response["error"] = "Some files was not uploaded"
+                    self._response["warning"] = "Some files was not uploaded"
 
-            self.__content(cur_dir, False)
             return
 
     def __paste(self):
@@ -625,9 +659,9 @@ class Connector:
             and "src" in self._request
             and "dst" in self._request
         ):
-            cur_dir = self.__find_dir(self._request["current"], None)
             src = self.__find_dir(self._request["src"], None)
             dst = self.__find_dir(self._request["dst"], None)
+            cur_dir = dst
             if not cur_dir or not src or not dst or "targets[]" not in self._request:
                 self._response["error"] = "Invalid parameters"
                 return
@@ -646,6 +680,8 @@ class Connector:
                 self._response["error"] = "Access denied"
                 return
 
+            added = []
+            removed = []
             for fhash in files:
                 fil = self.__find(fhash, src)
                 if not fil:
@@ -660,7 +696,6 @@ class Connector:
                     if not self.__is_allowed(fil, "rm"):
                         self._response["error"] = "Move failed"
                         self.__set_error_data(fil, "Access denied")
-                        self.__content(cur_dir, True)
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
@@ -668,11 +703,12 @@ class Connector:
                         self.__set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
-                        self.__content(cur_dir, True)
                         return
                     try:
                         os.rename(fil, new_dst)
                         self.__rm_tmb(fil)
+                        added.append(self.__info(new_dst))
+                        removed.append(fhash)
                         continue
                     except OSError:
                         self._response["error"] = "Unable to move files"
@@ -684,29 +720,36 @@ class Connector:
                         self._response["error"] = "Unable to copy files"
                         self.__content(cur_dir, True)
                         return
+                    added.append(self.__info(new_dst))
                     continue
-            self.__content(cur_dir, True)
+            self._response["added"] = added
+            self._response["removed"] = removed
         else:
             self._response["error"] = "Invalid parameters"
 
     def __duplicate(self):
         """Create copy of files/directories."""
-        if "current" in self._request and "target" in self._request:
+        if "current" in self._request and "targets[]" in self._request:
             cur_dir = self.__find_dir(self._request["current"], None)
-            target = self.__find(self._request["target"], cur_dir)
-            if not cur_dir or not target:
+            if not cur_dir:
                 self._response["error"] = "Invalid parameters"
                 return
-            if not self.__is_allowed(target, "read") or not self.__is_allowed(
-                cur_dir, "write"
-            ):
-                self._response["error"] = "Access denied"
-            new_name = _unique_name(target)
-            if not self.__copy(target, new_name):
-                self._response["error"] = "Unable to create file copy"
-                return
-
-        self.__content(cur_dir, True)
+            added = []
+            for target in self._request["targets[]"]:
+                target = self.__find(target, cur_dir)
+                if not self.__is_allowed(target, "read") or not self.__is_allowed(
+                    cur_dir, "write"
+                ):
+                    self._response["error"] = "Access denied"
+                    return
+                new_name = _unique_name(target)
+                if not self.__copy(target, new_name):
+                    self._response["error"] = "Unable to create file copy"
+                    return
+                added.append(self.__info(new_name))
+            self._response["added"] = added
+        else:
+            self._response["error"] = "Invalid parameters"
         return
 
     def __resize(self):
@@ -767,8 +810,7 @@ class Connector:
         if not cur_dir or cur_dir == thumbs_dir:
             return
 
-        self.__init_img_lib()
-        if not self.__can_create_tmb():
+        if not self.__init_img_lib() or not self.__can_create_tmb():
             return
         assert thumbs_dir  # typing
         if self._options["tmbAtOnce"] > 0:
@@ -778,8 +820,8 @@ class Connector:
         self._response["current"] = self.__hash(cur_dir)
         self._response["images"] = {}
         i = 0
-        for fil in os.listdir(cur_dir):
-            path = os.path.join(cur_dir, fil)
+        for entry in os.scandir(cur_dir):
+            path = entry.path
             fhash = self.__hash(path)
             if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
@@ -861,29 +903,26 @@ class Connector:
             filetype = "link"
 
         stat = os.lstat(path)
-        stat_date = datetime.fromtimestamp(stat.st_mtime)
-
-        fdate = ""
-        if stat.st_mtime >= self._today:
-            fdate = "Today " + stat_date.strftime("%H:%M")
-        elif stat.st_mtime >= self._yesterday and stat.st_mtime < self._today:
-            fdate = "Yesterday " + stat_date.strftime("%H:%M")
-        else:
-            fdate = stat_date.strftime("%d %b %Y %H:%M")
+        readable = self.__is_allowed(path, "read")
+        writable = self.__is_allowed(path, "write")
+        deletable = self.__is_allowed(path, "rm")
 
         info = {
             "name": self.__check_utf8(os.path.basename(path)),
             "hash": self.__hash(path),
             "mime": "directory" if filetype == "dir" else self.__mimetype(path),
-            "date": fdate,
-            "size": self.__dir_size(path) if filetype == "dir" else stat.st_size,
-            "read": self.__is_allowed(path, "read"),
-            "write": self.__is_allowed(path, "write"),
-            "rm": self.__is_allowed(path, "rm"),
+            "read": readable,
+            "write": writable,
+            "locked": not readable and not writable and not deletable,
+            "ts": stat.st_mtime,
         }
 
         if filetype == "dir":
             info["volumeid"] = self.volumeid
+            info["dirs"] = any(next(os.walk("."))[1])
+
+        if path != self._options["root"]:
+            info["phash"] = self.__hash(os.path.dirname(path))
 
         if filetype == "link":
             lpath = self.__readlink(path)
@@ -894,7 +933,6 @@ class Connector:
             if os.path.isdir(lpath):
                 info["mime"] = "directory"
             else:
-                info["phash"] = self.__hash(os.path.dirname(lpath))
                 info["mime"] = self.__mimetype(lpath)
 
             if self._options["rootAlias"]:
@@ -903,12 +941,18 @@ class Connector:
                 basename = os.path.basename(self._options["root"])
 
             info["link"] = self.__hash(lpath)
-            info["linkTo"] = os.path.join(basename, lpath[len(self._options["root"]) :])
+            info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
             info["read"] = info["read"] and self.__is_allowed(lpath, "read")
             info["write"] = info["write"] and self.__is_allowed(lpath, "write")
-            info["rm"] = self.__is_allowed(lpath, "rm")
+            info["locked"] = (
+                not info["write"]
+                and not info["read"]
+                and not self.__is_allowed(lpath, "rm")
+            )
+            info["size"] = 0
         else:
             lpath = False
+            info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
             if self._options["fileURL"] and info["read"] is True:
@@ -937,6 +981,11 @@ class Connector:
                         info["tmb"] = tmb_url
                     else:
                         self._response["tmb"] = True
+                        if info["mime"].startswith("image/"):
+                            info["tmb"] = 1
+
+        if info["mime"] == "application/x-empty" or info["mime"] == "inode/x-empty":
+            info["mime"] = "text/plain"
 
         return info
 
@@ -971,7 +1020,6 @@ class Connector:
                     and self.__is_accepted(directory)
                 ):
                     tree["dirs"].append(self.__tree(dir_path, depth + 1))
-
         return tree
 
     def __remove(self, target):
@@ -1038,9 +1086,7 @@ class Connector:
 
         return True
 
-    def __find_dir(
-        self, fhash: str, path: Optional[str] = None, depth: int = 0
-    ) -> Optional[str]:
+    def __find_dir(self, fhash: str, path: Optional[str] = None) -> Optional[str]:
         """Find directory by hash."""
         fhash = str(fhash)
         # try to get find it in the cache
@@ -1056,33 +1102,29 @@ class Connector:
         if not os.path.isdir(path):
             return None
 
-        # limit the folder depth
-        if depth < self._options["maxFolderDepth"]:
-            try:
-                for directory in os.listdir(path):
-                    dir_path = os.path.join(path, directory)
-                    if os.path.isdir(dir_path) and not os.path.islink(dir_path):
-                        if fhash == self.__hash(dir_path):
-                            return dir_path
-                        ret = self.__find_dir(fhash, dir_path, depth + 1)
-                        if ret:
-                            return ret
-            except PermissionError:
-                if depth == 0:
-                    raise
-                self.__debug("permission error", path)
-                print("WARNING: permission error: " + path)
-
+        for root, dirs, _ in os.walk(path, topdown=True):
+            for folder in dirs:
+                folder_path = os.path.join(root, folder)
+                if not os.path.islink(folder_path) and fhash == self.__hash(
+                    folder_path
+                ):
+                    return folder_path
         return None
 
     def __find(self, fhash, parent):
         """Find file/dir by hash."""
         fhash = str(fhash)
         if os.path.isdir(parent):
-            for i in os.listdir(parent):
-                path = os.path.join(parent, i)
-                if fhash == self.__hash(path):
-                    return path
+            for root, dirs, files in os.walk(parent, topdown=True):
+                for folder in dirs:
+                    folder_path = os.path.join(root, folder)
+                    if fhash == self.__hash(folder_path):
+                        return folder_path
+                for fil in files:
+                    file_path = os.path.join(root, fil)
+                    if fhash == self.__hash(file_path):
+                        return file_path
+
         return None
 
     def __read(self):
@@ -1266,6 +1308,44 @@ class Connector:
         self.http_status_code = 200
         self.http_header["Connection"] = "close"
 
+    def __search(self):
+        if "q" not in self._request:
+            self._response["error"] = "Invalid parameters"
+            return
+
+        if "target" in self._request:
+            target = self._request["target"]
+            if not target:
+                self._response["error"] = "Invalid parameters"
+                return
+            search_path = self.__find_dir(target, None)
+        else:
+            search_path = self._options["root"]
+
+        if not search_path:
+            self._response["error"] = "File not found"
+            return
+
+        mimes = self._request.get("mimes")
+
+        result = []
+        query = self._request["q"]
+        for root, dirs, files in os.walk(search_path):
+            for fil in files:
+                if query in fil:
+                    file_path = os.path.join(root, fil)
+                    if mimes is None:
+                        result.append(self.__info(file_path))
+                    else:
+                        if self.__mimetype(file_path) in mimes:
+                            result.append(self.__info(file_path))
+            if mimes is None:
+                for folder in dirs:
+                    file_path = os.path.join(root, folder)
+                    if query in folder:
+                        result.append(self.__info(file_path))
+        self._response["files"] = result
+
     def __mimetype(self, path):
         """Detect mimetype of file."""
         mime = mimetypes.guess_type(path)[0] or "unknown"
@@ -1303,7 +1383,7 @@ class Connector:
                 img = img.crop(box)
             img.thumbnail(size, self._img.ANTIALIAS)  # type: ignore
             img.save(tmb, "PNG")
-        except (UnidentifiedImageError, OSError) as exc:
+        except (UnidentifiedImageError, OSError, ValueError) as exc:
             self.__debug("tmbFailed_" + path, str(exc))
             return False
         return True
@@ -1455,21 +1535,26 @@ class Connector:
         self._error_data[path] = msg
 
     def __init_img_lib(self):
-        if not self._options["imgLib"] and self._img is None:
+        if not self._options["imgLib"] or self._options["imgLib"] == "auto":
+            self._options["imgLib"] = "PIL"
+
+        if self._options["imgLib"] == "PIL":
             try:
                 from PIL import Image  # pylint: disable=import-outside-toplevel
 
                 self._img = Image
-                self._options["imgLib"] = "PIL"
             except ImportError:
-                self._options["imgLib"] = None
                 self._img = None
+                self._options["imgLib"] = None
+        else:
+            raise NotImplementedError
 
         self.__debug("imgLib", self._options["imgLib"])
         return self._options["imgLib"]
 
     def __get_img_size(self, path):
-        self.__init_img_lib()
+        if not self.__init_img_lib():
+            return False
         if self.__can_create_tmb():
             # pylint: disable=import-outside-toplevel
             from PIL import UnidentifiedImageError
@@ -1478,7 +1563,7 @@ class Connector:
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
             except (UnidentifiedImageError, FileNotFoundError):
-                pass
+                print("WARNING: unidentified image or file not found error: " + path)
 
         return False
 
