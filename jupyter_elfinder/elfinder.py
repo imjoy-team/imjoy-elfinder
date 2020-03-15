@@ -475,7 +475,7 @@ class Connector:
             except OSError:
                 self._response["error"] = "Unable to rename file"
 
-    def __mkdir(self):
+    def __mkdir(self) -> None:
         """Create new directory."""
         current = None
         path = None
