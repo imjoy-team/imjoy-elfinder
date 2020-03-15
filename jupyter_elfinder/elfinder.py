@@ -356,7 +356,7 @@ class Connector:
 
         return self.http_status_code, self.http_header, self.http_response
 
-    def __open(self):
+    def __open(self) -> None:
         """Open file or directory."""
         # try to open file
         if "tree" not in self._request and "current" in self._request:
