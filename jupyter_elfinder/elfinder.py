@@ -1838,7 +1838,7 @@ def _run_sub_process(cmd: List[str], valid_return: Optional[List[int]] = None) -
     return True
 
 
-def _crop_tuple(size):
+def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
     """Return the crop rectangle, as a (left, upper, right, lower)-tuple."""
     width, height = size
     if width > height:  # landscape
@@ -1855,4 +1855,4 @@ def _crop_tuple(size):
         return (left, upper, right, lower)
 
     # cube
-    return False
+    return None
