@@ -1,4 +1,4 @@
 pillow
 pyramid
 pyramid_jinja2
-typing_extensions; python_version <= "3.6"
+typing_extensions
