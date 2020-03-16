@@ -14,5 +14,4 @@ from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
 
 def includeme(config: Configurator) -> None:
     """Include routes in frontend."""
-    config.add_route(JUPYTER_ELFINDER_CONNECTOR, "/jupyter_elfinder/connector/")
-    config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/jupyter_elfinder/filebrowser/")
+    config.add_route(JUPYTER_ELFINDER_CONNECTOR, "/connector/")
