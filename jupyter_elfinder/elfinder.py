@@ -1628,10 +1628,16 @@ class Connector:
         cur_dir = path
         length = len(self._options["root"])
         if self._options["URL"].startswith("http"):
-            url = urllib.parse.urljoin(self._options["URL"], cur_dir[length:])
+            url = "/" + urllib.parse.urljoin(
+                self._options["base_url"].rstrip("/"),
+                self._options["URL"].lstrip("/"),
+                cur_dir[length:],
+            )
         else:
-            url = os.path.join(
-                self._options["URL"].lstrip("/"), cur_dir[length:].lstrip("/")
+            url = "/" + os.path.join(
+                self._options["base_url"].rstrip("/"),
+                self._options["URL"].lstrip("/"),
+                cur_dir[length:].lstrip("/"),
             )
         url = self.__check_utf8(url).replace(os.sep, "/")
         url = urllib.parse.quote(url, "/:~")
