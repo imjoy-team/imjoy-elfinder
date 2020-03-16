@@ -340,7 +340,7 @@ class Connector:
                 if thumbs_dir:
                     thumbs_url = self.__path2url(thumbs_dir)
                 else:
-                    thumbs_dir = None
+                    thumbs_url = None
 
                 self._response["options"] = {
                     "path": self._response["cwd"]["rel"],
