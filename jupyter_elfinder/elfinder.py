@@ -58,6 +58,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
     {
         "root": str,
         "URL": str,
+        "base_url": str,
         "maxFolderDepth": int,
         "rootAlias": str,
         "dotFiles": bool,
@@ -102,6 +103,7 @@ class Connector:
     _options = {
         "root": "",
         "URL": "",
+        "base_url": "",
         "maxFolderDepth": 256,
         "rootAlias": "HOME",
         "dotFiles": False,
