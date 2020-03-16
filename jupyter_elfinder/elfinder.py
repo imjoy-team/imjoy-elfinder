@@ -215,6 +215,7 @@ class Connector:
         self,
         root: str,
         url: str,
+        base_url: str,
         upload_max_size: int,
         debug: bool,
         tmb_dir: Optional[str],
