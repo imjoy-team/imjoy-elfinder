@@ -17,12 +17,12 @@ import shutil
 import subprocess
 import time
 import traceback
-import urllib.parse
 import uuid
 from datetime import datetime
 from collections.abc import Callable
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
+from urllib.parse import urljoin, quote_plus, quote
 
 from typing_extensions import Literal, TypedDict
 
@@ -1627,20 +1627,11 @@ class Connector:
     def __path2url(self, path: str) -> str:
         cur_dir = path
         length = len(self._options["root"])
-        if self._options["base_url"].startswith("http"):
-            url = urllib.parse.urljoin(
-                self._options["base_url"].rstrip("/"),
-                self._options["files_url"].lstrip("/"),
-                cur_dir[length:],
-            )
-        else:
-            url = "/" + os.path.join(
-                self._options["base_url"].lstrip("/"),
-                self._options["files_url"].lstrip("/"),
-                cur_dir[length:].lstrip("/"),
-            )
+        url = multi_urljoin(
+            self._options["base_url"], self._options["files_url"], cur_dir[length:],
+        )
         url = self.__check_utf8(url).replace(os.sep, "/")
-        url = urllib.parse.quote(url, "/:~")
+        url = quote(url, "/:~")
         return url
 
     def __set_error_data(self, path: str, msg: str) -> None:
@@ -1899,3 +1890,9 @@ def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
 
     # cube
     return None
+
+
+def multi_urljoin(*parts):
+    return urljoin(
+        parts[0], "/".join(quote_plus(part.strip("/"), safe="/") for part in parts[1:])
+    )
