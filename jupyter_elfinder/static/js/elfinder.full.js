@@ -10729,7 +10729,7 @@ elFinder.prototype._options = {
 		sparkmd5   : 'https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.0/spark-md5.min.js',
 		jssha      : 'https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha.js',
 		amr        : 'https://cdn.jsdelivr.net/gh/yxl/opencore-amr-js@dcf3d2b5f384a1d9ded2a54e4c137a81747b222b/js/amrnb.js',
-		tiff       : 'https://cdn.jsdelivr.net/gh/seikichi/tiff.js@545ede3ee46b5a5bc5f06d65954e775aa2a64017/tiff.min.js'
+		utif       : 'https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js'
 	},
 	
 	/**
@@ -29190,6 +29190,10 @@ elFinder.prototype.commands.quicklook.plugins = [
 							co = cv.getContext('2d');
 							cv.width = data.width;
 							cv.height = data.height;
+
+							if(data.error || !data.width || !data.height){
+								err( data.error || new Error("Failed to parse the tiff file."))
+							}
 							id = co.createImageData(data.width, data.height);
 							(id).data.set(new Uint8Array(data.image));
 							co.putImageData(id, 0, 0);
@@ -29216,7 +29220,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 						};
 						wk.onerror = err;
 						wk.postMessage({
-							scripts: [fm.options.cdns.tiff, 'quicklook.tiff.js'],
+							scripts: [fm.options.cdns.utif, 'quicklook.tiff.js'],
 							data: { url: url }
 						});
 					} catch(e) {

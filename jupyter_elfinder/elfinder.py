@@ -17,12 +17,12 @@ import shutil
 import subprocess
 import time
 import traceback
-import urllib.parse
 import uuid
 from datetime import datetime
 from collections.abc import Callable
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
+from urllib.parse import urljoin, quote
 
 from typing_extensions import Literal, TypedDict
 
@@ -57,7 +57,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
     "Options",
     {
         "root": str,
-        "URL": str,
+        "files_url": str,
         "base_url": str,
         "maxFolderDepth": int,
         "rootAlias": str,
@@ -102,7 +102,7 @@ class Connector:
 
     _options = {
         "root": "",
-        "URL": "",
+        "files_url": "",
         "base_url": "",
         "maxFolderDepth": 256,
         "rootAlias": "HOME",
@@ -224,7 +224,7 @@ class Connector:
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = root
-        self._options["URL"] = url
+        self._options["files_url"] = url
         self._options["uploadMaxSize"] = upload_max_size
         self._options["debug"] = debug
         self._options["tmbDir"] = tmb_dir
@@ -233,13 +233,13 @@ class Connector:
         )
 
         self._response["debug"] = {}
-        self._options["URL"] = self.__check_utf8(self._options["URL"])
-        self._options["URL"] = self._options["URL"].rstrip("/")
+        self._options["files_url"] = self.__check_utf8(self._options["files_url"])
+        self._options["files_url"] = self._options["files_url"].rstrip("/")
         self._options["root"] = self.__check_utf8(self._options["root"])
         # only strip / if it's not root
         if os.path.dirname(self._options["root"]) != self._options["root"]:
             self._options["root"] = self._options["root"].rstrip(os.sep)
-        self.__debug("URL", self._options["URL"])
+        self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
         self.volumeid = str(uuid.uuid4())
 
@@ -328,7 +328,7 @@ class Connector:
                 if not self._options["fileURL"]:
                     url = ""
                 else:
-                    url = self._options["URL"]
+                    url = self._options["files_url"]
 
                 self._response["api"] = 2.1
                 self._response["netDrivers"] = []
@@ -1627,14 +1627,11 @@ class Connector:
     def __path2url(self, path: str) -> str:
         cur_dir = path
         length = len(self._options["root"])
-        if self._options["URL"].startswith("http"):
-            url = urllib.parse.urljoin(self._options["URL"], cur_dir[length:])
-        else:
-            url = os.path.join(
-                self._options["URL"].lstrip("/"), cur_dir[length:].lstrip("/")
-            )
+        url = multi_urljoin(
+            self._options["base_url"], self._options["files_url"], cur_dir[length:],
+        )
         url = self.__check_utf8(url).replace(os.sep, "/")
-        url = urllib.parse.quote(url, "/:~")
+        url = quote(url, safe="/")
         return url
 
     def __set_error_data(self, path: str, msg: str) -> None:
@@ -1893,3 +1890,10 @@ def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
 
     # cube
     return None
+
+
+def multi_urljoin(*parts: str) -> str:
+    """Joint multple url parts into a valid url."""
+    if parts[0].startswith("http"):
+        return str(urljoin(parts[0], "/".join(part.strip("/") for part in parts[1:]),))
+    return "/" + "/".join(part.strip("/") for part in parts)
