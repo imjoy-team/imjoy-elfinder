@@ -10,8 +10,6 @@
 	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || '/static'
 	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/connector/'
 	window.ELFINDER_CONFIG['connector_query'] = window.window.ELFINDER_CONFIG['connector_query'] || null
-	window.ELFINDER_CONFIG['file_base_url'] = window.window.ELFINDER_CONFIG['file_base_url'] || ''
-	
 	if(!window.ELFINDER_CONFIG['connector_url'].endsWith('/')) window.ELFINDER_CONFIG['connector_url'] = window.ELFINDER_CONFIG['connector_url'] + '/';
 	var // jQuery and jQueryUI version
 		jqver = '3.4.1',
@@ -163,7 +161,6 @@
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
 				url : window.ELFINDER_CONFIG['connector_url'], // connector URL (REQUIRED
-				file_base_url: window.ELFINDER_CONFIG['file_base_url'],
 				height: '100%',
 				rememberLastDir: false,
 				cssAutoLoad: true,

@@ -14,10 +14,9 @@
 			}
 			if(serverUrl && serverUrl.endsWith('/')) serverUrl = serverUrl.substring(0, serverUrl.length - 1);
 			window.ELFINDER_CONFIG = {
-				static_url: serverUrl + '/jupyter_elfinder_static',
-				connector_url: serverUrl + '/jupyter_elfinder/connector',
+				static_url: serverUrl + '/static',
+				connector_url: serverUrl + '/connector',
 				connector_query: null,
-				file_base_url: serverUrl,
 			}
 			// load the app
 			var script = document.createElement('script');
@@ -33,8 +32,8 @@
 			link.href = window.ELFINDER_CONFIG['static_url'] + '/img/favicon.ico';
 			document.getElementsByTagName('head')[0].appendChild(link);
 		</script>
-		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ JUPYTER_ELFINDER_BASE_URL }}/jupyter_elfinder_static/themes/Material/css/theme-light.min.css"> -->
-		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ JUPYTER_ELFINDER_BASE_URL }}/jupyter_elfinder_static/themes/windows-10/css/theme.css"> -->
+		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ JUPYTER_ELFINDER_BASE_URL }}/static/themes/Material/css/theme-light.min.css"> -->
+		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ JUPYTER_ELFINDER_BASE_URL }}/static/themes/windows-10/css/theme.css"> -->
 	</head>
 	<body>
 

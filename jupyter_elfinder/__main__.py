@@ -22,7 +22,9 @@ def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
     config.include("jupyter_elfinder")
 
     # serve the folder content as static files under /static
-    config.add_static_view("static", settings["jupyter_elfinder_root"])
+    config.add_static_view(
+        settings["jupyter_elfinder_url"], settings["jupyter_elfinder_root"]
+    )
 
     # serve the file browser under /
     config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/")
@@ -97,7 +99,7 @@ def main(args: Optional[List[str]] = None) -> None:
 
     settings = {
         "jupyter_elfinder_root": opt.root_dir or os.getcwd(),
-        "jupyter_elfinder_url": "/static",
+        "jupyter_elfinder_url": "/files",
         "jupyter_base_url": opt.base_url or "",
     }  # type: Dict[str, str]
     if opt.thumbnail:
