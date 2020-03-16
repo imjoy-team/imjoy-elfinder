@@ -29190,6 +29190,9 @@ elFinder.prototype.commands.quicklook.plugins = [
 							co = cv.getContext('2d');
 							cv.width = data.width;
 							cv.height = data.height;
+							if(!data.width || !data.height){
+								err(new Error("Failed to parse the tiff file."))
+							}
 							id = co.createImageData(data.width, data.height);
 							(id).data.set(new Uint8Array(data.image));
 							co.putImageData(id, 0, 0);
