@@ -189,7 +189,13 @@ class Connector:
     http_response = None  # type: Optional[Union[str, Dict[str, str]]]
 
     def __init__(
-        self, root: str, url: str, upload_max_size: int, debug: bool, tmb_dir: str
+        self,
+        root: str,
+        url: str,
+        base_url: str,
+        upload_max_size: int,
+        debug: bool,
+        tmb_dir: str,
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = root
@@ -197,6 +203,9 @@ class Connector:
         self._options["uploadMaxSize"] = upload_max_size
         self._options["debug"] = debug
         self._options["tmbDir"] = tmb_dir
+        self._options["base_url"] = (
+            base_url.lstrip("/") if base_url.startswith("//") else base_url
+        )
 
         self._response["debug"] = {}
         self._options["URL"] = self.__check_utf8(self._options["URL"])
@@ -1526,7 +1535,9 @@ class Connector:
         if self._options["URL"].startswith("http"):
             url = urllib.parse.urljoin(self._options["URL"], cur_dir[length:])
         else:
-            url = os.path.join(self._options["URL"], cur_dir[length:].lstrip("/"))
+            url = os.path.join(
+                self._options["URL"].lstrip("/"), cur_dir[length:].lstrip("/")
+            )
         url = self.__check_utf8(url).replace(os.sep, "/")
         url = urllib.parse.quote(url, "/:~")
         return url

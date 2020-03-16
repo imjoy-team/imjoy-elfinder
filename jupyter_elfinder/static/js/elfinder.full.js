@@ -2098,9 +2098,6 @@ var elFinder = function(elm, opts, bootCallback) {
 				url = cwdOptions.url + $.map(this.path2array(hash), function(n) { return encodeURIComponent(n); }).slice(1).join('/');
 			}
 			if (url) {
-				if(!url.startsWith('http') && this.options.file_base_url){
-					url = this.options.file_base_url + url;
-				}
 				url += (url.match(/\?/)? '&' : '?') + '_'.repeat((url.match(/[\?&](_+)t=/g) || ['&t=']).sort().shift().match(/[\?&](_*)t=/)[1].length + 1) + 't=' + (file.ts || parseInt(+new Date()/1000));
 				return url;
 			}
@@ -2169,9 +2166,6 @@ var elFinder = function(elm, opts, bootCallback) {
 							url += ((n++ === 0)? '' : '&') + encodeURIComponent(key) + '=' + encodeURIComponent(val);
 						});
 					}
-				}
-				if(!url.startsWith('http')){
-					url = this.options.file_base_url + url;
 				}
 				return { url: url, className: cls };
 			}
