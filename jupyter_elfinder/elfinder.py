@@ -1901,5 +1901,4 @@ def multi_urljoin(*parts: str) -> str:
                 "/".join(quote_plus(part.strip("/"), safe="/") for part in parts[1:]),
             )
         )
-    else:
-        return "/" + "/".join(quote_plus(part.strip("/"), safe="/") for part in parts)
+    return "/" + "/".join(quote_plus(part.strip("/"), safe="/") for part in parts)
