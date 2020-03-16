@@ -9,7 +9,7 @@
 """Provide routes of elfinder."""
 from pyramid.config import Configurator
 
-from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER
+from . import JUPYTER_ELFINDER_CONNECTOR
 
 
 def includeme(config: Configurator) -> None:
