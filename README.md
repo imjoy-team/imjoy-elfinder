@@ -1,4 +1,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master)
+![PyPI](https://img.shields.io/pypi/v/jupyter-elfinder.svg?style=popout)
+![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/jupyter-elfinder/master/jupyter_elfinder/VERSION)
+![Test](https://github.com/imjoy-team/jupyter-elfinder/workflows/Test/badge.svg)
 
 # Jupyter elFinder
 
