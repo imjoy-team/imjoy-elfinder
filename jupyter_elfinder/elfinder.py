@@ -22,7 +22,7 @@ from datetime import datetime
 from collections.abc import Callable
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
-from urllib.parse import urljoin, quote_plus, quote
+from urllib.parse import urljoin, quote
 
 from typing_extensions import Literal, TypedDict
 
@@ -1631,7 +1631,7 @@ class Connector:
             self._options["base_url"], self._options["files_url"], cur_dir[length:],
         )
         url = self.__check_utf8(url).replace(os.sep, "/")
-        url = quote(url, "/:~")
+        url = quote(url, safe="/")
         return url
 
     def __set_error_data(self, path: str, msg: str) -> None:
@@ -1895,10 +1895,5 @@ def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
 def multi_urljoin(*parts: str) -> str:
     """Joint multple url parts into a valid url."""
     if parts[0].startswith("http"):
-        return str(
-            urljoin(
-                parts[0],
-                "/".join(quote_plus(part.strip("/"), safe="/") for part in parts[1:]),
-            )
-        )
-    return "/" + "/".join(quote_plus(part.strip("/"), safe="/") for part in parts)
+        return str(urljoin(parts[0], "/".join(part.strip("/") for part in parts[1:]),))
+    return "/" + "/".join(part.strip("/") for part in parts)
