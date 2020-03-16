@@ -3,16 +3,20 @@ import argparse
 import json
 import os
 import sys
-from wsgiref.simple_server import make_server, WSGIServer
 from socketserver import ThreadingMixIn
+from typing import Any, Dict, List, Optional
+from wsgiref.simple_server import WSGIServer, make_server
 
 from pyramid.config import Configurator
 from pyramid.events import BeforeRender, NewRequest
+from pyramid.request import Request
+from pyramid.response import Response
+from pyramid.router import Router
 
 from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
 
 
-def build_app(opt, **settings):
+def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
     """Build the app."""
     config = Configurator(settings=settings)
     config.include("jupyter_elfinder")
@@ -23,8 +27,8 @@ def build_app(opt, **settings):
     # serve the file browser under /
     config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/")
 
-    def add_cors_headers_response_callback(event):
-        def cors_headers(request, response):
+    def add_cors_headers_response_callback(event: Any) -> None:
+        def cors_headers(request: Request, response: Response) -> None:
             response.headers.update(
                 {
                     "Access-Control-Allow-Origin": opt.allow_origin,
@@ -42,7 +46,7 @@ def build_app(opt, **settings):
     # add cors headers
     config.add_subscriber(add_cors_headers_response_callback, NewRequest)
 
-    def add_global_params(event):
+    def add_global_params(event: Any) -> None:
         """Add global parameters."""
         event["JUPYTER_ELFINDER_BASE_URL"] = settings["jupyter_base_url"]
         with open(
@@ -60,7 +64,7 @@ class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Represent a threading WSGI server."""
 
 
-def main(args=None):
+def main(args: Optional[List[str]] = None) -> None:
     """Run the app."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -90,14 +94,16 @@ def main(args=None):
     )
 
     opt = parser.parse_args(args=args)
+
     settings = {
         "jupyter_elfinder_root": opt.root_dir or os.getcwd(),
         "jupyter_elfinder_url": "/static",
         "jupyter_base_url": opt.base_url or "",
-        "jupyter_elfinder_thumbnail_dir": ".tmb" if opt.thumbnail else None,
-    }
+    }  # type: Dict[str, str]
+    if opt.thumbnail:
+        settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
 
-    app = build_app(opt, **settings)
+    app = build_app(opt, settings)
 
     httpd = make_server(opt.host, opt.port, app, ThreadingWSGIServer)
 
@@ -112,7 +118,7 @@ def main(args=None):
     httpd.serve_forever()
 
 
-def setup_for_jupyter_server_proxy():
+def setup_for_jupyter_server_proxy() -> dict:
     """Set up jupyter server proxy."""
 
     return {

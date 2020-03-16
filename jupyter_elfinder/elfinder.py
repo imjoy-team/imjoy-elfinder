@@ -22,7 +22,7 @@ import uuid
 from datetime import datetime
 from collections.abc import Callable
 from types import ModuleType
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 
 from typing_extensions import Literal, TypedDict
 
@@ -85,7 +85,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
 )
 
 
-def exception_to_string(excp):
+def exception_to_string(excp: Exception) -> str:
     """Convert exception to string."""
     stack = traceback.extract_stack()[:-3] + traceback.extract_tb(
         excp.__traceback__
@@ -212,7 +212,12 @@ class Connector:
     http_response = None  # type: Optional[Union[str, Dict[str, str]]]
 
     def __init__(
-        self, root: str, url: str, upload_max_size: int, debug: bool, tmb_dir: str
+        self,
+        root: str,
+        url: str,
+        upload_max_size: int,
+        debug: bool,
+        tmb_dir: Optional[str],
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = root
@@ -1512,7 +1517,9 @@ class Connector:
             total_size = os.lstat(path).st_size
         return total_size
 
-    def __fbuffer(self, fil, chunk_size=_options["uploadWriteChunk"]):
+    def __fbuffer(
+        self, fil: BinaryIO, chunk_size: int = _options["uploadWriteChunk"]
+    ) -> Generator[bytes, None, None]:
         # pylint: disable=no-self-use
         while True:
             chunk = fil.read(chunk_size)
