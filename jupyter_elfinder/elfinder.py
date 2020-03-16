@@ -340,7 +340,7 @@ class Connector:
                 if thumbs_dir:
                     thumbs_url = self.__path2url(thumbs_dir)
                 else:
-                    thumbs_url = None
+                    thumbs_url = ""
 
                 self._response["options"] = {
                     "path": self._response["cwd"]["rel"],
@@ -984,7 +984,10 @@ class Connector:
 
         if filetype == "dir":
             info["volumeid"] = self.volumeid
-            info["dirs"] = any(next(os.walk(path))[1])
+            try:
+                info["dirs"] = any(next(os.walk(path))[1])
+            except StopIteration:
+                info["dirs"] = False
 
         if path != self._options["root"]:
             info["phash"] = self.__hash(os.path.dirname(path))
