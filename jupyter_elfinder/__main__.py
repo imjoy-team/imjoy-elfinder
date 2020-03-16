@@ -22,9 +22,7 @@ def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
     config.include("jupyter_elfinder")
 
     # serve the folder content as static files under /static
-    config.add_static_view(
-        settings["jupyter_elfinder_url"], settings["jupyter_elfinder_root"]
-    )
+    config.add_static_view(settings["files_url"], settings["root_dir"])
 
     # serve the file browser under /
     config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/")
@@ -50,7 +48,7 @@ def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
 
     def add_global_params(event: Any) -> None:
         """Add global parameters."""
-        event["JUPYTER_ELFINDER_BASE_URL"] = settings["jupyter_base_url"]
+        event["JUPYTER_ELFINDER_BASE_URL"] = settings["base_url"]
         with open(
             os.path.join(os.path.dirname(os.path.realpath(__file__)), "VERSION"), "r"
         ) as fil:
@@ -98,9 +96,9 @@ def main(args: Optional[List[str]] = None) -> None:
     opt = parser.parse_args(args=args)
 
     settings = {
-        "jupyter_elfinder_root": opt.root_dir or os.getcwd(),
-        "jupyter_elfinder_url": "/files",
-        "jupyter_base_url": opt.base_url or "",
+        "root_dir": opt.root_dir or os.getcwd(),
+        "files_url": "/files",
+        "base_url": opt.base_url or "",
     }  # type: Dict[str, str]
     if opt.thumbnail:
         settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
