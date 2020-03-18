@@ -1899,4 +1899,4 @@ def multi_urljoin(*parts: str) -> str:
     """Join multiple url parts into a valid url."""
     if parts[0].startswith("http"):
         return str(urljoin(parts[0], "/".join(part.strip("/") for part in parts[1:]),))
-    return "/" + "/".join(part.strip("/") for part in parts)
+    return "/" + "/".join(part.strip("/") for part in parts if part)
