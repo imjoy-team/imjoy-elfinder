@@ -1620,9 +1620,7 @@ class Connector:
 
     def __hash(self, path: str) -> str:
         """Hash of the path."""
-        hash_obj = hashlib.md5()
-        hash_obj.update(path.encode("utf-8"))
-        hash_code = str(hash_obj.hexdigest())
+        hash_code = make_hash(path)
 
         # TODO: what if the cache getting to big?  # pylint: disable=fixme
         self._cached_path[hash_code] = path
@@ -1891,6 +1889,14 @@ def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
 
     # cube
     return None
+
+
+def make_hash(to_hash: str) -> str:
+    """Return a hash of to_hash."""
+    hash_obj = hashlib.md5()
+    hash_obj.update(to_hash.encode("utf-8"))
+    hash_code = str(hash_obj.hexdigest())
+    return hash_code
 
 
 def multi_urljoin(*parts: str) -> str:
