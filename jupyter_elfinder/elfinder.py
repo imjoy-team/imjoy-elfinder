@@ -1661,7 +1661,7 @@ class Connector:
             try:
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
-            except FileNotFoundError:  # UnidentifiedImageError requires Pillow 7.0.0
+            except OSError:  # UnidentifiedImageError requires Pillow 7.0.0
                 print("WARNING: unidentified image or file not found error: " + path)
 
         return None
