@@ -848,16 +848,13 @@ class Connector:
         if not self.__init_img_lib():
             return
 
-        # pylint: disable=import-outside-toplevel
-        from PIL import UnidentifiedImageError
-
         try:
             img = self._img.open(cur_file)  # type: ignore
             img_resized = img.resize(
                 (width, height), self._img.ANTIALIAS  # type: ignore
             )
             img_resized.save(cur_file)
-        except (UnidentifiedImageError, OSError) as exc:
+        except OSError as exc:  # UnidentifiedImageError requires Pillow 7.0.0
             # self.__debug('resizeFailed_' + path, str(exc))
             self.__debug("resizeFailed_" + self._options["root"], str(exc))
             self._response["error"] = "Unable to resize image"
@@ -1478,9 +1475,6 @@ class Connector:
 
     def __tmb(self, path: str, tmb: str) -> bool:
         """Provide internal thumbnail create procedure."""
-        # pylint: disable=import-outside-toplevel
-        from PIL import UnidentifiedImageError
-
         try:
             img = self._img.open(path).copy()  # type: ignore
             size = self._options["tmbSize"], self._options["tmbSize"]
@@ -1489,7 +1483,8 @@ class Connector:
                 img = img.crop(box)
             img.thumbnail(size, self._img.ANTIALIAS)  # type: ignore
             img.save(tmb, "PNG")
-        except (UnidentifiedImageError, OSError, ValueError) as exc:
+        # UnidentifiedImageError requires Pillow 7.0.0
+        except (OSError, ValueError) as exc:
             self.__debug("tmbFailed_" + path, str(exc))
             return False
         return True
@@ -1663,13 +1658,10 @@ class Connector:
         if not self.__init_img_lib():
             return None
         if self.__can_create_tmb():
-            # pylint: disable=import-outside-toplevel
-            from PIL import UnidentifiedImageError
-
             try:
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
-            except (UnidentifiedImageError, FileNotFoundError):
+            except OSError:  # UnidentifiedImageError requires Pillow 7.0.0
                 print("WARNING: unidentified image or file not found error: " + path)
 
         return None
