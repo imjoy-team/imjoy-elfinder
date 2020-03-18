@@ -112,9 +112,8 @@ def connector(request: Request) -> Response:
     # run connector with parameters
     status, header, response = elf.run(http_request)
 
-    if status == 200:
+    if status == 200 and "file" in response:
         # send file
-        if "file" in response:
             file_path = response["file"]
             if os.path.exists(file_path) and not os.path.isdir(file_path):
                 result = make_response(file_path)
