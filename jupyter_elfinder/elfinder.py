@@ -1896,7 +1896,7 @@ def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
 
 
 def multi_urljoin(*parts: str) -> str:
-    """Joint multple url parts into a valid url."""
+    """Join multiple url parts into a valid url."""
     if parts[0].startswith("http"):
         return str(urljoin(parts[0], "/".join(part.strip("/") for part in parts[1:]),))
     return "/" + "/".join(part.strip("/") for part in parts)
