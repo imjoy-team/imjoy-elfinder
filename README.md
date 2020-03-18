@@ -1,20 +1,14 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master)
-![PyPI](https://img.shields.io/pypi/v/jupyter-elfinder.svg?style=popout)
-![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/jupyter-elfinder/master/jupyter_elfinder/VERSION)
-![Test](https://github.com/imjoy-team/jupyter-elfinder/workflows/Test/badge.svg)
-
-# Jupyter elFinder
+# Jupyter elFinder [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master) [![PyPI](https://img.shields.io/pypi/v/jupyter-elfinder.svg?style=popout)](https://pypi.org/project/jupyter-elfinder/) ![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/jupyter-elfinder/master/jupyter_elfinder/VERSION) [![Test](https://github.com/imjoy-team/jupyter-elfinder/workflows/Test/badge.svg)](https://github.com/imjoy-team/jupyter-elfinder/actions)
 
 A web file browser for managing data on remote jupyter servers, specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
 
 The frontend is built with [elFinder](https://github.com/Studio-42/elfinder) and a Python backend server.
 
-## What is elFinder?
+## What is elFinder
 
 elFinder is an open-source file manager for web, written in JavaScript using jQuery and jQuery UI, [the project](https://github.com/Studio-42/elfinder) is maintained by [Studio 42](https://github.com/Studio-42).
 
 [Try their online demo here](https://studio-42.github.io/elFinder/).
-
 
 ## Installation
 
@@ -27,11 +21,12 @@ pip install -U jupyter-elfinder
 ## Basic Usage
 
 In your terminal, run the following command:
+
 ```sh
 jupyter-elfinder --thumbnail
 ```
-(The thumbnail option enables thumbnail for images, it will create a folder named `.tmb` under your current folder, you can also disable that by remove the `--thumbnail` option.)
 
+(The thumbnail option enables thumbnail for images, it will create a folder named `.tmb` under your current folder, you can also disable that by remove the `--thumbnail` option.)
 
 You will then see the following message:
 
@@ -40,10 +35,9 @@ You will then see the following message:
 http://127.0.0.1:8765
 ```
 
-Depending on where you started the command, the file browser will show your current folder as root directory or HOME. 
+Depending on where you started the command, the file browser will show your current folder as root directory or HOME.
 
 In order to browse your own directory, you can manually set the root directory by passing `--root-dir=/PATH/TO/MY/FOLDER`.
-
 
 ![jupyter-elfinder-screenshot](example-data/jupyter-elfinder-screenshot.png)
 
@@ -71,7 +65,7 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 
 ## Start a demo with MyBinder
 
-1. Start an instance on MyBinder: https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master
+1. Start an instance on MyBinder: [https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master](https://mybinder.org/v2/gh/oeway/pyramid_elfinder/master)
 
 2. Get the generated Jupyter Notebook URL and add `/elfinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elfinder`
 
@@ -82,6 +76,7 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 Please be aware that there is potential risk to use Jupyter elFinder locally or remotely over the internet.
 
 Here are some suggestions:
+
 1. Try to set root-dir to a folder containing the files you actually need, as minimal as possible, avoid exposing the entire file system.
 
 2. For remote servers, use it via the Jupyter proxy such that the access will be protected by jupyter token or password. also, do not turn off the authentication in Jupyter.
