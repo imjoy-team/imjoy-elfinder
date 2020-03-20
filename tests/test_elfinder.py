@@ -10,6 +10,7 @@ from jupyter_elfinder.api_const import (
     R_NETDRIVERS,
     R_OPTIONS,
     R_UPLMAXFILE,
+    R_UPLMAXSIZE,
 )
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
@@ -33,7 +34,7 @@ def test_open(p_request, settings):
     # assert "files" in body
     # Optional
     assert R_UPLMAXFILE in body
-    assert "uplMaxSize" in body
+    assert R_UPLMAXSIZE in body
     assert R_OPTIONS in body
 
 

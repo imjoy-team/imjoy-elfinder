@@ -54,6 +54,7 @@ from .api_const import (
     R_NETDRIVERS,
     R_OPTIONS,
     R_UPLMAXFILE,
+    R_UPLMAXSIZE,
     R_WARNING,
 )
 
@@ -443,7 +444,7 @@ class Connector:
 
         self._response[R_NETDRIVERS] = []
         self._response[R_UPLMAXFILE] = 1000
-        self._response["uplMaxSize"] = (
+        self._response[R_UPLMAXSIZE] = (
             str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
         )
         thumbs_dir = self._options["tmbDir"]
