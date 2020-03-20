@@ -219,8 +219,9 @@ class Connector:
         url: str,
         base_url: str,
         upload_max_size: int,
-        debug: bool,
         tmb_dir: Optional[str],
+        send_file_path: bool = False,
+        debug: bool = False,
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = root
@@ -231,6 +232,7 @@ class Connector:
         self._options["base_url"] = (
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
+        self._options["send_file_path"] = send_file_path
 
         self._response["debug"] = {}
         self._options["files_url"] = self.__check_utf8(self._options["files_url"])
@@ -978,6 +980,9 @@ class Connector:
             "locked": not readable and not writable and not deletable,
             "ts": stat.st_mtime,
         }  # type: Info
+
+        if self._options["send_file_path"]:
+            info["path"] = os.path.abspath(path)
 
         if filetype == "dir":
             info["volumeid"] = self.volumeid

@@ -86,7 +86,7 @@
 							Object.assign(mOpts, optEditors);
 						}
 						// Make elFinder
-						window.elfinder_instance = $('#' + id).elfinder(
+						$('#' + id).elfinder(
 							// 1st Arg - options
 							$.extend(true, { lang: lang }, opts, mOpts || {}),
 							// 2nd Arg - before boot up function
