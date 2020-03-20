@@ -42,5 +42,8 @@ INFO_RESIZE = "resize"
 INFO_TMB = "tmb"
 
 # Response constants
+R_DEBUG = "debug"
 R_ERROR = "error"
+R_FILE = "file"
+R_OPTIONS = "options"
 R_WARNING = "warning"

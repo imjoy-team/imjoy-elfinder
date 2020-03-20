@@ -47,6 +47,7 @@ from .api_const import (
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
+    R_DEBUG,
     R_ERROR,
     R_WARNING,
 )
@@ -270,7 +271,7 @@ class Connector:
         )
         self._options["expose_real_path"] = expose_real_path
 
-        self._response["debug"] = {}
+        self._response[R_DEBUG] = {}
         self._options["files_url"] = self.__check_utf8(self._options["files_url"])
         self._options["files_url"] = self._options["files_url"].rstrip("/")
         self._options["root"] = self.__check_utf8(self._options["root"])
@@ -318,7 +319,7 @@ class Connector:
         )
         self._yesterday = self._today - 86400
 
-        self._response["debug"] = {}
+        self._response[R_DEBUG] = {}
 
     def run(
         self, http_request: Optional[Dict[str, Any]] = None
@@ -367,8 +368,8 @@ class Connector:
         if self._options["debug"]:
             self.__debug("time", (time.time() - self._time))
         else:
-            if "debug" in self._response:
-                del self._response["debug"]
+            if R_DEBUG in self._response:
+                del self._response[R_DEBUG]
 
         if self.http_status_code < 100:
             self.http_status_code = 200
@@ -1804,7 +1805,7 @@ class Connector:
 
     def __debug(self, key: str, val: Any) -> None:
         if self._options["debug"]:
-            self._response["debug"].update({key: val})
+            self._response[R_DEBUG].update({key: val})
 
     def __check_archivers(self) -> None:
         # import subprocess
