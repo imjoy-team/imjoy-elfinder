@@ -1,25 +1,5 @@
 """Test views."""
-import pytest
-from pyramid import testing
-
-from jupyter_elfinder.views import index
-
-
-@pytest.fixture(name="p_config")
-def config_fixture():
-    """Provide a mock pyramid Configurator instance.
-
-    This also sets up and tearsdown the context before and after the test.
-    """
-    with testing.testConfig() as config:
-        yield config
-
-
-@pytest.fixture(name="p_request")
-def request_fixture():
-    """Provide a mock pyramid Request instance."""
-    request = testing.DummyRequest()
-    return request
+from jupyter_elfinder.views import connector, index
 
 
 def test_index_view(p_config, p_request):
@@ -27,3 +7,10 @@ def test_index_view(p_config, p_request):
     response = index(p_request)
 
     assert response == {}
+
+
+def test_connector_200(p_request, settings):
+    """Test the connector view returns 200 response status code."""
+    response = connector(p_request)
+
+    assert response.status_code == 200
