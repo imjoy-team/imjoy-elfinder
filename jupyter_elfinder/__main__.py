@@ -92,6 +92,11 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--thumbnail", action="store_true", help="enable thumbnail for files"
     )
+    parser.add_argument(
+        "--send-file-path",
+        action="store_true",
+        help="send file path to the frontend (disabled for security reason)",
+    )
 
     opt = parser.parse_args(args=args)
 
@@ -99,6 +104,7 @@ def main(args: Optional[List[str]] = None) -> None:
         "root_dir": opt.root_dir or os.getcwd(),
         "files_url": "/files",
         "base_url": opt.base_url or "",
+        "send_file_path": opt.send_file_path,
     }  # type: Dict[str, str]
     if opt.thumbnail:
         settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
