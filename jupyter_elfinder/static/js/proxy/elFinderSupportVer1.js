@@ -104,8 +104,8 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				opts.data.current = fm.cwd().hash;
 				break
 			case 'mkdir':
+				break
 			case 'mkfile':
-				opts.data.current = opts.data.target;
 				break;
 			case 'paste':
 				opts.data.current = opts.data.dst;
@@ -143,7 +143,8 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				dfrd.reject(error);
 			})
 			.done(function(raw) {
-				if(cmd === 'rm' || cmd === 'paste' || cmd === 'rename' || cmd === 'search' || cmd === 'duplicate'){
+				var migrated_cmds = ['rm', 'paste', 'rename', 'search', 'duplicate', 'mkdir', 'mkfile'];
+				if(migrated_cmds.includes(cmd)){
 					dfrd.resolve(raw);
 					return;
 				}
