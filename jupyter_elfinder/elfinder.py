@@ -27,6 +27,8 @@ from urllib.parse import urljoin, quote
 
 from typing_extensions import Literal, TypedDict
 
+from .api_const import API_CURRENT, API_TARGET
+
 Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
     {"create": Dict[str, Dict[str, str]], "extract": Dict[str, Dict[str, str]]},
@@ -203,9 +205,9 @@ class Connector:
     # public variables
     http_allowed_parameters = (
         "cmd",
-        "target",
+        API_TARGET,
         "targets[]",
-        "current",
+        API_CURRENT,
         "tree",
         "name",
         "content",
@@ -376,19 +378,19 @@ class Connector:
 
     def __open(self) -> None:
         """Open file or directory."""
-        if "target" not in self._request:
+        if API_TARGET not in self._request:
             self._response["error"] = "Invalid parameters"
             return
 
         if "init" in self._request and self._request["init"]:
             self._response["api"] = 2.1
 
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if target:
             target = self.__find_dir(target)
             if not target:
                 self._response["error"] = (
-                    "Invalid parameters: " + self._request["target"]
+                    "Invalid parameters: " + self._request[API_TARGET]
                 )
             elif not self.__is_allowed(target, "read"):
                 self._response["error"] = "Access denied"
@@ -454,7 +456,7 @@ class Connector:
         self._response["tree"] = []
 
     def __file(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -513,7 +515,7 @@ class Connector:
     def __rename(self) -> None:
         """Rename file or dir."""
         name = self._request.get("name")
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
 
         if not (name and target):
             self._response["error"] = "Invalid parameters"
@@ -559,10 +561,10 @@ class Connector:
         """Create new directory."""
         path = None
         new_dir = None
-        if "name" in self._request and "target" in self._request:
+        if "name" in self._request and API_TARGET in self._request:
             name = self._request["name"]
             name = self.__check_utf8(name)
-            target = self._request["target"]
+            target = self._request[API_TARGET]
             if not target:
                 self._response["error"] = "Invalid parameters"
                 return
@@ -602,9 +604,9 @@ class Connector:
         """Create new file."""
         name = None
         cur_dir = new_file = None
-        if "name" in self._request and "target" in self._request:
+        if "name" in self._request and API_TARGET in self._request:
             name = self._request["name"]
-            target = self._request["target"]
+            target = self._request[API_TARGET]
             if not target:
                 self._response["error"] = "Invalid parameters"
                 return
@@ -671,8 +673,8 @@ class Connector:
         except ImportError:
             pass
 
-        if "target" in self._request:
-            dir_hash = self._request["target"]
+        if API_TARGET in self._request:
+            dir_hash = self._request[API_TARGET]
             cur_dir = self.__find_dir(dir_hash)
             if not cur_dir:
                 self._response["error"] = "Invalid parameters"
@@ -841,7 +843,7 @@ class Connector:
 
     def __resize(self) -> None:
         """Scale image size."""
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         width = self._request.get("width")
         height = self._request.get("height")
         if not (target and width is not None and height is not None):
@@ -1132,7 +1134,7 @@ class Connector:
         self._response["sizes"] = sizes
 
     def __ls(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -1156,7 +1158,7 @@ class Connector:
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -1309,7 +1311,7 @@ class Connector:
         return None
 
     def __get(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -1334,7 +1336,7 @@ class Connector:
                 )
 
     def __dim(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -1357,7 +1359,7 @@ class Connector:
 
     def __put(self) -> None:
         """Save content in file."""
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         content = self._request.get("content")
         if not target or not content:
             self._response["error"] = "Invalid parameters"
@@ -1385,7 +1387,7 @@ class Connector:
             else:
                 with open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request["content"])
-            self._response["target"] = self.__info(cur_file)
+            self._response[API_TARGET] = self.__info(cur_file)
         except OSError:
             self._response["error"] = "Unable to write to file"
 
@@ -1394,13 +1396,13 @@ class Connector:
         if (
             not self._options["archivers"]["create"]
             or "type" not in self._request
-            or "target" not in self._request
+            or API_TARGET not in self._request
             or "targets[]" not in self._request
         ):
             self._response["error"] = "Invalid parameters"
             return
 
-        cur_dir = self.__find_dir(self._request["target"])
+        cur_dir = self.__find_dir(self._request[API_TARGET])
         archive_type = self._request["type"]
         if (
             archive_type not in self._options["archivers"]["create"]
@@ -1451,7 +1453,7 @@ class Connector:
 
     def __extract(self) -> None:
         """Uncompress archive."""
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not self._options["archivers"]["extract"] or not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -1528,8 +1530,8 @@ class Connector:
             self._response["error"] = "Invalid parameters"
             return
 
-        if "target" in self._request:
-            target = self._request["target"]
+        if API_TARGET in self._request:
+            target = self._request[API_TARGET]
             if not target:
                 self._response["error"] = "Invalid parameters"
                 return
