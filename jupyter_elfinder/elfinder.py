@@ -33,6 +33,7 @@ from .api_const import (
     API_CURRENT,
     API_CUT,
     API_DST,
+    API_INIT,
     API_NAME,
     API_SRC,
     API_TARGET,
@@ -229,7 +230,7 @@ class Connector:
         API_SRC,
         API_DST,
         API_CUT,
-        "init",
+        API_INIT,
         "type",
         "width",
         "height",
@@ -399,7 +400,7 @@ class Connector:
             self._response["error"] = "Invalid parameters"
             return
 
-        if "init" in self._request and self._request["init"]:
+        if API_INIT in self._request and self._request[API_INIT]:
             self._response["api"] = 2.1
 
         target = self._request.get(API_TARGET)

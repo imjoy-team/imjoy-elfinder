@@ -1,5 +1,5 @@
 """Test elfinder."""
-from jupyter_elfinder.api_const import API_CMD, API_TARGETS, API_TREE
+from jupyter_elfinder.api_const import API_CMD, API_INIT, API_TARGETS, API_TREE
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
@@ -7,7 +7,7 @@ from jupyter_elfinder.views import connector
 def test_open(p_request, settings):
     """Test the open command."""
     p_request.params[API_CMD] = "open"
-    p_request.params["init"] = True
+    p_request.params[API_INIT] = True
     p_request.params[API_TREE] = True
     p_request.params["target"] = None
     response = connector(p_request)
