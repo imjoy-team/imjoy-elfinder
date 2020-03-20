@@ -528,11 +528,15 @@ class Connector:
         current = None
         path = None
         new_dir = None
-        if "name" in self._request and "current" in self._request:
+        if "name" in self._request and "target" in self._request:
             name = self._request["name"]
-            current = self._request["current"]
-            path = self.__find_dir(current, None)
             name = self.__check_utf8(name)
+            target = self._request["target"]
+            path = self.__find_dir(target, None)
+        if "dirs" in self._request:
+            dirs = self._request[dirs]
+        else:
+            dirs = []
 
         if not path:
             self._response["error"] = "Invalid parameters"
@@ -553,8 +557,12 @@ class Connector:
         else:
             try:
                 os.mkdir(new_dir, int(self._options["dirMode"]))
-                self._response["select"] = [self.__hash(new_dir)]
-                self.__content(path, True)
+                self._response["added"] = [self.__info(new_dir)]
+                self._response["hashes"] = []
+                for subdir in dirs:
+                    new_subdir = os.path.join(new_dir, subdir)
+                    os.mkdir(new_subdir)
+                    self._response["hashes"].append(self.__hash(new_subdir))
             except OSError:
                 self._response["error"] = "Unable to create folder"
 
@@ -562,10 +570,10 @@ class Connector:
         """Create new file."""
         name = current = None
         cur_dir = new_file = None
-        if "name" in self._request and "current" in self._request:
+        if "name" in self._request and "target" in self._request:
             name = self._request["name"]
-            current = self._request["current"]
-            cur_dir = self.__find_dir(current, None)
+            target = self._request["target"]
+            cur_dir = self.__find_dir(target, None)
             name = self.__check_utf8(name)
 
         if not cur_dir or not name:
@@ -585,8 +593,7 @@ class Connector:
         else:
             try:
                 open(new_file, "w").close()
-                self._response["select"] = [self.__hash(new_file)]
-                self.__content(cur_dir, False)
+                self._response["added"] = [self.__info(new_file)]
             except OSError:
                 self._response["error"] = "Unable to create file"
 
