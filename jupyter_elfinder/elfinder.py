@@ -39,6 +39,7 @@ from .api_const import (
     API_TARGET,
     API_TARGETS,
     API_TREE,
+    API_TYPE,
     API_UPLOAD,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
@@ -231,7 +232,7 @@ class Connector:
         API_DST,
         API_CUT,
         API_INIT,
-        "type",
+        API_TYPE,
         "width",
         "height",
         API_UPLOAD,
@@ -1413,7 +1414,7 @@ class Connector:
         """Compress files/directories to archive."""
         if (
             not self._options["archivers"]["create"]
-            or "type" not in self._request
+            or API_TYPE not in self._request
             or API_TARGET not in self._request
             or API_TARGETS not in self._request
         ):
@@ -1421,7 +1422,7 @@ class Connector:
             return
 
         cur_dir = self.__find_dir(self._request[API_TARGET])
-        archive_type = self._request["type"]
+        archive_type = self._request[API_TYPE]
         if (
             archive_type not in self._options["archivers"]["create"]
             or archive_type not in self._options["archiveMimes"]
