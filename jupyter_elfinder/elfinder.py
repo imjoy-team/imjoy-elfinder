@@ -55,6 +55,7 @@ from .api_const import (
     R_FILE,
     R_NETDRIVERS,
     R_OPTIONS,
+    R_REMOVED,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
     R_WARNING,
@@ -586,7 +587,7 @@ class Connector:
         try:
             os.rename(cur_name, new_name)
             self._response[R_ADDED] = [self.__info(new_name)]
-            self._response["removed"] = [target]
+            self._response[R_REMOVED] = [target]
         except OSError:
             self._response[R_ERROR] = "Unable to rename file"
 
@@ -691,7 +692,7 @@ class Connector:
                 self._response[R_ERROR] = "Failed to remove: " + rm_file
                 return
 
-        self._response["removed"] = removed
+        self._response[R_REMOVED] = removed
 
     def __upload(self) -> None:
         """Upload files."""
@@ -844,7 +845,7 @@ class Connector:
                     added.append(self.__info(new_dst))
                     continue
             self._response[R_ADDED] = added
-            self._response["removed"] = removed
+            self._response[R_REMOVED] = removed
         else:
             self._response[R_ERROR] = "Invalid parameters"
 
