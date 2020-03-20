@@ -50,6 +50,7 @@ Info = TypedDict(  # pylint: disable=invalid-name
         "dim": str,
         "resize": bool,
         "tmb": Union[str, int],
+        "path": str,
     },
     total=False,
 )
@@ -59,6 +60,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "root": str,
         "files_url": str,
         "base_url": str,
+        "send_file_path": str,
         "maxFolderDepth": int,
         "rootAlias": str,
         "dotFiles": bool,
@@ -104,6 +106,7 @@ class Connector:
         "root": "",
         "files_url": "",
         "base_url": "",
+        "send_file_path": "",
         "maxFolderDepth": 256,
         "rootAlias": "HOME",
         "dotFiles": False,
