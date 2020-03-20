@@ -15,6 +15,7 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from .util import get_all, get_one
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
 
 
@@ -92,50 +93,50 @@ def connector(request: Request) -> Response:
         if field in form:
             # Russian file names hack
             if field == "name":
-                http_request[field] = form.getone(field).encode("utf-8")
+                http_request[field] = get_one(form, field).encode("utf-8")
 
             elif field == "targets[]":
-                http_request[field] = form.getall(field)
+                http_request[field] = get_all(form, field)
 
             # handle CGI upload
             elif field == "upload[]":
                 up_files = {}
-                cgi_upload_files = form.getall(field)
+                cgi_upload_files = get_all(form, field)
                 for up_ in cgi_upload_files:
                     if isinstance(up_, FieldStorage) and up_.filename:
                         # pack dict(filename: filedescriptor)
                         up_files[up_.filename.encode("utf-8")] = up_.file
                 http_request[field] = up_files
             else:
-                http_request[field] = form.getone(field)
+                http_request[field] = get_one(form, field)
 
     # run connector with parameters
     status, header, response = elf.run(http_request)
 
     if status == 200 and "file" in response:
         # send file
-            file_path = response["file"]
-            if os.path.exists(file_path) and not os.path.isdir(file_path):
-                result = make_response(file_path)
-                result.headers["Content-Length"] = elf.http_header["Content-Length"]
-                result.headers["Content-type"] = elf.http_header["Content-type"]
-                result.headers["Content-Disposition"] = elf.http_header[
-                    "Content-Disposition"
-                ]
-                return result
+        file_path = response["file"]
+        if os.path.exists(file_path) and not os.path.isdir(file_path):
+            result = make_response(file_path)
+            result.headers["Content-Length"] = elf.http_header["Content-Length"]
+            result.headers["Content-type"] = elf.http_header["Content-type"]
+            result.headers["Content-Disposition"] = elf.http_header[
+                "Content-Disposition"
+            ]
+            return result
 
-            result = Response("Unable to find: {}".format(request.path_info))
-        # output json
-        else:
-            # get connector output and print it out
-            result = Response(status=status)
-            try:
-                del header["Connection"]
-            except KeyError:
-                pass
-            result.headers = header
-            result.charset = "utf8"
-            result.text = json.dumps(response)
+        result = Response("Unable to find: {}".format(request.path_info))
+    # output json
+    else:
+        # get connector output and print it out
+        result = Response(status=status)
+        try:
+            del header["Connection"]
+        except KeyError:
+            pass
+        result.headers = header
+        result.charset = "utf8"
+        result.text = json.dumps(response)
     return result
 
 
