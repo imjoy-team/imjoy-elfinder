@@ -38,7 +38,6 @@ from .api_const import (
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
-    INFO_NAME,
 )
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
@@ -48,7 +47,7 @@ Archivers = TypedDict(  # pylint: disable=invalid-name
 Info = TypedDict(  # pylint: disable=invalid-name
     "Info",
     {
-        INFO_NAME: str,
+        "name": str,
         "hash": str,
         "mime": str,
         "read": int,
@@ -968,7 +967,7 @@ class Connector:
 
         info = {
             "hash": self.__hash(path),
-            INFO_NAME: self.__check_utf8(name),
+            "name": self.__check_utf8(name),
             "mime": "directory",
             "rel": self.__check_utf8(rel),
             "size": 0,
@@ -1005,7 +1004,7 @@ class Connector:
         deletable = self.__is_allowed(path, "rm")
 
         info = {
-            INFO_NAME: self.__check_utf8(os.path.basename(path)),
+            "name": self.__check_utf8(os.path.basename(path)),
             "hash": self.__hash(path),
             "mime": "directory" if filetype == "dir" else self.__mimetype(path),
             "read": 1 if readable else 0,
