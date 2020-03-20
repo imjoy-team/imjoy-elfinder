@@ -47,6 +47,7 @@ from .api_const import (
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
+    R_API,
     R_DEBUG,
     R_ERROR,
     R_FILE,
@@ -410,7 +411,7 @@ class Connector:
             return
 
         if API_INIT in self._request and self._request[API_INIT]:
-            self._response["api"] = 2.1
+            self._response[R_API] = 2.1
 
         target = self._request.get(API_TARGET)
         if target:

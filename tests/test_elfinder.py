@@ -5,6 +5,7 @@ from jupyter_elfinder.api_const import (
     API_TARGETS,
     API_TREE,
     API_TYPE,
+    R_API,
     R_ERROR,
     R_OPTIONS,
 )
@@ -23,7 +24,7 @@ def test_open(p_request, settings):
     assert response.status_code == 200
     body = response.json
     assert R_ERROR not in body
-    assert body["api"] >= 2.1
+    assert body[R_API] >= 2.1
     assert "cwd" in body
     assert "netDrivers" in body
     # Part of api 2.1 but currently not implemented in our Python backend
