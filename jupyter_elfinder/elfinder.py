@@ -48,6 +48,7 @@ from .api_const import (
     ARCHIVE_CMD,
     ARCHIVE_EXT,
     R_API,
+    R_CWD,
     R_DEBUG,
     R_ERROR,
     R_FILE,
@@ -1004,7 +1005,7 @@ class Connector:
         except StopIteration:
             info["dirs"] = 0
 
-        self._response["cwd"] = info
+        self._response[R_CWD] = info
 
     def __info(self, path: str) -> Info:
         # mime = ''

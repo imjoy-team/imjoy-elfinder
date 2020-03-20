@@ -6,6 +6,7 @@ from jupyter_elfinder.api_const import (
     API_TREE,
     API_TYPE,
     R_API,
+    R_CWD,
     R_ERROR,
     R_NETDRIVERS,
     R_OPTIONS,
@@ -28,7 +29,7 @@ def test_open(p_request, settings):
     body = response.json
     assert R_ERROR not in body
     assert body[R_API] >= 2.1
-    assert "cwd" in body
+    assert R_CWD in body
     assert R_NETDRIVERS in body
     # Part of api 2.1 but currently not implemented in our Python backend
     # assert "files" in body

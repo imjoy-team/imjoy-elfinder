@@ -43,6 +43,7 @@ INFO_TMB = "tmb"
 
 # Response constants
 R_API = "api"
+R_CWD = "cwd"
 R_DEBUG = "debug"
 R_ERROR = "error"
 R_FILE = "file"  # This is not part of api 2.1
