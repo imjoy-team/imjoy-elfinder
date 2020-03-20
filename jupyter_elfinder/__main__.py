@@ -137,6 +137,7 @@ def setup_for_jupyter_server_proxy() -> dict:
             "--allow-origin",
             "https://lib.imjoy.io",
             "--thumbnail",
+            "--send-file-path",
         ],
         "environment": {},
         "launcher_entry": {
