@@ -7,6 +7,7 @@ from jupyter_elfinder.api_const import (
     API_TYPE,
     R_API,
     R_ERROR,
+    R_NETDRIVERS,
     R_OPTIONS,
 )
 from jupyter_elfinder.elfinder import make_hash
@@ -26,7 +27,7 @@ def test_open(p_request, settings):
     assert R_ERROR not in body
     assert body[R_API] >= 2.1
     assert "cwd" in body
-    assert "netDrivers" in body
+    assert R_NETDRIVERS in body
     # Part of api 2.1 but currently not implemented in our Python backend
     # assert "files" in body
     # Optional

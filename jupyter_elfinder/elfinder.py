@@ -51,6 +51,7 @@ from .api_const import (
     R_DEBUG,
     R_ERROR,
     R_FILE,
+    R_NETDRIVERS,
     R_OPTIONS,
     R_WARNING,
 )
@@ -439,7 +440,7 @@ class Connector:
         else:
             url = self._options["files_url"]
 
-        self._response["netDrivers"] = []
+        self._response[R_NETDRIVERS] = []
         self._response["uplMaxFile"] = 1000
         self._response["uplMaxSize"] = (
             str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
