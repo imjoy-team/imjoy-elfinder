@@ -43,3 +43,4 @@ INFO_TMB = "tmb"
 
 # Response constants
 R_ERROR = "error"
+R_WARNING = "warning"

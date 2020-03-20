@@ -48,6 +48,7 @@ from .api_const import (
     ARCHIVE_CMD,
     ARCHIVE_EXT,
     R_ERROR,
+    R_WARNING,
 )
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
@@ -762,12 +763,12 @@ class Connector:
 
             if self._error_data:
                 if len(self._error_data) == total:
-                    self._response["warning"] = "Unable to upload files"
+                    self._response[R_WARNING] = "Unable to upload files"
                 else:
-                    self._response["warning"] = "Some files was not uploaded"
+                    self._response[R_WARNING] = "Some files was not uploaded"
         else:
             self._response["added"] = []
-            self._response["warning"] = "Invalid parameters"
+            self._response[R_WARNING] = "Invalid parameters"
 
     def __paste(self) -> None:
         """Copy or cut files/directories."""
