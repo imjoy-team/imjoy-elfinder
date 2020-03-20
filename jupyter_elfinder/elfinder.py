@@ -27,7 +27,14 @@ from urllib.parse import quote, urljoin
 
 from typing_extensions import Literal, TypedDict
 
-from .api_const import API_CMD, API_CURRENT, API_TARGET
+from .api_const import (
+    API_CMD,
+    API_CURRENT,
+    API_TARGET,
+    ARCHIVE_ARGC,
+    ARCHIVE_CMD,
+    ARCHIVE_EXT,
+)
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
@@ -434,7 +441,7 @@ class Connector:
                 "create": list(self._options["archivers"]["create"].keys()),
                 "extract": list(self._options["archivers"]["extract"].keys()),
                 "createext": {
-                    k: self._options["archivers"]["create"][k]["ext"]
+                    k: self._options["archivers"]["create"][k][ARCHIVE_EXT]
                     for k in self._options["archivers"]["create"]
                 },
             },
@@ -1432,12 +1439,12 @@ class Connector:
             archive_name = "Archive"
         else:
             archive_name = real_files[0]
-        archive_name += "." + arc["ext"]
+        archive_name += "." + arc[ARCHIVE_EXT]
         archive_name = _unique_name(archive_name, "")
         archive_path = os.path.join(cur_dir, archive_name)
 
-        cmd = [arc["cmd"]]
-        for arg in arc["argc"].split():
+        cmd = [arc[ARCHIVE_CMD]]
+        for arg in arc[ARCHIVE_ARGC].split():
             cmd.append(arg)
         cmd.append(archive_name)
         for fil in real_files:
@@ -1481,8 +1488,8 @@ class Connector:
 
         arc = self._options["archivers"]["extract"][mime]
 
-        cmd = [arc["cmd"]]
-        for arg in arc["argc"].split():
+        cmd = [arc[ARCHIVE_CMD]]
+        for arg in arc[ARCHIVE_ARGC].split():
             cmd.append(arg)
         cmd.append(os.path.basename(cur_file))
 
@@ -1820,27 +1827,59 @@ class Connector:
 
         if tar:
             mime = "application/x-tar"
-            create.update({mime: {"cmd": "tar", "argc": "-cf", "ext": "tar"}})
+            create.update(
+                {mime: {ARCHIVE_CMD: "tar", ARCHIVE_ARGC: "-cf", ARCHIVE_EXT: "tar"}}
+            )
             extract.update(
-                {mime: {"cmd": "tar", "argc": "-xf", "ext": "tar", "argd": "-C {}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-xf",
+                        ARCHIVE_EXT: "tar",
+                        "argd": "-C {}",
+                    }
+                }
             )
 
         if tar and gzip:
             mime = "application/x-gzip"
-            create.update({mime: {"cmd": "tar", "argc": "-czf", "ext": "tar.gz"}})
+            create.update(
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-czf",
+                        ARCHIVE_EXT: "tar.gz",
+                    }
+                }
+            )
             extract.update(
-                {mime: {"cmd": "tar", "argc": "-xzf", "ext": "tar.gz", "argd": "-C {}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-xzf",
+                        ARCHIVE_EXT: "tar.gz",
+                        "argd": "-C {}",
+                    }
+                }
             )
 
         if tar and bzip2:
             mime = "application/x-bzip2"
-            create.update({mime: {"cmd": "tar", "argc": "-cjf", "ext": "tar.bz2"}})
+            create.update(
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-cjf",
+                        ARCHIVE_EXT: "tar.bz2",
+                    }
+                }
+            )
             extract.update(
                 {
                     mime: {
-                        "cmd": "tar",
-                        "argc": "-xjf",
-                        "ext": "tar.bz2",
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-xjf",
+                        ARCHIVE_EXT: "tar.bz2",
                         "argd": "-C {}",
                     }
                 }
@@ -1848,21 +1887,52 @@ class Connector:
 
         mime = "application/zip"
         if zipc:
-            create.update({mime: {"cmd": "zip", "argc": "-r9", "ext": "zip"}})
+            create.update(
+                {mime: {ARCHIVE_CMD: "zip", ARCHIVE_ARGC: "-r9", ARCHIVE_EXT: "zip"}}
+            )
         if unzip:
             extract.update(
-                {mime: {"cmd": "unzip", "argc": "", "ext": "zip", "argd": "-d {}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "unzip",
+                        ARCHIVE_ARGC: "",
+                        ARCHIVE_EXT: "zip",
+                        "argd": "-d {}",
+                    }
+                }
             )
 
         mime = "application/x-rar"
         if rar:
-            create.update({mime: {"cmd": "rar", "argc": "a -inul", "ext": "rar"}})
+            create.update(
+                {
+                    mime: {
+                        ARCHIVE_CMD: "rar",
+                        ARCHIVE_ARGC: "a -inul",
+                        ARCHIVE_EXT: "rar",
+                    }
+                }
+            )
             extract.update(
-                {mime: {"cmd": "rar", "argc": "x -y", "ext": "rar", "argd": "{}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "rar",
+                        ARCHIVE_ARGC: "x -y",
+                        ARCHIVE_EXT: "rar",
+                        "argd": "{}",
+                    }
+                }
             )
         elif unrar:
             extract.update(
-                {mime: {"cmd": "unrar", "argc": "x -y", "ext": "rar", "argd": "{}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "unrar",
+                        ARCHIVE_ARGC: "x -y",
+                        ARCHIVE_EXT: "rar",
+                        "argd": "{}",
+                    }
+                }
             )
 
         p7zip = None
@@ -1875,13 +1945,15 @@ class Connector:
 
         if p7zip:
             mime = "application/x-7z-compressed"
-            create.update({mime: {"cmd": p7zip, "argc": "a -t7z", "ext": "7z"}})
+            create.update(
+                {mime: {ARCHIVE_CMD: p7zip, ARCHIVE_ARGC: "a -t7z", ARCHIVE_EXT: "7z"}}
+            )
             extract.update(
                 {
                     mime: {
-                        "cmd": p7zip,
-                        "argc": "extract -y",
-                        "ext": "7z",
+                        ARCHIVE_CMD: p7zip,
+                        ARCHIVE_ARGC: "extract -y",
+                        ARCHIVE_EXT: "7z",
                         "argd": "-o{}",
                     }
                 }
@@ -1889,14 +1961,22 @@ class Connector:
 
             mime = "application/x-tar"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -ttar", "ext": "tar"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -ttar",
+                            ARCHIVE_EXT: "tar",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "tar",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "tar",
                             "argd": "-o{}",
                         }
                     }
@@ -1904,14 +1984,22 @@ class Connector:
 
             mime = "application/x-gzip"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -tgzip", "ext": "gz"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -tgzip",
+                            ARCHIVE_EXT: "gz",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "tar.gz",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "tar.gz",
                             "argd": "-o{}",
                         }
                     }
@@ -1919,14 +2007,22 @@ class Connector:
 
             mime = "application/x-bzip2"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -tbzip2", "ext": "bz2"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -tbzip2",
+                            ARCHIVE_EXT: "bz2",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "tar.bz2",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "tar.bz2",
                             "argd": "-o{}",
                         }
                     }
@@ -1934,14 +2030,22 @@ class Connector:
 
             mime = "application/zip"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -tzip", "ext": "zip"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -tzip",
+                            ARCHIVE_EXT: "zip",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "zip",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "zip",
                             "argd": "-o{}",
                         }
                     }
