@@ -54,6 +54,7 @@ from .api_const import (
     R_ERROR,
     R_FILE,
     R_HASHES,
+    R_IMAGES,
     R_NETDRIVERS,
     R_OPTIONS,
     R_REMOVED,
@@ -937,7 +938,7 @@ class Connector:
             tmb_max = self._options["tmbAtOnce"]
         else:
             tmb_max = 5
-        self._response["images"] = {}
+        self._response[R_IMAGES] = {}
         i = 0
         for fhash in targets:
             path = self.__find(fhash)
@@ -949,7 +950,7 @@ class Connector:
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
                     if self.__tmb(path, tmb):
-                        self._response["images"].update({fhash: self.__path2url(tmb)})
+                        self._response[R_IMAGES].update({fhash: self.__path2url(tmb)})
                         i += 1
             if i >= tmb_max:
                 break
