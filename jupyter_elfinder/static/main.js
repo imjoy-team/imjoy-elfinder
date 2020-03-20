@@ -161,6 +161,7 @@
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
 				url : window.ELFINDER_CONFIG['connector_url'], // connector URL (REQUIRED
+				file_base_url: window.ELFINDER_CONFIG['file_base_url'],
 				height: '100%',
 				rememberLastDir: false,
 				cssAutoLoad: true,
