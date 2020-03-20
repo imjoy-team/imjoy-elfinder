@@ -5,6 +5,7 @@ from jupyter_elfinder.api_const import (
     API_TARGETS,
     API_TREE,
     API_TYPE,
+    R_ERROR,
 )
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
@@ -20,7 +21,7 @@ def test_open(p_request, settings):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" not in body
+    assert R_ERROR not in body
     assert body["api"] >= 2.1
     assert "cwd" in body
     assert "netDrivers" in body
@@ -42,7 +43,7 @@ def test_archive(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" not in body
+    assert R_ERROR not in body
     assert "added" in body
 
 
@@ -54,7 +55,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
@@ -63,7 +64,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
@@ -73,7 +74,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
@@ -83,7 +84,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
@@ -93,7 +94,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     # Incorrect archive type
     p_request.params.clear()
@@ -105,7 +106,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     # Bad target directory
     p_request.params.clear()
@@ -117,7 +118,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body
 
     # Bad target file
     p_request.params.clear()
@@ -129,4 +130,4 @@ def test_archive_error(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert "error" in body
+    assert R_ERROR in body

@@ -40,3 +40,6 @@ INFO_URL = "url"
 INFO_DIM = "dim"
 INFO_RESIZE = "resize"
 INFO_TMB = "tmb"
+
+# Response constants
+R_ERROR = "error"

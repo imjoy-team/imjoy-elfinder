@@ -47,6 +47,7 @@ from .api_const import (
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
+    R_ERROR,
 )
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
@@ -328,10 +329,10 @@ class Connector:
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
             root_ok = False
-            self._response["error"] = "Invalid backend configuration"
+            self._response[R_ERROR] = "Invalid backend configuration"
         elif not self.__is_allowed(self._options["root"], "read"):
             root_ok = False
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
 
         for field in self.http_allowed_parameters:
             if field in http_request:
@@ -349,13 +350,13 @@ class Connector:
                         try:
                             func()
                         except Exception as exc:  # pylint: disable=broad-except
-                            self._response["error"] = (
+                            self._response[R_ERROR] = (
                                 "Command Failed: " + cmd + ", Error: \n" + str(exc)
                             )
                             traceback.print_exc()
                             self.__debug("exception", exception_to_string(exc))
                 else:
-                    self._response["error"] = (
+                    self._response[R_ERROR] = (
                         "Unknown command: " + self._request[API_CMD]
                     )
 
@@ -385,7 +386,7 @@ class Connector:
 
     def __places(self) -> None:
         if API_TARGETS not in self._request:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         targets = self._request[API_TARGETS]
@@ -401,7 +402,7 @@ class Connector:
     def __open(self) -> None:
         """Open file or directory."""
         if API_TARGET not in self._request:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         if API_INIT in self._request and self._request[API_INIT]:
@@ -411,11 +412,11 @@ class Connector:
         if target:
             target = self.__find_dir(target)
             if not target:
-                self._response["error"] = (
+                self._response[R_ERROR] = (
                     "Invalid parameters: " + self._request[API_TARGET]
                 )
             elif not self.__is_allowed(target, "read"):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
             else:
                 path = target
@@ -480,7 +481,7 @@ class Connector:
     def __file(self) -> None:
         target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         download = self._request.get("download")
@@ -540,13 +541,13 @@ class Connector:
         target = self._request.get(API_TARGET)
 
         if not (name and target):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_name = self.__find(target)
 
         if not cur_name:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         cur_dir = os.path.dirname(cur_name)
@@ -554,19 +555,19 @@ class Connector:
         if not self.__is_allowed(cur_dir, "write") and self.__is_allowed(
             cur_name, "rm"
         ):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         name = self.__check_utf8(name)
 
         if not name or not _check_name(name):
-            self._response["error"] = "Invalid name"
+            self._response[R_ERROR] = "Invalid name"
             return
 
         new_name = os.path.join(cur_dir, name)
 
         if os.path.exists(new_name):
-            self._response["error"] = (
+            self._response[R_ERROR] = (
                 "File or folder with the same name" + "already exists"
             )
             return
@@ -577,7 +578,7 @@ class Connector:
             self._response["added"] = [self.__info(new_name)]
             self._response["removed"] = [target]
         except OSError:
-            self._response["error"] = "Unable to rename file"
+            self._response[R_ERROR] = "Unable to rename file"
 
     def __mkdir(self) -> None:
         """Create new directory."""
@@ -588,26 +589,26 @@ class Connector:
             name = self.__check_utf8(name)
             target = self._request[API_TARGET]
             if not target:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             path = self.__find_dir(target)
 
         dirs = self._request.get("dirs[]") or []
 
         if not path:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         if not self.__is_allowed(path, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
         if not _check_name(name):
-            self._response["error"] = "Invalid name"
+            self._response[R_ERROR] = "Invalid name"
             return
 
         new_dir = os.path.join(path, name)
 
         if os.path.exists(new_dir):
-            self._response["error"] = (
+            self._response[R_ERROR] = (
                 "File or folder with the same name" + " already exists"
             )
         else:
@@ -620,7 +621,7 @@ class Connector:
                     os.mkdir(new_subdir, int(self._options["dirMode"]))
                     self._response["hashes"].append(self.__hash(new_subdir))
             except OSError:
-                self._response["error"] = "Unable to create folder"
+                self._response[R_ERROR] = "Unable to create folder"
 
     def __mkfile(self) -> None:
         """Create new file."""
@@ -630,31 +631,31 @@ class Connector:
             name = self._request[API_NAME]
             target = self._request[API_TARGET]
             if not target:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             cur_dir = self.__find_dir(target)
             name = self.__check_utf8(name)
 
         if not cur_dir or not name:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         if not self.__is_allowed(cur_dir, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
         if not _check_name(name):
-            self._response["error"] = "Invalid name"
+            self._response[R_ERROR] = "Invalid name"
             return
 
         new_file = os.path.join(cur_dir, name)
 
         if os.path.exists(new_file):
-            self._response["error"] = "File or folder with the same name already exists"
+            self._response[R_ERROR] = "File or folder with the same name already exists"
         else:
             try:
                 open(new_file, "w").close()
                 self._response["added"] = [self.__info(new_file)]
             except OSError:
-                self._response["error"] = "Unable to create file"
+                self._response[R_ERROR] = "Unable to create file"
 
     def __rm(self) -> None:
         """Delete files and directories."""
@@ -663,7 +664,7 @@ class Connector:
             rm_list = self._request[API_TARGETS]
 
         if not rm_list:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         if not isinstance(rm_list, list):
@@ -677,7 +678,7 @@ class Connector:
             if self.__remove(rm_file):
                 removed.append(rm_hash)
             else:
-                self._response["error"] = "Failed to remove: " + rm_file
+                self._response[R_ERROR] = "Failed to remove: " + rm_file
                 return
 
         self._response["removed"] = removed
@@ -699,13 +700,13 @@ class Connector:
             dir_hash = self._request[API_TARGET]
             cur_dir = self.__find_dir(dir_hash)
             if not cur_dir:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             if not self.__is_allowed(cur_dir, "write"):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
             if API_UPLOAD not in self._request:
-                self._response["error"] = "No file to upload"
+                self._response[R_ERROR] = "No file to upload"
                 return
 
             up_files = self._request[API_UPLOAD]
@@ -713,7 +714,7 @@ class Connector:
             # must be dict('filename1': 'filedescriptor1',
             #              'filename2': 'filedescriptor2', ...)
             if not isinstance(up_files, dict):
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
 
             self._response["added"] = []
@@ -775,7 +776,7 @@ class Connector:
             dst = self.__find_dir(self._request[API_DST])
             cur_dir = dst
             if not cur_dir or not src or not dst or API_TARGETS not in self._request:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             files = self._request[API_TARGETS]
             if not isinstance(files, list):
@@ -789,7 +790,7 @@ class Connector:
             if not self.__is_allowed(src, "read") or not self.__is_allowed(
                 dst, "write"
             ):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
 
             added = []
@@ -797,21 +798,21 @@ class Connector:
             for fhash in files:
                 fil = self.__find(fhash, src)
                 if not fil:
-                    self._response["error"] = "File not found"
+                    self._response[R_ERROR] = "File not found"
                     return
                 new_dst = os.path.join(dst, os.path.basename(fil))
                 if dst.find(fil) == 0:
-                    self._response["error"] = "Unable to copy into itself"
+                    self._response[R_ERROR] = "Unable to copy into itself"
                     return
 
                 if cut:
                     if not self.__is_allowed(fil, "rm"):
-                        self._response["error"] = "Move failed"
+                        self._response[R_ERROR] = "Move failed"
                         self.__set_error_data(fil, "Access denied")
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
-                        self._response["error"] = "Unable to move files"
+                        self._response[R_ERROR] = "Unable to move files"
                         self.__set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
@@ -823,42 +824,42 @@ class Connector:
                         removed.append(fhash)
                         continue
                     except OSError:
-                        self._response["error"] = "Unable to move files"
+                        self._response[R_ERROR] = "Unable to move files"
                         self.__set_error_data(fil, "Unable to move")
                         return
                 else:
                     if not self.__copy(fil, new_dst):
-                        self._response["error"] = "Unable to copy files"
+                        self._response[R_ERROR] = "Unable to copy files"
                         return
                     added.append(self.__info(new_dst))
                     continue
             self._response["added"] = added
             self._response["removed"] = removed
         else:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
 
     def __duplicate(self) -> None:
         """Create copy of files/directories."""
         targets = self._request.get(API_TARGETS)
         if not targets:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         added = []
         for target in targets:
             target = self.__find(target)
             if not target:
-                self._response["error"] = "File not found"
+                self._response[R_ERROR] = "File not found"
                 return
             cur_dir = os.path.dirname(target)
             if not self.__is_allowed(target, "read") or not self.__is_allowed(
                 cur_dir, "write"
             ):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
             new_name = _unique_name(target)
             if not self.__copy(target, new_name):
-                self._response["error"] = "Unable to create file copy"
+                self._response[R_ERROR] = "Unable to create file copy"
                 return
             added.append(self.__info(new_name))
         self._response["added"] = added
@@ -869,27 +870,27 @@ class Connector:
         width = self._request.get(API_WIDTH)
         height = self._request.get(API_HEIGHT)
         if not (target and width is not None and height is not None):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         width = int(width)
         height = int(height)
 
         if width < 1 or height < 1:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
         if self.__mimetype(cur_file).find("image") != 0:
-            self._response["error"] = "File is not an image"
+            self._response[R_ERROR] = "File is not an image"
             return
 
         self.__debug("resize " + cur_file, str(width) + ":" + str(height))
@@ -905,7 +906,7 @@ class Connector:
         except OSError as exc:  # UnidentifiedImageError requires Pillow 7.0.0
             # self.__debug('resizeFailed_' + path, str(exc))
             self.__debug("resizeFailed_" + self._options["root"], str(exc))
-            self._response["error"] = "Unable to resize image"
+            self._response[R_ERROR] = "Unable to resize image"
             return
 
         self._response["changed"] = [self.__info(cur_file)]
@@ -1107,7 +1108,7 @@ class Connector:
 
     def __size(self) -> None:
         if API_TARGETS not in self._request:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         targets = self._request[API_TARGETS]
@@ -1158,14 +1159,14 @@ class Connector:
     def __ls(self) -> None:
         target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         intersect = self._request.get("intersect[]")
 
         path = self.__find(target)
         if path is None or not os.path.isdir(path):
-            self._response["error"] = "Target directory not found"
+            self._response[R_ERROR] = "Target directory not found"
             return
 
         items = {}
@@ -1182,22 +1183,22 @@ class Connector:
         """Return directory tree starting from path."""
         target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         path = self.__find_dir(target)
 
         if path is None or not os.path.isdir(path):
-            self._response["error"] = "Directory not found"
+            self._response[R_ERROR] = "Directory not found"
             return
 
         if os.path.islink(path):
             path = self.__read_link(path)
             if path is None:
-                self._response["error"] = "Directory (link) not found"
+                self._response[R_ERROR] = "Directory (link) not found"
                 return
 
         if not self.__is_allowed(path, "read"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         tree = []
@@ -1335,17 +1336,17 @@ class Connector:
     def __get(self) -> None:
         target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "read"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         try:
@@ -1360,17 +1361,17 @@ class Connector:
     def __dim(self) -> None:
         target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "read"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         dim = self.__get_img_size(cur_file)
@@ -1384,17 +1385,17 @@ class Connector:
         target = self._request.get(API_TARGET)
         content = self._request.get(API_CONTENT)
         if not target or not content:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         try:
@@ -1411,7 +1412,7 @@ class Connector:
                     text_fil.write(self._request[API_CONTENT])
             self._response[API_TARGET] = self.__info(cur_file)
         except OSError:
-            self._response["error"] = "Unable to write to file"
+            self._response[R_ERROR] = "Unable to write to file"
 
     def __archive(self) -> None:
         """Compress files/directories to archive."""
@@ -1421,7 +1422,7 @@ class Connector:
             or API_TARGET not in self._request
             or API_TARGETS not in self._request
         ):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_dir = self.__find_dir(self._request[API_TARGET])
@@ -1432,7 +1433,7 @@ class Connector:
             or not cur_dir
             or not self.__is_allowed(cur_dir, "write")
         ):
-            self._response["error"] = "Unable to create archive"
+            self._response[R_ERROR] = "Unable to create archive"
             return
 
         files = self._request[API_TARGETS]
@@ -1443,7 +1444,7 @@ class Connector:
         for fhash in files:
             cur_file = self.__find(fhash, cur_dir)
             if not cur_file:
-                self._response["error"] = "File not found"
+                self._response[R_ERROR] = "File not found"
                 return
             real_files.append(os.path.basename(cur_file))
 
@@ -1471,22 +1472,22 @@ class Connector:
         if os.path.exists(archive_path):
             self._response["added"] = [self.__info(archive_path)]
         else:
-            self._response["error"] = "Unable to create archive"
+            self._response[R_ERROR] = "Unable to create archive"
 
     def __extract(self) -> None:
         """Uncompress archive."""
         target = self._request.get(API_TARGET)
         if not self._options["archivers"]["extract"] or not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         makedir = self._request.get("makedir")
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         cur_file = self.__find(target)
         if cur_file is None or os.path.isdir(cur_file):
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         cur_dir = os.path.dirname(cur_file)
@@ -1496,7 +1497,7 @@ class Connector:
         if mime not in self._options["archivers"]["extract"] or not self.__is_allowed(
             cur_dir, "write"
         ):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         arc = self._options["archivers"]["extract"][mime]
@@ -1519,7 +1520,7 @@ class Connector:
                 cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
                 added = [self.__info(target_dir)]
             except OSError:
-                self._response["error"] = "Unable to create folder: " + base_name
+                self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
         if added is None:
             existing_files = os.listdir(cur_dir)
@@ -1540,7 +1541,7 @@ class Connector:
                 self._response["added"] = added
             return
 
-        self._response["error"] = "Unable to extract files from archive"
+        self._response[R_ERROR] = "Unable to extract files from archive"
 
     def __ping(self) -> None:
         """Workaround for Safari."""
@@ -1549,20 +1550,20 @@ class Connector:
 
     def __search(self) -> None:
         if API_Q not in self._request:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         if API_TARGET in self._request:
             target = self._request[API_TARGET]
             if not target:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             search_path = self.__find_dir(target)
         else:
             search_path = self._options["root"]
 
         if not search_path:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         mimes = self._request.get("mimes")
