@@ -31,6 +31,7 @@ from .api_const import (
     API_CMD,
     API_CONTENT,
     API_CURRENT,
+    API_DST,
     API_NAME,
     API_SRC,
     API_TARGET,
@@ -225,7 +226,7 @@ class Connector:
         API_NAME,
         API_CONTENT,
         API_SRC,
-        "dst",
+        API_DST,
         "cut",
         "init",
         "type",
@@ -763,9 +764,9 @@ class Connector:
 
     def __paste(self) -> None:
         """Copy or cut files/directories."""
-        if API_SRC in self._request and "dst" in self._request:
+        if API_SRC in self._request and API_DST in self._request:
             src = self.__find_dir(self._request[API_SRC])
-            dst = self.__find_dir(self._request["dst"])
+            dst = self.__find_dir(self._request[API_DST])
             cur_dir = dst
             if not cur_dir or not src or not dst or API_TARGETS not in self._request:
                 self._response["error"] = "Invalid parameters"
