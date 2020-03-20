@@ -53,6 +53,7 @@ R_IMAGES = "images"
 R_NETDRIVERS = "netDrivers"
 R_OPTIONS = "options"
 R_REMOVED = "removed"
+R_TMB = "tmb"  # This is not part of api 2.1
 R_UPLMAXFILE = "uplMaxFile"
 R_UPLMAXSIZE = "uplMaxSize"
 R_WARNING = "warning"

@@ -58,6 +58,7 @@ from .api_const import (
     R_NETDRIVERS,
     R_OPTIONS,
     R_REMOVED,
+    R_TMB,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
     R_WARNING,
@@ -1110,7 +1111,7 @@ class Connector:
                         tmb_url = self.__path2url(tmb)
                         info["tmb"] = tmb_url
                     else:
-                        self._response["tmb"] = True
+                        self._response[R_TMB] = True
                         if info["mime"].startswith("image/"):
                             info["tmb"] = 1
 
