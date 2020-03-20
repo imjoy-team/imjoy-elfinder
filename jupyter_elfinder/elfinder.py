@@ -41,6 +41,7 @@ from .api_const import (
     API_TREE,
     API_TYPE,
     API_UPLOAD,
+    API_WIDTH,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
@@ -233,7 +234,7 @@ class Connector:
         API_CUT,
         API_INIT,
         API_TYPE,
-        "width",
+        API_WIDTH,
         "height",
         API_UPLOAD,
         "q",
@@ -863,7 +864,7 @@ class Connector:
     def __resize(self) -> None:
         """Scale image size."""
         target = self._request.get(API_TARGET)
-        width = self._request.get("width")
+        width = self._request.get(API_WIDTH)
         height = self._request.get("height")
         if not (target and width is not None and height is not None):
             self._response["error"] = "Invalid parameters"
