@@ -36,6 +36,7 @@ from .api_const import (
     API_HEIGHT,
     API_INIT,
     API_NAME,
+    API_Q,
     API_SRC,
     API_TARGET,
     API_TARGETS,
@@ -238,7 +239,7 @@ class Connector:
         API_WIDTH,
         API_HEIGHT,
         API_UPLOAD,
-        "q",
+        API_Q,
         "makedir",
     )
     # return variables
@@ -1547,7 +1548,7 @@ class Connector:
         self.http_header["Connection"] = "close"
 
     def __search(self) -> None:
-        if "q" not in self._request:
+        if API_Q not in self._request:
             self._response["error"] = "Invalid parameters"
             return
 
@@ -1567,7 +1568,7 @@ class Connector:
         mimes = self._request.get("mimes")
 
         result = []
-        query = self._request["q"]
+        query = self._request[API_Q]
         for root, dirs, files in os.walk(search_path):
             for fil in files:
                 if query.lower() in fil.lower():
