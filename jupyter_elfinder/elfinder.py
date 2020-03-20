@@ -47,6 +47,7 @@ from .api_const import (
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
+    R_ADDED,
     R_API,
     R_CWD,
     R_DEBUG,
@@ -584,7 +585,7 @@ class Connector:
         self.__rm_tmb(cur_name)
         try:
             os.rename(cur_name, new_name)
-            self._response["added"] = [self.__info(new_name)]
+            self._response[R_ADDED] = [self.__info(new_name)]
             self._response["removed"] = [target]
         except OSError:
             self._response[R_ERROR] = "Unable to rename file"
@@ -623,7 +624,7 @@ class Connector:
         else:
             try:
                 os.mkdir(new_dir, int(self._options["dirMode"]))
-                self._response["added"] = [self.__info(new_dir)]
+                self._response[R_ADDED] = [self.__info(new_dir)]
                 self._response["hashes"] = []
                 for subdir in dirs:
                     new_subdir = os.path.join(new_dir, subdir)
@@ -662,7 +663,7 @@ class Connector:
         else:
             try:
                 open(new_file, "w").close()
-                self._response["added"] = [self.__info(new_file)]
+                self._response[R_ADDED] = [self.__info(new_file)]
             except OSError:
                 self._response[R_ERROR] = "Unable to create file"
 
@@ -726,7 +727,7 @@ class Connector:
                 self._response[R_ERROR] = "Invalid parameters"
                 return
 
-            self._response["added"] = []
+            self._response[R_ADDED] = []
             total = 0
             up_size = 0
             max_size = self._options["uploadMaxSize"]
@@ -747,7 +748,7 @@ class Connector:
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
                                 os.chmod(name, self._options["fileMode"])
-                                self._response["added"].append(self.__info(name))
+                                self._response[R_ADDED].append(self.__info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
                                 try:
@@ -842,7 +843,7 @@ class Connector:
                         return
                     added.append(self.__info(new_dst))
                     continue
-            self._response["added"] = added
+            self._response[R_ADDED] = added
             self._response["removed"] = removed
         else:
             self._response[R_ERROR] = "Invalid parameters"
@@ -871,7 +872,7 @@ class Connector:
                 self._response[R_ERROR] = "Unable to create file copy"
                 return
             added.append(self.__info(new_name))
-        self._response["added"] = added
+        self._response[R_ADDED] = added
 
     def __resize(self) -> None:
         """Scale image size."""

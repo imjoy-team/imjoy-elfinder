@@ -42,6 +42,7 @@ INFO_RESIZE = "resize"
 INFO_TMB = "tmb"
 
 # Response constants
+R_ADDED = "added"
 R_API = "api"
 R_CWD = "cwd"
 R_DEBUG = "debug"
