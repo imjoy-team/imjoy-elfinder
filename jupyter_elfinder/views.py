@@ -16,7 +16,7 @@ from pyramid.response import Response
 from pyramid.view import view_config
 
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
-from .api_const import API_TARGETS, API_UPLOAD
+from .api_const import API_NAME, API_TARGETS, API_UPLOAD
 from .util import get_all, get_one
 
 
@@ -94,7 +94,7 @@ def connector(request: Request) -> Response:
     for field in elf.http_allowed_parameters:
         if field in form:
             # Russian file names hack
-            if field == "name":
+            if field == API_NAME:
                 http_request[field] = get_one(form, field).encode("utf-8")
 
             elif field == API_TARGETS:

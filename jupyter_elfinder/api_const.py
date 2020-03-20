@@ -21,3 +21,6 @@ API_Q = "q"
 ARCHIVE_CMD = "cmd"
 ARCHIVE_ARGC = "argc"
 ARCHIVE_EXT = "ext"
+
+# Info constants
+

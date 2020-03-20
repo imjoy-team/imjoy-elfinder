@@ -30,6 +30,7 @@ from typing_extensions import Literal, TypedDict
 from .api_const import (
     API_CMD,
     API_CURRENT,
+    API_NAME,
     API_TARGET,
     API_TARGETS,
     API_TREE,
@@ -219,7 +220,7 @@ class Connector:
         API_TARGETS,
         API_CURRENT,
         API_TREE,
-        "name",
+        API_NAME,
         "content",
         "src",
         "dst",
@@ -526,7 +527,7 @@ class Connector:
 
     def __rename(self) -> None:
         """Rename file or dir."""
-        name = self._request.get("name")
+        name = self._request.get(API_NAME)
         target = self._request.get(API_TARGET)
 
         if not (name and target):
@@ -573,8 +574,8 @@ class Connector:
         """Create new directory."""
         path = None
         new_dir = None
-        if "name" in self._request and API_TARGET in self._request:
-            name = self._request["name"]
+        if API_NAME in self._request and API_TARGET in self._request:
+            name = self._request[API_NAME]
             name = self.__check_utf8(name)
             target = self._request[API_TARGET]
             if not target:
@@ -616,8 +617,8 @@ class Connector:
         """Create new file."""
         name = None
         cur_dir = new_file = None
-        if "name" in self._request and API_TARGET in self._request:
-            name = self._request["name"]
+        if API_NAME in self._request and API_TARGET in self._request:
+            name = self._request[API_NAME]
             target = self._request[API_TARGET]
             if not target:
                 self._response["error"] = "Invalid parameters"
