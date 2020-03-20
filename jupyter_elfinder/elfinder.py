@@ -54,6 +54,7 @@ from .api_const import (
     R_DIM,
     R_ERROR,
     R_FILE,
+    R_FILES,
     R_HASHES,
     R_IMAGES,
     R_NETDRIVERS,
@@ -1599,7 +1600,7 @@ class Connector:
                     file_path = os.path.join(root, folder)
                     if query.lower() in folder.lower():
                         result.append(self.__info(file_path))
-        self._response["files"] = result
+        self._response[R_FILES] = result
 
     def __mimetype(self, path: str) -> str:
         """Detect mimetype of file."""
