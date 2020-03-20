@@ -31,6 +31,7 @@ from .api_const import (
     API_CMD,
     API_CURRENT,
     API_TARGET,
+    API_TARGETS,
     API_UPLOAD,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
@@ -214,7 +215,7 @@ class Connector:
     http_allowed_parameters = (
         API_CMD,
         API_TARGET,
-        "targets[]",
+        API_TARGETS,
         API_CURRENT,
         "tree",
         "name",
@@ -372,11 +373,11 @@ class Connector:
         return self.http_status_code, self.http_header, self.http_response
 
     def __places(self) -> None:
-        if "targets[]" not in self._request:
+        if API_TARGETS not in self._request:
             self._response["error"] = "Invalid parameters"
             return
 
-        targets = self._request["targets[]"]
+        targets = self._request[API_TARGETS]
         files = []
         for target in targets:
             path = self.__find(target)
@@ -647,8 +648,8 @@ class Connector:
     def __rm(self) -> None:
         """Delete files and directories."""
         rm_file = rm_list = None
-        if "targets[]" in self._request:
-            rm_list = self._request["targets[]"]
+        if API_TARGETS in self._request:
+            rm_list = self._request[API_TARGETS]
 
         if not rm_list:
             self._response["error"] = "Invalid parameters"
@@ -762,10 +763,10 @@ class Connector:
             src = self.__find_dir(self._request["src"])
             dst = self.__find_dir(self._request["dst"])
             cur_dir = dst
-            if not cur_dir or not src or not dst or "targets[]" not in self._request:
+            if not cur_dir or not src or not dst or API_TARGETS not in self._request:
                 self._response["error"] = "Invalid parameters"
                 return
-            files = self._request["targets[]"]
+            files = self._request[API_TARGETS]
             if not isinstance(files, list):
                 files = [files]
 
@@ -827,7 +828,7 @@ class Connector:
 
     def __duplicate(self) -> None:
         """Create copy of files/directories."""
-        targets = self._request.get("targets[]")
+        targets = self._request.get(API_TARGETS)
         if not targets:
             self._response["error"] = "Invalid parameters"
             return
@@ -901,7 +902,7 @@ class Connector:
     def __thumbnails(self) -> None:
         """Create previews for images."""
         thumbs_dir = self._options["tmbDir"]
-        targets = self._request.get("targets[]")
+        targets = self._request.get(API_TARGETS)
         if not targets:
             return
 
@@ -1094,11 +1095,11 @@ class Connector:
         return info
 
     def __size(self) -> None:
-        if "targets[]" not in self._request:
+        if API_TARGETS not in self._request:
             self._response["error"] = "Invalid parameters"
             return
 
-        targets = self._request["targets[]"]
+        targets = self._request[API_TARGETS]
 
         all_total_size = 0
         all_file_count = 0
@@ -1407,7 +1408,7 @@ class Connector:
             not self._options["archivers"]["create"]
             or "type" not in self._request
             or API_TARGET not in self._request
-            or "targets[]" not in self._request
+            or API_TARGETS not in self._request
         ):
             self._response["error"] = "Invalid parameters"
             return
@@ -1423,7 +1424,7 @@ class Connector:
             self._response["error"] = "Unable to create archive"
             return
 
-        files = self._request["targets[]"]
+        files = self._request[API_TARGETS]
         if not isinstance(files, list):
             files = [files]
 

@@ -1,4 +1,5 @@
 """Test elfinder."""
+from jupyter_elfinder.api_const import API_TARGETS
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
@@ -30,7 +31,7 @@ def test_archive(p_request, settings, txt_file):
     p_request.params["cmd"] = "archive"
     p_request.params["type"] = "application/x-tar"
     p_request.params["target"] = make_hash(str(txt_file.parent))
-    p_request.params["targets[]"] = make_hash(str(txt_file))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -71,7 +72,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params.clear()
     p_request.params["cmd"] = "archive"
     p_request.params["type"] = "application/x-tar"
-    p_request.params["targets[]"] = make_hash(str(txt_file))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -81,7 +82,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params.clear()
     p_request.params["cmd"] = "archive"
     p_request.params["target"] = make_hash(str(txt_file.parent))
-    p_request.params["targets[]"] = make_hash(str(txt_file))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -93,7 +94,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params["cmd"] = "archive"
     p_request.params["type"] = "missing"
     p_request.params["target"] = make_hash(str(txt_file.parent))
-    p_request.params["targets[]"] = make_hash(str(txt_file))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -105,7 +106,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params["cmd"] = "archive"
     p_request.params["type"] = "application/x-tar"
     p_request.params["target"] = make_hash(str("missing"))
-    p_request.params["targets[]"] = make_hash(str(txt_file))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -117,7 +118,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params["cmd"] = "archive"
     p_request.params["type"] = "application/x-tar"
     p_request.params["target"] = make_hash(str(txt_file.parent))
-    p_request.params["targets[]"] = make_hash(str(txt_file.parent / "missing"))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file.parent / "missing"))
     response = connector(p_request)
 
     assert response.status_code == 200
