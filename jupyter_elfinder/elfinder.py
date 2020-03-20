@@ -53,6 +53,7 @@ from .api_const import (
     R_DEBUG,
     R_ERROR,
     R_FILE,
+    R_HASHES,
     R_NETDRIVERS,
     R_OPTIONS,
     R_REMOVED,
@@ -626,11 +627,11 @@ class Connector:
             try:
                 os.mkdir(new_dir, int(self._options["dirMode"]))
                 self._response[R_ADDED] = [self.__info(new_dir)]
-                self._response["hashes"] = []
+                self._response[R_HASHES] = []
                 for subdir in dirs:
                     new_subdir = os.path.join(new_dir, subdir)
                     os.mkdir(new_subdir, int(self._options["dirMode"]))
-                    self._response["hashes"].append(self.__hash(new_subdir))
+                    self._response[R_HASHES].append(self.__hash(new_subdir))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder"
 
