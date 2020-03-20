@@ -29,6 +29,7 @@ from typing_extensions import Literal, TypedDict
 
 from .api_const import (
     API_CMD,
+    API_CONTENT,
     API_CURRENT,
     API_NAME,
     API_TARGET,
@@ -221,7 +222,7 @@ class Connector:
         API_CURRENT,
         API_TREE,
         API_NAME,
-        "content",
+        API_CONTENT,
         "src",
         "dst",
         "cut",
@@ -1341,10 +1342,10 @@ class Connector:
 
         try:
             with open(cur_file, "r") as text_fil:
-                self._response["content"] = text_fil.read()
+                self._response[API_CONTENT] = text_fil.read()
         except UnicodeDecodeError:
             with open(cur_file, "rb") as bin_fil:
-                self._response["content"] = base64.b64encode(bin_fil.read()).decode(
+                self._response[API_CONTENT] = base64.b64encode(bin_fil.read()).decode(
                     "ascii"
                 )
 
@@ -1373,7 +1374,7 @@ class Connector:
     def __put(self) -> None:
         """Save content in file."""
         target = self._request.get(API_TARGET)
-        content = self._request.get("content")
+        content = self._request.get(API_CONTENT)
         if not target or not content:
             self._response["error"] = "Invalid parameters"
             return
@@ -1390,16 +1391,16 @@ class Connector:
 
         try:
             if (
-                self._request["content"].startswith("data:")
-                and ";base64," in self._request["content"][:100]
+                self._request[API_CONTENT].startswith("data:")
+                and ";base64," in self._request[API_CONTENT][:100]
             ):
-                img_data = self._request["content"].split(";base64,")[1]
+                img_data = self._request[API_CONTENT].split(";base64,")[1]
                 img_data = base64.b64decode(img_data)
                 with open(cur_file, "wb") as bin_fil:
                     bin_fil.write(img_data)
             else:
                 with open(cur_file, "w+") as text_fil:
-                    text_fil.write(self._request["content"])
+                    text_fil.write(self._request[API_CONTENT])
             self._response[API_TARGET] = self.__info(cur_file)
         except OSError:
             self._response["error"] = "Unable to write to file"
