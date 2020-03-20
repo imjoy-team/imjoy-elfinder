@@ -32,6 +32,7 @@ from .api_const import (
     API_CURRENT,
     API_TARGET,
     API_TARGETS,
+    API_TREE,
     API_UPLOAD,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
@@ -217,7 +218,7 @@ class Connector:
         API_TARGET,
         API_TARGETS,
         API_CURRENT,
-        "tree",
+        API_TREE,
         "name",
         "content",
         "src",
@@ -413,7 +414,7 @@ class Connector:
 
         self.__cwd(path)
         self.__files(path, False)
-        if self._request.get("tree"):
+        if self._request.get(API_TREE):
             self._response["files"].append(self.__info(path))
 
         self.__check_archivers()
