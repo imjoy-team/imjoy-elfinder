@@ -50,6 +50,7 @@ from .api_const import (
     R_DEBUG,
     R_ERROR,
     R_FILE,
+    R_OPTIONS,
     R_WARNING,
 )
 
@@ -447,7 +448,7 @@ class Connector:
             thumbs_url = self.__path2url(thumbs_dir)
         else:
             thumbs_url = ""
-        self._response["options"] = {
+        self._response[R_OPTIONS] = {
             "path": path,
             "separator": os.path.sep,
             "url": url,
