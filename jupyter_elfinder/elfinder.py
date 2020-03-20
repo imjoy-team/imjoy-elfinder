@@ -31,6 +31,7 @@ from .api_const import (
     API_CMD,
     API_CONTENT,
     API_CURRENT,
+    API_CUT,
     API_DST,
     API_NAME,
     API_SRC,
@@ -227,7 +228,7 @@ class Connector:
         API_CONTENT,
         API_SRC,
         API_DST,
-        "cut",
+        API_CUT,
         "init",
         "type",
         "width",
@@ -776,8 +777,8 @@ class Connector:
                 files = [files]
 
             cut = False
-            if "cut" in self._request:
-                if self._request["cut"] == "1":
+            if API_CUT in self._request:
+                if self._request[API_CUT] == "1":
                     cut = True
 
             if not self.__is_allowed(src, "read") or not self.__is_allowed(
