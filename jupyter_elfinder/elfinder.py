@@ -51,6 +51,7 @@ from .api_const import (
     R_API,
     R_CWD,
     R_DEBUG,
+    R_DIM,
     R_ERROR,
     R_FILE,
     R_HASHES,
@@ -1390,9 +1391,9 @@ class Connector:
 
         dim = self.__get_img_size(cur_file)
         if dim:
-            self._response["dim"] = str(dim)
+            self._response[R_DIM] = str(dim)
         else:
-            self._response["dim"] = None
+            self._response[R_DIM] = None
 
     def __put(self) -> None:
         """Save content in file."""

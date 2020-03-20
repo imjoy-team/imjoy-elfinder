@@ -46,6 +46,7 @@ R_ADDED = "added"
 R_API = "api"
 R_CWD = "cwd"
 R_DEBUG = "debug"
+R_DIM = "dim"
 R_ERROR = "error"
 R_FILE = "file"  # This is not part of api 2.1
 R_HASHES = "hashes"
