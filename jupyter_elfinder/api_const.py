@@ -44,6 +44,6 @@ INFO_TMB = "tmb"
 # Response constants
 R_DEBUG = "debug"
 R_ERROR = "error"
-R_FILE = "file"
+R_FILE = "file"  # This is not part of api 2.1
 R_OPTIONS = "options"
 R_WARNING = "warning"

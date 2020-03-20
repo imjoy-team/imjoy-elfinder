@@ -49,6 +49,7 @@ from .api_const import (
     ARCHIVE_EXT,
     R_DEBUG,
     R_ERROR,
+    R_FILE,
     R_WARNING,
 )
 
@@ -535,7 +536,7 @@ class Connector:
         self.http_header["Content-Transfer-Encoding"] = "binary"
         self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
         self.http_header["Connection"] = "close"
-        self._response["file"] = cur_file
+        self._response[R_FILE] = cur_file
 
     def __rename(self) -> None:
         """Rename file or dir."""
