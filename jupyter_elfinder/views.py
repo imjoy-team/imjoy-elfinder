@@ -15,6 +15,7 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from .api_const import API_UPLOAD
 from .util import get_all, get_one
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
 
@@ -100,7 +101,7 @@ def connector(request: Request) -> Response:
                 http_request[field] = get_all(form, field)
 
             # handle CGI upload
-            elif field == "upload[]":
+            elif field == API_UPLOAD:
                 up_files = {}
                 cgi_upload_files = get_all(form, field)
                 for up_ in cgi_upload_files:

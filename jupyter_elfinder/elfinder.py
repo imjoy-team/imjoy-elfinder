@@ -31,6 +31,7 @@ from .api_const import (
     API_CMD,
     API_CURRENT,
     API_TARGET,
+    API_UPLOAD,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
@@ -225,7 +226,7 @@ class Connector:
         "type",
         "width",
         "height",
-        "upload[]",
+        API_UPLOAD,
         "q",
         "makedir",
     )
@@ -691,11 +692,11 @@ class Connector:
             if not self.__is_allowed(cur_dir, "write"):
                 self._response["error"] = "Access denied"
                 return
-            if "upload[]" not in self._request:
+            if API_UPLOAD not in self._request:
                 self._response["error"] = "No file to upload"
                 return
 
-            up_files = self._request["upload[]"]
+            up_files = self._request[API_UPLOAD]
             # invalid format
             # must be dict('filename1': 'filedescriptor1',
             #              'filename2': 'filedescriptor2', ...)
