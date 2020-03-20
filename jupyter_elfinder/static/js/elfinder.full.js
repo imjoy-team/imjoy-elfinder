@@ -2099,6 +2099,9 @@ var elFinder = function(elm, opts, bootCallback) {
 			}
 			if (url) {
 				url += (url.match(/\?/)? '&' : '?') + '_'.repeat((url.match(/[\?&](_+)t=/g) || ['&t=']).sort().shift().match(/[\?&](_*)t=/)[1].length + 1) + 't=' + (file.ts || parseInt(+new Date()/1000));
+				if(self.options.file_base_url){
+					url = self.options.file_base_url + url;
+				}
 				return url;
 			}
 		}
@@ -2166,6 +2169,9 @@ var elFinder = function(elm, opts, bootCallback) {
 							url += ((n++ === 0)? '' : '&') + encodeURIComponent(key) + '=' + encodeURIComponent(val);
 						});
 					}
+				}
+				if(self.options.file_base_url){
+					url = self.options.file_base_url + url;
 				}
 				return { url: url, className: cls };
 			}
