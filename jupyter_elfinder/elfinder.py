@@ -33,6 +33,7 @@ from .api_const import (
     API_CURRENT,
     API_CUT,
     API_DST,
+    API_HEIGHT,
     API_INIT,
     API_NAME,
     API_SRC,
@@ -235,7 +236,7 @@ class Connector:
         API_INIT,
         API_TYPE,
         API_WIDTH,
-        "height",
+        API_HEIGHT,
         API_UPLOAD,
         "q",
         "makedir",
@@ -865,7 +866,7 @@ class Connector:
         """Scale image size."""
         target = self._request.get(API_TARGET)
         width = self._request.get(API_WIDTH)
-        height = self._request.get("height")
+        height = self._request.get(API_HEIGHT)
         if not (target and width is not None and height is not None):
             self._response["error"] = "Invalid parameters"
             return
