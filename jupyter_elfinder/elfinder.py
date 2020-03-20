@@ -32,6 +32,7 @@ from .api_const import (
     API_CONTENT,
     API_CURRENT,
     API_NAME,
+    API_SRC,
     API_TARGET,
     API_TARGETS,
     API_TREE,
@@ -223,7 +224,7 @@ class Connector:
         API_TREE,
         API_NAME,
         API_CONTENT,
-        "src",
+        API_SRC,
         "dst",
         "cut",
         "init",
@@ -762,8 +763,8 @@ class Connector:
 
     def __paste(self) -> None:
         """Copy or cut files/directories."""
-        if "src" in self._request and "dst" in self._request:
-            src = self.__find_dir(self._request["src"])
+        if API_SRC in self._request and "dst" in self._request:
+            src = self.__find_dir(self._request[API_SRC])
             dst = self.__find_dir(self._request["dst"])
             cur_dir = dst
             if not cur_dir or not src or not dst or API_TARGETS not in self._request:
