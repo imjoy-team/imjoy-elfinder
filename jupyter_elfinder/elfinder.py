@@ -19,15 +19,15 @@ import shlex
 import time
 import traceback
 import uuid
-from datetime import datetime
 from collections.abc import Callable
+from datetime import datetime
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
-from urllib.parse import urljoin, quote
+from urllib.parse import quote, urljoin
 
 from typing_extensions import Literal, TypedDict
 
-from .api_const import API_CURRENT, API_TARGET
+from .api_const import API_CMD, API_CURRENT, API_TARGET
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
@@ -204,7 +204,7 @@ class Connector:
 
     # public variables
     http_allowed_parameters = (
-        "cmd",
+        API_CMD,
         API_TARGET,
         "targets[]",
         API_CURRENT,
@@ -318,9 +318,9 @@ class Connector:
                 self._request[field] = http_request[field]
 
         if root_ok is True:
-            if "cmd" in self._request:
-                if self._request["cmd"] in self._commands:
-                    cmd = self._commands[self._request["cmd"]]
+            if API_CMD in self._request:
+                if self._request[API_CMD] in self._commands:
+                    cmd = self._commands[self._request[API_CMD]]
                     func = getattr(self, "_" + self.__class__.__name__ + cmd, None)
                     # https://github.com/python/mypy/issues/6864
                     is_callable = isinstance(func, Callable)  # type: ignore
@@ -335,7 +335,9 @@ class Connector:
                             traceback.print_exc()
                             self.__debug("exception", exception_to_string(exc))
                 else:
-                    self._response["error"] = "Unknown command: " + self._request["cmd"]
+                    self._response["error"] = (
+                        "Unknown command: " + self._request[API_CMD]
+                    )
 
         if self._error_data:
             self.__debug("errorData", self._error_data)
@@ -351,7 +353,7 @@ class Connector:
 
         if "Content-type" not in self.http_header:
             if (
-                "cmd" in self._request and self._request["cmd"] == "upload"
+                API_CMD in self._request and self._request[API_CMD] == "upload"
             ) or self._options["debug"]:
                 self.http_header["Content-type"] = "text/html"
             else:
