@@ -525,7 +525,6 @@ class Connector:
 
     def __mkdir(self) -> None:
         """Create new directory."""
-        current = None
         path = None
         new_dir = None
         if "name" in self._request and "target" in self._request:
@@ -534,7 +533,7 @@ class Connector:
             target = self._request["target"]
             path = self.__find_dir(target, None)
         if "dirs" in self._request:
-            dirs = self._request[dirs]
+            dirs = self._request["dirs"]
         else:
             dirs = []
 
@@ -568,7 +567,7 @@ class Connector:
 
     def __mkfile(self) -> None:
         """Create new file."""
-        name = current = None
+        name = None
         cur_dir = new_file = None
         if "name" in self._request and "target" in self._request:
             name = self._request["name"]
