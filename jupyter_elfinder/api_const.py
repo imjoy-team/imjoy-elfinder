@@ -3,6 +3,7 @@
 API_CURRENT = "current"
 API_TARGET = "target"
 API_CMD = "cmd"
+API_DIRS = "dirs[]"
 API_UPLOAD = "upload[]"
 API_TARGETS = "targets[]"
 API_TREE = "tree"
