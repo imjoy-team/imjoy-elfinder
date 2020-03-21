@@ -337,7 +337,7 @@ class Connector:
                     self._response["error"] = "Unknown command: " + self._request["cmd"]
 
         if self._error_data:
-            self.__debug('errorData', self._error_data)
+            self.__debug("errorData", self._error_data)
 
         if self._options["debug"]:
             self.__debug("time", (time.time() - self._time))
@@ -369,7 +369,10 @@ class Connector:
         files = []
         for target in targets:
             path = self.__find(target)
-            files.append(self.__info(path))
+            if path is None:
+                self.__set_error_data(target, "File not found")
+            else:
+                files.append(self.__info(path))
         self._response["files"] = files
 
     def __open(self) -> None:
@@ -627,8 +630,7 @@ class Connector:
 
     def __rm(self) -> None:
         """Delete files and directories."""
-        rm_list = None
-        cur_dir = rm_file = None
+        rm_file = rm_list = None
         if "targets[]" in self._request:
             rm_list = self._request["targets[]"]
 
@@ -665,8 +667,8 @@ class Connector:
         except ImportError:
             pass
 
-        if "target" in self._request or "current" in self._request:
-            dir_hash = self._request.get("target") or self._request.get("current")
+        if "target" in self._request:
+            dir_hash = self._request["target"]
             cur_dir = self.__find_dir(dir_hash)
             if not cur_dir:
                 self._response["error"] = "Invalid parameters"
@@ -898,6 +900,8 @@ class Connector:
         i = 0
         for fhash in targets:
             path = self.__find(fhash)
+            if path is None:
+                continue
             if os.path.dirname(path) == thumbs_dir:
                 continue
             if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
@@ -1077,10 +1081,13 @@ class Connector:
         all_total_size = 0
         all_file_count = 0
         all_dir_count = 0
-        sizes = []
+        sizes: List[Dict[str, int]] = []
 
         for target in targets:
             path = self.__find(target)
+            if path is None:
+                self.__set_error_data(target, "Target not found")
+                continue
             total_size = 0
             file_count = 0
             dir_count = 0
@@ -1119,11 +1126,11 @@ class Connector:
             self._response["error"] = "Invalid parameters"
             return
 
-        target = self._request.get("target")
+        target = self._request["target"]
         intersect = self._request.get("intersect[]")
 
         path = self.__find(target)
-        if not os.path.isdir(path):
+        if path is None or not os.path.isdir(path):
             self._response["error"] = "Target directory not found."
             return
 
@@ -1139,16 +1146,21 @@ class Connector:
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
-        if "target" in self._request:
-            target = self._request["target"]
-            path = self.__find_dir(target)
+        if "target" not in self._request:
+            self._response["error"] = "Invalid parameters"
+            return
+        target = self._request["target"]
+        path = self.__find_dir(target)
 
-        if not os.path.isdir(path):
+        if path is None or not os.path.isdir(path):
             self._response["error"] = "Directory not found."
             return
 
         if os.path.islink(path):
             path = self.__read_link(path)
+            if path is None:
+                self._response["error"] = "Directory (link) not found."
+                return
 
         if self.__is_allowed(path, "read"):
             tree = []
@@ -1420,10 +1432,10 @@ class Connector:
         if not self._options["archivers"]["extract"] or "target" not in self._request:
             self._response["error"] = "Invalid parameters"
             return
-        target = self._request.get("target")
+        target = self._request["target"]
         makedir = self._request.get("makedir")
         cur_file = self.__find(target)
-        if not cur_file or os.path.isdir(cur_file):
+        if cur_file is None or os.path.isdir(cur_file):
             self._response["error"] = "File not found"
             return
 
@@ -1466,13 +1478,13 @@ class Connector:
         os.chdir(cur_cwd)
         if ret:
             if added is None:
-                added = [
+                added_names = [
                     dname
                     for dname in os.listdir(cur_dir)
                     if dname not in existing_files
                 ]
                 self._response["added"] = [
-                    self.__info(os.path.join(cur_dir, item)) for item in added
+                    self.__info(os.path.join(cur_dir, item)) for item in added_names
                 ]
             else:
                 self._response["added"] = added
