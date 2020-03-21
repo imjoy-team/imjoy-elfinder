@@ -1132,18 +1132,16 @@ class Connector:
         self._response["sizes"] = sizes
 
     def __ls(self) -> None:
-        if not self._request.get("target"):
-            self._response["error"] = "Invalid parameters"
-            return
-
-        target = self._request["target"]
-        intersect = self._request.get("intersect[]")
+        target = self._request.get("target")
         if not target:
             self._response["error"] = "Invalid parameters"
             return
+
+        intersect = self._request.get("intersect[]")
+
         path = self.__find(target)
         if path is None or not os.path.isdir(path):
-            self._response["error"] = "Target directory not found."
+            self._response["error"] = "Target directory not found"
             return
 
         items = {}
@@ -1177,19 +1175,20 @@ class Connector:
                 self._response["error"] = "Directory (link) not found"
                 return
 
-        if self.__is_allowed(path, "read"):
-            tree = []
-            for directory in sorted(os.listdir(path)):
-                dir_path = os.path.join(path, directory)
-                if (
-                    os.path.isdir(dir_path)
-                    and not os.path.islink(dir_path)
-                    and self.__is_accepted(directory)
-                ):
-                    tree.append(self.__info(dir_path))
-            self._response["tree"] = tree
-        else:
+        if not self.__is_allowed(path, "read"):
             self._response["error"] = "Access denied"
+            return
+
+        tree = []
+        for directory in sorted(os.listdir(path)):
+            dir_path = os.path.join(path, directory)
+            if (
+                os.path.isdir(dir_path)
+                and not os.path.islink(dir_path)
+                and self.__is_accepted(directory)
+            ):
+                tree.append(self.__info(dir_path))
+        self._response["tree"] = tree
 
     def __remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
@@ -1444,10 +1443,11 @@ class Connector:
 
     def __extract(self) -> None:
         """Uncompress archive."""
-        if not self._options["archivers"]["extract"] or "target" not in self._request:
+        target = self._request.get("target")
+        if not self._options["archivers"]["extract"] or not target:
             self._response["error"] = "Invalid parameters"
             return
-        target = self._request["target"]
+
         makedir = self._request.get("makedir")
         if not target:
             self._response["error"] = "Invalid parameters"
