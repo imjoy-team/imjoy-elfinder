@@ -337,7 +337,7 @@ class Connector:
                     self._response["error"] = "Unknown command: " + self._request["cmd"]
 
         if self._error_data:
-            self._response["errorData"] = self._error_data
+            self.__debug('errorData', self._error_data)
 
         if self._options["debug"]:
             self.__debug("time", (time.time() - self._time))
