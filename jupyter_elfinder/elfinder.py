@@ -1187,6 +1187,17 @@ class Connector:
                 tree.append(self.__info(dir_path))
         self._response["tree"] = tree
 
+        tree = []
+        for directory in sorted(os.listdir(path)):
+            dir_path = os.path.join(path, directory)
+            if (
+                os.path.isdir(dir_path)
+                and not os.path.islink(dir_path)
+                and self.__is_accepted(directory)
+            ):
+                tree.append(self.__info(dir_path))
+        self._response["tree"] = tree
+
     def __remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
         if not self.__is_allowed(target, "rm"):
