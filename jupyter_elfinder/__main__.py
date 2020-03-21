@@ -93,9 +93,9 @@ def main(args: Optional[List[str]] = None) -> None:
         "--thumbnail", action="store_true", help="enable thumbnail for files"
     )
     parser.add_argument(
-        "--send-file-path",
+        "--expose-real-path",
         action="store_true",
-        help="send file path to the frontend (disabled for security reason)",
+        help="expose file path to the frontend (disabled for security reasons)",
     )
 
     opt = parser.parse_args(args=args)
@@ -104,7 +104,7 @@ def main(args: Optional[List[str]] = None) -> None:
         "root_dir": opt.root_dir or os.getcwd(),
         "files_url": "/files",
         "base_url": opt.base_url or "",
-        "send_file_path": opt.send_file_path,
+        "expose_real_path": opt.expose_real_path,
     }  # type: Dict[str, str]
     if opt.thumbnail:
         settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
@@ -137,7 +137,7 @@ def setup_for_jupyter_server_proxy() -> dict:
             "--allow-origin",
             "https://lib.imjoy.io",
             "--thumbnail",
-            "--send-file-path",
+            "--expose-real-path",
         ],
         "environment": {},
         "launcher_entry": {

@@ -60,7 +60,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "root": str,
         "files_url": str,
         "base_url": str,
-        "send_file_path": bool,
+        "expose_real_path": bool,
         "maxFolderDepth": int,
         "rootAlias": str,
         "dotFiles": bool,
@@ -106,7 +106,7 @@ class Connector:
         "root": "",
         "files_url": "",
         "base_url": "",
-        "send_file_path": False,
+        "expose_real_path": False,
         "maxFolderDepth": 256,
         "rootAlias": "HOME",
         "dotFiles": False,
@@ -223,7 +223,7 @@ class Connector:
         base_url: str,
         upload_max_size: int,
         tmb_dir: Optional[str],
-        send_file_path: bool = False,
+        expose_real_path: bool = False,
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
@@ -235,7 +235,7 @@ class Connector:
         self._options["base_url"] = (
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
-        self._options["send_file_path"] = send_file_path
+        self._options["expose_real_path"] = expose_real_path
 
         self._response["debug"] = {}
         self._options["files_url"] = self.__check_utf8(self._options["files_url"])
@@ -990,7 +990,7 @@ class Connector:
             "ts": stat.st_mtime,
         }  # type: Info
 
-        if self._options["send_file_path"]:
+        if self._options["expose_real_path"]:
             info["path"] = os.path.abspath(path)
 
         if filetype == "dir":
