@@ -448,8 +448,9 @@ class Connector:
         }
 
     def __parents(self) -> None:
+        # TODO: implement according to the spec 
+        # https://github.com/Studio-42/elFinder/wiki/Client-Server-API-2.1#parents
         self._response["tree"] = []
-
 
     def __file(self) -> None:
         if "target" in self._request:
@@ -1506,7 +1507,7 @@ class Connector:
         query = self._request["q"]
         for root, dirs, files in os.walk(search_path):
             for fil in files:
-                if query in fil:
+                if query.lower() in fil.lower():
                     file_path = os.path.join(root, fil)
                     if mimes is None:
                         result.append(self.__info(file_path))
@@ -1516,7 +1517,7 @@ class Connector:
             if mimes is None:
                 for folder in dirs:
                     file_path = os.path.join(root, folder)
-                    if query in folder:
+                    if query.lower() in folder.lower():
                         result.append(self.__info(file_path))
         self._response["files"] = result
 
@@ -1731,7 +1732,7 @@ class Connector:
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
             except OSError:  # UnidentifiedImageError requires Pillow 7.0.0
-                print("WARNING: unidentified image or file not found error: " + path)
+                print("WARNING: unidentified image or file not found: " + path)
 
         return None
 
