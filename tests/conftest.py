@@ -30,5 +30,7 @@ def settings_fixture():
         "root_dir": str(ROOT_DIR),
         "files_url": "/files",
         "base_url": "",
+        "expose_real_path": True,
+        "thumbnail_dir": ".tmb",
     }
     return settings
