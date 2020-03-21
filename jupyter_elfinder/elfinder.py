@@ -1356,7 +1356,7 @@ class Connector:
             self._response["error"] = "Invalid parameters"
             return
 
-        cur_file = self.__find(self._request["target"])
+        cur_file = self.__find(target)
 
         if not cur_file:
             self._response["error"] = "File not found"
