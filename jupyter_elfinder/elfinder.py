@@ -157,6 +157,7 @@ class Connector:
         "size": "__size",
         "info": "__places",
         "ls": "__ls",
+        "file": "__file",
     }
 
     _mimeType = {
@@ -366,7 +367,7 @@ class Connector:
         for target in targets:
             path = self.__find(target)
             files.append(self.__info(path))
-        self._request["files"] = files
+        self._response["files"] = files
 
     def __open(self) -> None:
         """Open file or directory."""
@@ -395,6 +396,8 @@ class Connector:
 
         self.__cwd(path)
         self.__files(path, False)
+        if self._request.get("tree"):
+            self._response["files"].append(self.__info(path))
 
         self.__check_archivers()
         if not self._options["fileURL"]:
@@ -1112,7 +1115,7 @@ class Connector:
 
         items = {}
         for fname in os.listdir(path):
-            fhash = self.__hash(os.path.join(path.fname))
+            fhash = self.__hash(os.path.join(path, fname))
             if intersect:
                 if fhash in intersect:
                     items[fhash] = fname
