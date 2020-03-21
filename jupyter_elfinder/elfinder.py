@@ -501,7 +501,7 @@ class Connector:
 
         self.http_status_code = 200
         self.http_header["Content-type"] = mime
-        self.http_header["Content-Disposition"] = ( disp + ";")
+        self.http_header["Content-Disposition"] = disp + ";"
         self.http_header["Content-Location"] = cur_file.replace(
             self._options["root"], ""
         )
