@@ -67,69 +67,6 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				xhr.abort();
 			}
 		};
-		
-		switch (cmd) {
-			case 'open':
-				opts.data.tree = 1;
-				if(opts.data.target){
-					var _file = fm.file(opts.data.target)
-					opts.data.current = _file && _file.phash;
-				}
-				break;
-			case 'parents':
-			case 'tree':
-				return dfrd.resolve({tree : []});
-			case 'get':
-				opts.data.cmd = 'read';
-				opts.data.current = fm.file(opts.data.target).phash;
-				break;
-			case 'put':
-				opts.data.cmd = 'edit';
-				opts.data.current = fm.file(opts.data.target).phash;
-				break;
-			case 'dim':
-				opts.data.cmd = 'dim';
-				opts.data.current = fm.file(opts.data.target).phash;
-				break;
-			case 'archive':
-			case 'rm':
-				opts.data.current = fm.file(opts.data.targets[0]).phash;
-				break;
-			case 'extract':
-			case 'rename':
-			case 'resize':
-				opts.data.current = fm.file(opts.data.target).phash;
-				break;
-			case 'duplicate':
-				opts.data.current = fm.cwd().hash;
-				break
-			case 'mkdir':
-				break
-			case 'mkfile':
-				break;
-			case 'paste':
-				opts.data.current = opts.data.dst;
-				if (! opts.data.tree) {
-					$.each(opts.data.targets, function(i, h) {
-						if (fm.file(h) && fm.file(h).mime === 'directory') {
-							opts.data.tree = '1';
-							return false;
-						}
-					});
-				}
-				break;
-				
-			case 'size':
-				return dfrd.resolve({error : fm.res('error', 'cmdsupport')});
-			case 'search':
-				break;
-			case 'file':
-				opts.data.cmd = 'open';
-				opts.data.current = fm.file(opts.data.target).phash;
-				break;
-		}
-		// cmd = opts.data.cmd
-		
 		if(this.extra_query){
 			if(opts.url.includes('?')){
 				opts.url = opts.url + '&' + this.extra_query
@@ -143,16 +80,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				dfrd.reject(error);
 			})
 			.done(function(raw) {
-				var migrated_cmds = ['rm', 'paste', 'rename', 'search', 'duplicate', 'mkdir', 'mkfile'];
-				if(migrated_cmds.includes(cmd)){
-					dfrd.resolve(raw);
-					return;
-				}
-				else{
-					data = self.normalize(cmd, raw);
-					dfrd.resolve(data);
-				}
-				
+				dfrd.resolve(raw);
 			});
 			
 		return dfrd;
@@ -206,10 +134,6 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				return treeDiff;
 			},
 			phash, diff, isCwd, treeDiff;
-
-		if ((cmd == 'tmb' || cmd == 'get' || cmd == 'dim')) {
-			return data;
-		}
 		
 		// if (data.error) {
 		// 	$.each(data.error, function(i, msg) {
@@ -230,7 +154,6 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		}
 		
 		if (cmd == 'put') {
-
 			phash = fm.file(data.target.hash).phash;
 			return {changed : [data.target]};
 		}
@@ -245,32 +168,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			});
 		}
 		
-		$.each(data.cdc||[], function(i, file) {
-			var hash = file.hash,
-				mcts;
 
-			if (files[hash]) {
-				if (file.date) {
-					mcts = Date.parse(getDateString(file.date));
-					if (mcts && !isNaN(mcts)) {
-						files[hash].ts = Math.floor(mcts / 1000);
-					} else {
-						files[hash].date = file.date || fm.formatDate(file);
-					}
-				}
-				files[hash].locked = file.hash == phash ? true : file.rm === void(0) ? false : !file.rm;
-			} else {
-				files[hash] = file;
-			}
-		});
-		
-		if (!data.tree) {
-			$.each(fm.files(), function(hash, file) {
-				if (!files[hash] && file.phash != phash && file.mime == 'directory') {
-					files[hash] = file;
-				}
-			});
-		}
 		
 		if (cmd == 'open') {
 			return {
@@ -281,30 +179,14 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 					debug   : data.debug
 				};
 		}
-		
-		if (isCwd) {
-			diff = fm.diff($.map(files, filter));
-		} else {
-			if (data.tree && cmd !== 'paste') {
-				diff = getTreeDiff(files);
-			} else {
-				diff = {
-					added   : [],
-					removed : [],
-					changed : []
-				};
-				if (cmd === 'paste') {
-					diff.sync = true;
-				}
-			}
-		}
+	
 		
 		return Object.assign({
 			current : data.cwd && data.cwd.hash,
 			error   : data.error,
 			warning : data.warning,
 			options : {tmb : !!data.tmb}
-		}, diff);
+		});
 		
 	};
 	
