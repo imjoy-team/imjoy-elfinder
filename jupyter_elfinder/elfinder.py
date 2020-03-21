@@ -15,6 +15,7 @@ import os
 import re
 import shutil
 import subprocess
+import shlex
 import time
 import traceback
 import uuid
@@ -158,6 +159,7 @@ class Connector:
         "info": "__places",
         "ls": "__ls",
         "file": "__file",
+        "parents": "__parents",
     }
 
     _mimeType = {
@@ -217,6 +219,7 @@ class Connector:
         "height",
         "upload[]",
         "q",
+        "makedir",
     )
     # return variables
     http_status_code = 0
@@ -444,6 +447,10 @@ class Connector:
             "uiCmdMap": {},
         }
 
+    def __parents(self) -> None:
+        self._response["tree"] = []
+
+
     def __file(self) -> None:
         if "target" in self._request:
             cur_file = self.__find(self._request["target"])
@@ -581,7 +588,7 @@ class Connector:
                 self._response["hashes"] = []
                 for subdir in dirs:
                     new_subdir = os.path.join(new_dir, subdir)
-                    os.mkdir(new_subdir)
+                    os.mkdir(new_subdir, int(self._options["dirMode"]))
                     self._response["hashes"].append(self.__hash(new_subdir))
             except OSError:
                 self._response["error"] = "Unable to create folder"
@@ -905,7 +912,6 @@ class Connector:
         """Get files and directories in current directory."""
         files = []
         dirs = []
-
         for fil in sorted(os.listdir(path)):
             if not self.__is_accepted(fil):
                 continue
@@ -935,7 +941,7 @@ class Connector:
 
         rel = os.path.join(basename, path[len(self._options["root"]) :])
 
-        self._response["cwd"] = {
+        info = {
             "hash": self.__hash(path),
             "name": self.__check_utf8(name),
             "mime": "directory",
@@ -949,6 +955,13 @@ class Connector:
             "rm": not root and self.__is_allowed(path, "rm"),
             "volumeid": self.volumeid,
         }
+
+        try:
+            info["dirs"] = any(next(os.walk(path))[1])
+        except StopIteration:
+            info["dirs"] = False
+
+        self._response["cwd"] = info
 
     def __info(self, path: str) -> Info:
         # mime = ''
@@ -1199,7 +1212,7 @@ class Connector:
                 return False
         else:
             try:
-                os.mkdir(dst)
+                os.mkdir(dst, int(self._options["dirMode"]))
                 shutil.copymode(src, dst)
             except (shutil.SameFileError, OSError):
                 self.__set_error_data(src, "Unable to copy files")
@@ -1408,9 +1421,7 @@ class Connector:
             return
         target = self._request.get("target")
         makedir = self._request.get("makedir")
-
         cur_file = self.__find(target)
-
         if not cur_file or os.path.isdir(cur_file):
             self._response["error"] = "File not found"
             return
@@ -1434,26 +1445,34 @@ class Connector:
 
         cur_cwd = os.getcwd()
         target_dir = cur_dir
-
-        if makedir:
+        added = None
+        if makedir and makedir != '0':
             try:
-                base_name = os.path.splitext(os.path.basename(cur_file))[0]
-                target_dir = os.path.join(cur_dir, base_name)
+                base_name = os.path.basename(cur_file).split('.')[0] or 'New Folder'
+                target_dir = os.path.join(target_dir, base_name)
+                target_dir = _unique_name(target_dir, copy="")
+                
                 os.mkdir(target_dir, int(self._options["dirMode"]))
+                cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
+                added = [self.__info(target_dir)]
             except OSError:
-                self._response["error"] = "Unable to create folder"
+                self._response["error"] = "Unable to create folder: " +  base_name
                 return
-        existing_files = os.listdir(cur_dir)
-        os.chdir(target_dir)
+        if added is None:
+            existing_files = os.listdir(cur_dir)
+        os.chdir(cur_dir)
         ret = _run_sub_process(cmd)
         os.chdir(cur_cwd)
         if ret:
-            added = [
-                dname for dname in os.listdir(cur_dir) if dname not in existing_files
-            ]
-            self._response["added"] = [
-                self.__info(os.path.join(cur_dir, item)) for item in added
-            ]
+            if added is None:
+                added = [
+                    dname for dname in os.listdir(cur_dir) if dname not in existing_files
+                ]
+                self._response["added"] = [
+                    self.__info(os.path.join(cur_dir, item)) for item in added
+                ]
+            else:
+                self._response["added"] = added
             return
 
         self._response["error"] = "Unable to extract files from archive"
@@ -1759,30 +1778,30 @@ class Connector:
         if tar:
             mime = "application/x-tar"
             create.update({mime: {"cmd": "tar", "argc": "-cf", "ext": "tar"}})
-            extract.update({mime: {"cmd": "tar", "argc": "-xf", "ext": "tar"}})
+            extract.update({mime: {"cmd": "tar", "argc": "-xf", "ext": "tar", "argd": "-C {}"}})
 
         if tar and gzip:
             mime = "application/x-gzip"
             create.update({mime: {"cmd": "tar", "argc": "-czf", "ext": "tar.gz"}})
-            extract.update({mime: {"cmd": "tar", "argc": "-xzf", "ext": "tar.gz"}})
+            extract.update({mime: {"cmd": "tar", "argc": "-xzf", "ext": "tar.gz", "argd": "-C {}"}})
 
         if tar and bzip2:
             mime = "application/x-bzip2"
             create.update({mime: {"cmd": "tar", "argc": "-cjf", "ext": "tar.bz2"}})
-            extract.update({mime: {"cmd": "tar", "argc": "-xjf", "ext": "tar.bz2"}})
+            extract.update({mime: {"cmd": "tar", "argc": "-xjf", "ext": "tar.bz2", "argd": "-C {}"}})
 
         mime = "application/zip"
         if zipc:
             create.update({mime: {"cmd": "zip", "argc": "-r9", "ext": "zip"}})
         if unzip:
-            extract.update({mime: {"cmd": "unzip", "argc": "", "ext": "zip"}})
+            extract.update({mime: {"cmd": "unzip", "argc": "", "ext": "zip", "argd": "-d {}"}})
 
         mime = "application/x-rar"
         if rar:
             create.update({mime: {"cmd": "rar", "argc": "a -inul", "ext": "rar"}})
-            extract.update({mime: {"cmd": "rar", "argc": "x -y", "ext": "rar"}})
+            extract.update({mime: {"cmd": "rar", "argc": "x -y", "ext": "rar", "argd": "{}"}})
         elif unrar:
-            extract.update({mime: {"cmd": "unrar", "argc": "x -y", "ext": "rar"}})
+            extract.update({mime: {"cmd": "unrar", "argc": "x -y", "ext": "rar", "argd": "{}"}})
 
         p7zip = None
         if p7z:
@@ -1795,14 +1814,14 @@ class Connector:
         if p7zip:
             mime = "application/x-7z-compressed"
             create.update({mime: {"cmd": p7zip, "argc": "a -t7z", "ext": "7z"}})
-            extract.update({mime: {"cmd": p7zip, "argc": "extract -y", "ext": "7z"}})
+            extract.update({mime: {"cmd": p7zip, "argc": "extract -y", "ext": "7z", "argd": "-o{}"}})
 
             mime = "application/x-tar"
             if mime not in create:
                 create.update({mime: {"cmd": p7zip, "argc": "a -ttar", "ext": "tar"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar"}}
+                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar", "argd": "-o{}"}}
                 )
 
             mime = "application/x-gzip"
@@ -1810,7 +1829,7 @@ class Connector:
                 create.update({mime: {"cmd": p7zip, "argc": "a -tgzip", "ext": "gz"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar.gz"}}
+                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar.gz", "argd": "-o{}"}}
                 )
 
             mime = "application/x-bzip2"
@@ -1818,7 +1837,7 @@ class Connector:
                 create.update({mime: {"cmd": p7zip, "argc": "a -tbzip2", "ext": "bz2"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar.bz2"}}
+                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar.bz2", "argd": "-o{}"}}
                 )
 
             mime = "application/zip"
@@ -1826,7 +1845,7 @@ class Connector:
                 create.update({mime: {"cmd": p7zip, "argc": "a -tzip", "ext": "zip"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "zip"}}
+                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "zip", "argd": "-o{}"}}
                 )
 
         if not self._options["archiveMimes"]:
@@ -1913,6 +1932,7 @@ def _run_sub_process(cmd: List[str], valid_return: Optional[List[int]] = None) -
         return False
 
     if completed.returncode not in valid_return:
+        print(str(completed.stderr))
         return False
 
     return True
