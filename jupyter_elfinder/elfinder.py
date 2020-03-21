@@ -1081,7 +1081,7 @@ class Connector:
         all_total_size = 0
         all_file_count = 0
         all_dir_count = 0
-        sizes = [] # type: List[Dict[str, int]]
+        sizes = []  # type: List[Dict[str, int]]
 
         for target in targets:
             path = self.__find(target)
