@@ -454,59 +454,63 @@ class Connector:
         self._response["tree"] = []
 
     def __file(self) -> None:
-        if "target" in self._request:
-            cur_file = self.__find(self._request["target"])
+        target = self._request.get("target")
+        if not target:
+            self._response["error"] = "Invalid parameters"
+            return
 
-            if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
+        download = self._request.get("download")
+        cur_file = self.__find(target)
+
+        if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
+            self.http_status_code = 404
+            self.http_header["Content-type"] = "text/html"
+            self.http_response = "File not found"
+            return
+
+        if not self.__is_allowed(cur_file, "read"):
+            self.http_status_code = 403
+            self.http_header["Content-type"] = "text/html"
+            self.http_response = "Access denied"
+            return
+
+        if os.path.islink(cur_file):
+            cur_file = self.__read_link(cur_file)
+            if not cur_file or os.path.isdir(cur_file):
                 self.http_status_code = 404
                 self.http_header["Content-type"] = "text/html"
                 self.http_response = "File not found"
                 return
-
-            if not self.__is_allowed(cur_file, "read"):
+            if not self.__is_allowed(
+                os.path.dirname(cur_file), "read"
+            ) or not self.__is_allowed(cur_file, "read"):
                 self.http_status_code = 403
                 self.http_header["Content-type"] = "text/html"
                 self.http_response = "Access denied"
                 return
 
-            if os.path.islink(cur_file):
-                cur_file = self.__read_link(cur_file)
-                if not cur_file or os.path.isdir(cur_file):
-                    self.http_status_code = 404
-                    self.http_header["Content-type"] = "text/html"
-                    self.http_response = "File not found"
-                    return
-                if not self.__is_allowed(
-                    os.path.dirname(cur_file), "read"
-                ) or not self.__is_allowed(cur_file, "read"):
-                    self.http_status_code = 403
-                    self.http_header["Content-type"] = "text/html"
-                    self.http_response = "Access denied"
-                    return
+        mime = self.__mimetype(cur_file)
+        parts = mime.split("/", 2)
 
-            mime = self.__mimetype(cur_file)
-            parts = mime.split("/", 2)
-            if parts[0] == "image":
-                disp = "image"
-            elif parts[0] == "text":
-                disp = "inline"
-            else:
-                disp = "attachments"
-
-            self.http_status_code = 200
-            self.http_header["Content-type"] = mime
-            self.http_header["Content-Disposition"] = (
-                disp + "; filename=" + os.path.basename(cur_file)
-            )
-            self.http_header["Content-Location"] = cur_file.replace(
-                self._options["root"], ""
-            )
-            self.http_header["Content-Transfer-Encoding"] = "binary"
-            self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
-            self.http_header["Connection"] = "close"
-            self._response["file"] = cur_file
+        if download:
+            disp = "attachments"
+        elif parts[0] == "image":
+            disp = "image"
         else:
-            self._response["error"] = "Invalid parameters"
+            disp = "inline"
+
+        self.http_status_code = 200
+        self.http_header["Content-type"] = mime
+        self.http_header["Content-Disposition"] = (
+            disp + "; filename=" + os.path.basename(cur_file)
+        )
+        self.http_header["Content-Location"] = cur_file.replace(
+            self._options["root"], ""
+        )
+        self.http_header["Content-Transfer-Encoding"] = "binary"
+        self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
+        self.http_header["Connection"] = "close"
+        self._response["file"] = cur_file
 
     def __rename(self) -> None:
         """Rename file or dir."""
@@ -1028,12 +1032,18 @@ class Connector:
             info["link"] = self.__hash(lpath)
             info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
             info["read"] = 1 if info["read"] and self.__is_allowed(lpath, "read") else 0
-            info["write"] = 1 if info["write"] and self.__is_allowed(lpath, "write") else 0
-            info["locked"] = 1 if (
-                not info["write"]
-                and not info["read"]
-                and not self.__is_allowed(lpath, "rm")
-            ) else 0
+            info["write"] = (
+                1 if info["write"] and self.__is_allowed(lpath, "write") else 0
+            )
+            info["locked"] = (
+                1
+                if (
+                    not info["write"]
+                    and not info["read"]
+                    and not self.__is_allowed(lpath, "rm")
+                )
+                else 0
+            )
             info["size"] = 0
         else:
             lpath = None
