@@ -1,4 +1,5 @@
 """Test elfinder."""
+from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
 
@@ -22,3 +23,17 @@ def test_open(p_request, settings):
     assert "uplMaxFile" in body
     assert "uplMaxSize" in body
     assert "options" in body
+
+
+def test_archive(p_request, settings, txt_file):
+    """Test the archive command."""
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "application/x-tar"
+    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params["targets[]"] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" not in body
+    assert "added" in body

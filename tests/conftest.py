@@ -2,7 +2,7 @@
 import pytest
 from pyramid import testing
 
-from . import ROOT_DIR
+from . import TEST_CONTENT
 
 
 @pytest.fixture(name="p_config", autouse=True)
@@ -24,13 +24,23 @@ def request_fixture():
 
 
 @pytest.fixture(name="settings")
-def settings_fixture():
+def settings_fixture(tmp_path):
     """Provide default settings for the app."""
     settings = {
-        "root_dir": str(ROOT_DIR),
+        "root_dir": str(tmp_path),
         "files_url": "/files",
         "base_url": "",
         "expose_real_path": True,
         "thumbnail_dir": ".tmb",
     }
     return settings
+
+
+@pytest.fixture(name="txt_file")
+def txt_file_fixture(tmp_path):
+    """Provide a temporary text file."""
+    tmp_dir = tmp_path / "sub"
+    tmp_dir.mkdir()
+    fil = tmp_dir / "test.txt"
+    fil.write_text(TEST_CONTENT)
+    yield fil
