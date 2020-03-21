@@ -1156,10 +1156,7 @@ class Connector:
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
-        if "target" not in self._request:
-            self._response["error"] = "Invalid parameters"
-            return
-        target = self._request["target"]
+        target = self._request.get("target")
         if not target:
             self._response["error"] = "Invalid parameters"
             return
@@ -1178,6 +1175,17 @@ class Connector:
         if not self.__is_allowed(path, "read"):
             self._response["error"] = "Access denied"
             return
+    
+        tree = []
+        for directory in sorted(os.listdir(path)):
+            dir_path = os.path.join(path, directory)
+            if (
+                os.path.isdir(dir_path)
+                and not os.path.islink(dir_path)
+                and self.__is_accepted(directory)
+            ):
+                tree.append(self.__info(dir_path))
+        self._response["tree"] = tree
 
         tree = []
         for directory in sorted(os.listdir(path)):
