@@ -377,15 +377,12 @@ class Connector:
 
     def __open(self) -> None:
         """Open file or directory."""
-        # try dir
+        if "target" not in self._request:
+            self._response["error"] = "Invalid parameters"
+            return
 
-        # initialized = len(self._cached_path) > 0
         if "init" in self._request and self._request["init"]:
             self._response["api"] = 2.1
-        else:
-            if "target" not in self._request:
-                self._response["error"] = "Invalid parameters"
-                return
 
         if "target" in self._request and self._request["target"]:
             target = self.__find_dir(self._request["target"])
