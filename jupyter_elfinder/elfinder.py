@@ -37,19 +37,18 @@ Info = TypedDict(  # pylint: disable=invalid-name
         "name": str,
         "hash": str,
         "mime": str,
-        "read": bool,
-        "write": bool,
-        "locked": bool,
+        "read": int,
+        "write": int,
+        "locked": int,
         "ts": float,
         "volumeid": str,
-        "dirs": bool,
+        "dirs": int,
         "phash": str,
         "link": str,
         "alias": str,
         "size": int,
         "url": str,
         "dim": str,
-        "resize": bool,
         "tmb": Union[str, int],
         "path": str,
     },
@@ -384,14 +383,16 @@ class Connector:
         if "init" in self._request and self._request["init"]:
             self._response["api"] = 2.1
 
-        if "target" in self._request and self._request["target"]:
-            target = self.__find_dir(self._request["target"])
+        target = self._request.get("target")
+        if target:
+            target = self.__find_dir(target)
             if not target:
                 self._response["error"] = (
                     "Invalid parameters: " + self._request["target"]
                 )
             elif not self.__is_allowed(target, "read"):
                 self._response["error"] = "Access denied"
+                return
             else:
                 path = target
         else:
@@ -561,10 +562,8 @@ class Connector:
             name = self.__check_utf8(name)
             target = self._request["target"]
             path = self.__find_dir(target)
-        if "dirs[]" in self._request:
-            dirs = self._request["dirs[]"]
-        else:
-            dirs = []
+
+        dirs = self._request.get("dirs[]") or []
 
         if not path:
             self._response["error"] = "Invalid parameters"
@@ -952,16 +951,17 @@ class Connector:
             "date": datetime.fromtimestamp(os.stat(path).st_mtime).strftime(
                 "%d %b %Y %H:%M"
             ),
-            "read": True,
-            "write": self.__is_allowed(path, "write"),
+            "read": 1,
+            "write": 1 if self.__is_allowed(path, "write") else 0,
+            "locked": 0,
             "rm": not root and self.__is_allowed(path, "rm"),
             "volumeid": self.volumeid,
         }
 
         try:
-            info["dirs"] = any(next(os.walk(path))[1])
+            info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
         except StopIteration:
-            info["dirs"] = False
+            info["dirs"] = 0
 
         self._response["cwd"] = info
 
@@ -984,9 +984,9 @@ class Connector:
             "name": self.__check_utf8(os.path.basename(path)),
             "hash": self.__hash(path),
             "mime": "directory" if filetype == "dir" else self.__mimetype(path),
-            "read": readable,
-            "write": writable,
-            "locked": not readable and not writable and not deletable,
+            "read": 1 if readable else 0,
+            "write": 1 if writable else 0,
+            "locked": 1 if not readable and not writable and not deletable else 0,
             "ts": stat.st_mtime,
         }  # type: Info
 
@@ -996,9 +996,9 @@ class Connector:
         if filetype == "dir":
             info["volumeid"] = self.volumeid
             try:
-                info["dirs"] = any(next(os.walk(path))[1])
+                info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
             except StopIteration:
-                info["dirs"] = False
+                info["dirs"] = 0
 
         if path != self._options["root"]:
             info["phash"] = self.__hash(os.path.dirname(path))
@@ -1021,13 +1021,13 @@ class Connector:
 
             info["link"] = self.__hash(lpath)
             info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
-            info["read"] = info["read"] and self.__is_allowed(lpath, "read")
-            info["write"] = info["write"] and self.__is_allowed(lpath, "write")
-            info["locked"] = (
+            info["read"] = 1 if info["read"] and self.__is_allowed(lpath, "read") else 0
+            info["write"] = 1 if info["write"] and self.__is_allowed(lpath, "write") else 0
+            info["locked"] = 1 if (
                 not info["write"]
                 and not info["read"]
                 and not self.__is_allowed(lpath, "rm")
-            )
+            ) else 0
             info["size"] = 0
         else:
             lpath = None
@@ -1046,7 +1046,6 @@ class Connector:
                     dim = self.__get_img_size(path)
                     if dim:
                         info["dim"] = dim
-                        info["resize"] = True
 
                     # if we are in tmb dir, files are thumbs itself
                     if os.path.dirname(path) == thumbs_dir:
