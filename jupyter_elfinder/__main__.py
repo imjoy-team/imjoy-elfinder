@@ -105,9 +105,8 @@ def main(args: Optional[List[str]] = None) -> None:
         "files_url": "/files",
         "base_url": opt.base_url or "",
         "expose_real_path": opt.expose_real_path,
+        "thumbnail_dir": ".tmb" if opt.thumbnail else ""
     }  # type: Dict[str, str]
-    if opt.thumbnail:
-        settings["thumbnail_dir"] = ".tmb"
 
     app = build_app(opt, settings)
 
