@@ -9,6 +9,7 @@ disable=
   too-many-nested-blocks,
   too-many-statements,
   unused-argument,
+  fixme,
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=1
@@ -17,7 +18,7 @@ min-public-methods=1
 max-locals=25
 
 # Maximum number of branch for function / method body
-max-branches=25
+max-branches=30
 
 # Maximum number of return / yield for function / method body
 max-returns=8
