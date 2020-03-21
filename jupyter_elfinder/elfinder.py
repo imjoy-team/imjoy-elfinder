@@ -1158,10 +1158,7 @@ class Connector:
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
-        if "target" not in self._request:
-            self._response["error"] = "Invalid parameters"
-            return
-        target = self._request["target"]
+        target = self._request.get("target")
         if not target:
             self._response["error"] = "Invalid parameters"
             return
