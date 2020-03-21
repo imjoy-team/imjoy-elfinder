@@ -561,8 +561,8 @@ class Connector:
             name = self.__check_utf8(name)
             target = self._request["target"]
             path = self.__find_dir(target)
-        if "dirs" in self._request:
-            dirs = self._request["dirs"]
+        if "dirs[]" in self._request:
+            dirs = self._request["dirs[]"]
         else:
             dirs = []
 
