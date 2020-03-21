@@ -52,7 +52,7 @@
 		start = function(elFinder, editors, config) {
 			// load jQueryUI CSS
 			elFinder.prototype.loadCss('//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
-			config.defaultOpts.transport = new window.elFinderSupportVer1(null, window.ELFINDER_CONFIG['connector_query']);
+			// config.defaultOpts.transport = new window.elFinderSupportVer1(null, window.ELFINDER_CONFIG['connector_query']);
 			if(window.ELFINDER_CONFIG['connector_query']){
 				config.defaultOpts.urlUpload = config.defaultOpts.url;
 				if(config.defaultOpts.urlUpload.includes('?')){
@@ -86,7 +86,7 @@
 							Object.assign(mOpts, optEditors);
 						}
 						// Make elFinder
-						window.elfinder_instance = $('#' + id).elfinder(
+						$('#' + id).elfinder(
 							// 1st Arg - options
 							$.extend(true, { lang: lang }, opts, mOpts || {}),
 							// 2nd Arg - before boot up function

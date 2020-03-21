@@ -16,7 +16,7 @@ from pyramid.router import Router
 from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
 
 
-def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
+def build_app(opt: argparse.Namespace, settings: Dict[str, Optional[str]]) -> Router:
     """Build the app."""
     config = Configurator(settings=settings)
     config.include("jupyter_elfinder")
@@ -92,6 +92,11 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--thumbnail", action="store_true", help="enable thumbnail for files"
     )
+    parser.add_argument(
+        "--expose-real-path",
+        action="store_true",
+        help="send file path to the frontend (disabled for security reason)",
+    )
 
     opt = parser.parse_args(args=args)
 
@@ -99,9 +104,9 @@ def main(args: Optional[List[str]] = None) -> None:
         "root_dir": opt.root_dir or os.getcwd(),
         "files_url": "/files",
         "base_url": opt.base_url or "",
-    }  # type: Dict[str, str]
-    if opt.thumbnail:
-        settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
+        "expose_real_path": opt.expose_real_path,
+        "thumbnail_dir": ".tmb" if opt.thumbnail else None,
+    }  # type: Dict[str, Optional[str]]
 
     app = build_app(opt, settings)
 
@@ -131,6 +136,7 @@ def setup_for_jupyter_server_proxy() -> dict:
             "--allow-origin",
             "https://lib.imjoy.io",
             "--thumbnail",
+            "--expose-real-path",
         ],
         "environment": {},
         "launcher_entry": {

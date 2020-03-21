@@ -7,6 +7,7 @@ def test_open(p_request, settings):
     p_request.params["cmd"] = "open"
     p_request.params["init"] = True
     p_request.params["tree"] = True
+    p_request.params["target"] = None
     response = connector(p_request)
 
     assert response.status_code == 200

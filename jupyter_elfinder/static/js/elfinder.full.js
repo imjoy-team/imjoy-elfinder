@@ -10598,7 +10598,7 @@ $.fn.elfinder = function(o, o2) {
 		
 		if (!elfinder) {
 			if ($.isPlainObject(o)) {
-				new elFinder(this, o, bootCallback);
+				window.elfinder = new elFinder(this, o, bootCallback);
 			}
 		} else {
 			switch(cmd) {
@@ -10625,7 +10625,7 @@ $.fn.elfinder = function(o, o2) {
 							elfinder.reloadCallback(opts, bootCallback);
 						} else {
 							elfinder.destroy();
-							new elFinder(this, opts, bootCallback);
+							window.elfinder = new elFinder(this, opts, bootCallback);
 						}
 					}
 					break;
@@ -10735,7 +10735,8 @@ elFinder.prototype._options = {
 		sparkmd5   : 'https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.0/spark-md5.min.js',
 		jssha      : 'https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha.js',
 		amr        : 'https://cdn.jsdelivr.net/gh/yxl/opencore-amr-js@dcf3d2b5f384a1d9ded2a54e4c137a81747b222b/js/amrnb.js',
-		utif       : 'https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js'
+		utif       : 'https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js',
+		pako       : 'https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.10/pako.min.js',
 	},
 	
 	/**
@@ -29226,8 +29227,8 @@ elFinder.prototype.commands.quicklook.plugins = [
 						};
 						wk.onerror = err;
 						wk.postMessage({
-							scripts: [fm.options.cdns.utif, 'quicklook.tiff.js'],
-							data: { url: url }
+							scripts: [fm.options.cdns.utif, fm.options.cdns.pako, 'quicklook.tiff.js'],
+							data: { url: url, name: file.name }
 						});
 					} catch(e) {
 						err(e);

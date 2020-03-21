@@ -81,8 +81,9 @@ def connector(request: Request) -> Response:
         "url": request.registry.settings["files_url"],
         "base_url": request.registry.settings["base_url"],
         "upload_max_size": 100 * 1024 * 1024 * 1024,  # 100GB
+        "tmb_dir": request.registry.settings["thumbnail_dir"],
+        "expose_real_path": request.registry.settings["expose_real_path"],
         "debug": True,
-        "tmb_dir": request.registry.settings.get("jupyter_elfinder_thumbnail_dir"),
     }
     elf = elfinder.Connector(**options)
 

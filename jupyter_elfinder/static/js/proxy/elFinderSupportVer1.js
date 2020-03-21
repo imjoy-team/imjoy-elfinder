@@ -9,20 +9,13 @@
  *
  * @author Dmitry (dio) Levashov
  **/
-window.elFinderSupportVer1 = function(upload, extra_query) {
+window.elFinderSupportVer1 = function(upload) {
 	"use strict";
 	var self = this,
 		dateObj, today, yesterday,
 		getDateString = function(date) {
 			return date.replace('Today', today).replace('Yesterday', yesterday);
 		};
-
-	if(extra_query){
-		this.extra_query = extra_query.startsWith('&')?extra_query.slice(1):extra_query;
-	}
-	else{
-		this.extra_query = null;
-	}
 	
 	dateObj = new Date();
 	today = dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' + dateObj.getDate();
@@ -46,7 +39,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				return {error : ['errResponse', 'errDataNotJSON']};
 			}
 			
-			return data;
+			return self.normalize('upload', data);
 		};
 	};
 	
@@ -71,10 +64,6 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		switch (cmd) {
 			case 'open':
 				opts.data.tree = 1;
-				if(opts.data.target){
-					var _file = fm.file(opts.data.target)
-					opts.data.current = _file && _file.phash;
-				}
 				break;
 			case 'parents':
 			case 'tree':
@@ -87,10 +76,6 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				opts.data.cmd = 'edit';
 				opts.data.current = fm.file(opts.data.target).phash;
 				break;
-			case 'dim':
-				opts.data.cmd = 'dim';
-				opts.data.current = fm.file(opts.data.target).phash;
-				break;
 			case 'archive':
 			case 'rm':
 				opts.data.current = fm.file(opts.data.targets[0]).phash;
@@ -101,11 +86,27 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				opts.data.current = fm.file(opts.data.target).phash;
 				break;
 			case 'duplicate':
-				opts.data.current = fm.cwd().hash;
-				break
+				_opts = $.extend(true, {}, opts);
+
+				$.each(opts.data.targets, function(i, hash) {
+					$.ajax(Object.assign(_opts, {data : {cmd : 'duplicate', target : hash, current : fm.file(hash).phash}}))
+						.fail(function(error) {
+							fm.error(fm.res('error', 'connect'));
+						})
+						.done(function(data) {
+							data = self.normalize('duplicate', data);
+							if (data.error) {
+								fm.error(data.error);
+							} else if (data.added) {
+								fm.trigger('add', {added : data.added});
+							}
+						});
+				});
+				return dfrd.resolve({});
+				
 			case 'mkdir':
-				break
 			case 'mkfile':
+				opts.data.current = opts.data.target;
 				break;
 			case 'paste':
 				opts.data.current = opts.data.dst;
@@ -122,7 +123,8 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			case 'size':
 				return dfrd.resolve({error : fm.res('error', 'cmdsupport')});
 			case 'search':
-				break;
+				return dfrd.resolve({error : fm.res('error', 'cmdsupport')});
+				
 			case 'file':
 				opts.data.cmd = 'open';
 				opts.data.current = fm.file(opts.data.target).phash;
@@ -130,29 +132,13 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		}
 		// cmd = opts.data.cmd
 		
-		if(this.extra_query){
-			if(opts.url.includes('?')){
-				opts.url = opts.url + '&' + this.extra_query
-			}
-			else{
-				opts.url = opts.url + '?' + this.extra_query
-			}
-		}
 		xhr = $.ajax(opts)
 			.fail(function(error) {
 				dfrd.reject(error);
 			})
 			.done(function(raw) {
-				var migrated_cmds = ['rm', 'paste', 'rename', 'search', 'duplicate', 'mkdir', 'mkfile'];
-				if(migrated_cmds.includes(cmd)){
-					dfrd.resolve(raw);
-					return;
-				}
-				else{
-					data = self.normalize(cmd, raw);
-					dfrd.resolve(data);
-				}
-				
+				data = self.normalize(cmd, raw);
+				dfrd.resolve(data);
 			});
 			
 		return dfrd;
@@ -207,7 +193,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 			},
 			phash, diff, isCwd, treeDiff;
 
-		if ((cmd == 'tmb' || cmd == 'get' || cmd == 'dim')) {
+		if ((cmd == 'tmb' || cmd == 'get')) {
 			return data;
 		}
 		
@@ -232,10 +218,10 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		if (cmd == 'put') {
 
 			phash = fm.file(data.target.hash).phash;
-			return {changed : [data.target]};
+			return {changed : [this.normalizeFile(data.target, phash)]};
 		}
 		
-		phash = data.cwd && data.cwd.hash;
+		phash = data.cwd.hash;
 
 		isCwd = (phash == fm.cwd().hash);
 		
@@ -260,7 +246,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				}
 				files[hash].locked = file.hash == phash ? true : file.rm === void(0) ? false : !file.rm;
 			} else {
-				files[hash] = file;
+				files[hash] = self.normalizeFile(file, phash, data.tmb);
 			}
 		});
 		
@@ -274,9 +260,9 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		
 		if (cmd == 'open') {
 			return {
-					cwd     : files[phash] || data.cwd,
+					cwd     : files[phash] || this.normalizeFile(data.cwd),
 					files   : $.map(files, function(f) { return f; }),
-					options : data.options,
+					options : self.normalizeOptions(data),
 					init    : !!data.params,
 					debug   : data.debug
 				};
@@ -300,7 +286,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 		}
 		
 		return Object.assign({
-			current : data.cwd && data.cwd.hash,
+			current : data.cwd.hash,
 			error   : data.error,
 			warning : data.warning,
 			options : {tmb : !!data.tmb}
@@ -322,7 +308,7 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 				
 				for (i = 0; i < dirs.length; i++) {
 					dir = dirs[i];
-					result.push(dir);
+					result.push(self.normalizeFile(dir, phash));
 					dir.dirs.length && traverse(dir.dirs, dir.hash);
 				}
 			};
@@ -339,5 +325,84 @@ window.elFinderSupportVer1 = function(upload, extra_query) {
 	 * @param  String  parent dir hash
 	 * @return Object
 	 */
+	this.normalizeFile = function(file, phash, tmb) {
+		var mime = file.mime || 'directory',
+			size = mime == 'directory' && !file.linkTo ? 0 : file.size,
+			mcts = file.date? Date.parse(getDateString(file.date)) : void 0,
+			info = {
+				url    : file.url,
+				hash   : file.hash,
+				phash  : phash,
+				name   : file.name,
+				mime   : mime,
+				ts     : file.ts,
+				size   : size,
+				read   : file.read,
+				write  : file.write,
+				locked : !phash ? true : file.rm === void(0) ? false : !file.rm
+			};
+		
+		if (! info.ts) {
+			if (mcts && !isNaN(mcts)) {
+				info.ts = Math.floor(mcts / 1000);
+			} else {
+				info.date = file.date || this.fm.formatDate(file);
+			}
+		}
+		
+		if (file.mime == 'application/x-empty' || file.mime == 'inode/x-empty') {
+			info.mime = 'text/plain';
+		}
+		
+		if (file.linkTo) {
+			info.alias = file.linkTo;
+		}
 
+		if (file.linkTo) {
+			info.linkTo = file.linkTo;
+		}
+		
+		if (file.tmb) {
+			info.tmb = file.tmb;
+		} else if (info.mime.indexOf('image/') === 0 && tmb) {
+			info.tmb = 1;
+			
+		}
+
+		if (file.dirs && file.dirs.length) {
+			info.dirs = true;
+		}
+		if (file.dim) {
+			info.dim = file.dim;
+		}
+		if (file.resize) {
+			info.resize = file.resize;
+		}
+		return info;
+	};
+	
+	this.normalizeOptions = function(data) {
+		var opts = {
+				path          : data.cwd.rel,
+				disabled      : $.merge((data.disabled || []), [ 'search', 'netmount', 'zipdl' ]),
+				tmb           : !!data.tmb,
+				copyOverwrite : true
+			};
+		
+		if (data.params) {
+			opts.api      = 1;
+			opts.url      = data.params.url;
+			opts.archivers = {
+				create  : data.params.archives || [],
+				extract : data.params.extract || []
+			};
+		}
+		
+		if (opts.path.indexOf('/') !== -1) {
+			opts.separator = '/';
+		} else if (opts.path.indexOf('\\') !== -1) {
+			opts.separator = '\\';
+		}
+		return opts;
+	};
 };
