@@ -1175,7 +1175,7 @@ class Connector:
         if not self.__is_allowed(path, "read"):
             self._response["error"] = "Access denied"
             return
-    
+
         tree = []
         for directory in sorted(os.listdir(path)):
             dir_path = os.path.join(path, directory)
