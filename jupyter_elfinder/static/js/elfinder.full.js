@@ -3995,6 +3995,14 @@ var elFinder = function(elm, opts, bootCallback) {
 			this.transport.init(this);
 		}
 	}
+
+	// extra query for transport
+	if(this.options.extra_query){
+		this.extra_query = this.options.extra_query.startsWith('&')?this.options.extra_query.slice(1):this.options.extra_query;
+	}
+	else{
+		this.extra_query = null;
+	}
 	
 	if (typeof(this.transport.send) != 'function') {
 		this.transport.send = function(opts) {
@@ -4002,6 +4010,14 @@ var elFinder = function(elm, opts, bootCallback) {
 				// keep native xhr object for handling property responseURL
 				opts._xhr = new XMLHttpRequest();
 				opts.xhr = function() { return opts._xhr; };
+			}
+			if(self.extra_query){
+				if(opts.url.includes('?')){
+					opts.url = opts.url + '&' + self.extra_query
+				}
+				else{
+					opts.url = opts.url + '?' + self.extra_query
+				}
 			}
 			return $.ajax(opts);
 		};
