@@ -37,3 +37,89 @@ def test_archive(p_request, settings, txt_file):
     body = response.json
     assert "error" not in body
     assert "added" in body
+
+
+def test_archive_error(p_request, settings, txt_file):
+    """Test the archive command with error conditions."""
+    # Missing parameters
+    p_request.params["cmd"] = "archive"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "application/x-tar"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "application/x-tar"
+    p_request.params["target"] = make_hash(str(txt_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "application/x-tar"
+    p_request.params["targets[]"] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params["targets[]"] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    # Incorrect archive type
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "missing"
+    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params["targets[]"] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    # Bad target directory
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "application/x-tar"
+    p_request.params["target"] = make_hash(str("missing"))
+    p_request.params["targets[]"] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
+
+    # Bad target file
+    p_request.params.clear()
+    p_request.params["cmd"] = "archive"
+    p_request.params["type"] = "application/x-tar"
+    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params["targets[]"] = make_hash(str(txt_file.parent / "missing"))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert "error" in body
