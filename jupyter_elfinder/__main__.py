@@ -16,7 +16,7 @@ from pyramid.router import Router
 from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
 
 
-def build_app(opt: argparse.Namespace, settings: Dict[str, str]) -> Router:
+def build_app(opt: argparse.Namespace, settings: Dict[str, Optional[str]]) -> Router:
     """Build the app."""
     config = Configurator(settings=settings)
     config.include("jupyter_elfinder")
@@ -105,8 +105,8 @@ def main(args: Optional[List[str]] = None) -> None:
         "files_url": "/files",
         "base_url": opt.base_url or "",
         "expose_real_path": opt.expose_real_path,
-        "thumbnail_dir": ".tmb" if opt.thumbnail else "",
-    }  # type: Dict[str, str]
+        "thumbnail_dir": ".tmb" if opt.thumbnail else None,
+    }  # type: Dict[str, Optional[str]]
 
     app = build_app(opt, settings)
 
