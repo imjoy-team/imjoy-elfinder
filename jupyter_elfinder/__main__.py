@@ -107,7 +107,7 @@ def main(args: Optional[List[str]] = None) -> None:
         "expose_real_path": opt.expose_real_path,
     }  # type: Dict[str, str]
     if opt.thumbnail:
-        settings["jupyter_elfinder_thumbnail_dir"] = ".tmb"
+        settings["thumbnail_dir"] = ".tmb"
 
     app = build_app(opt, settings)
 
