@@ -561,6 +561,9 @@ class Connector:
             name = self._request["name"]
             name = self.__check_utf8(name)
             target = self._request["target"]
+            if not target:
+                self._response["error"] = "Invalid parameters"
+                return
             path = self.__find_dir(target)
 
         dirs = self._request.get("dirs[]") or []
@@ -600,6 +603,9 @@ class Connector:
         if "name" in self._request and "target" in self._request:
             name = self._request["name"]
             target = self._request["target"]
+            if not target:
+                self._response["error"] = "Invalid parameters"
+                return
             cur_dir = self.__find_dir(target)
             name = self.__check_utf8(name)
 
@@ -1124,7 +1130,9 @@ class Connector:
 
         target = self._request["target"]
         intersect = self._request.get("intersect[]")
-
+        if not target:
+            self._response["error"] = "Invalid parameters"
+            return
         path = self.__find(target)
         if path is None or not os.path.isdir(path):
             self._response["error"] = "Target directory not found."
@@ -1146,16 +1154,19 @@ class Connector:
             self._response["error"] = "Invalid parameters"
             return
         target = self._request["target"]
+        if not target:
+            self._response["error"] = "Invalid parameters"
+            return
         path = self.__find_dir(target)
 
         if path is None or not os.path.isdir(path):
-            self._response["error"] = "Directory not found."
+            self._response["error"] = "Directory not found"
             return
 
         if os.path.islink(path):
             path = self.__read_link(path)
             if path is None:
-                self._response["error"] = "Directory (link) not found."
+                self._response["error"] = "Directory (link) not found"
                 return
 
         if self.__is_allowed(path, "read"):
@@ -1288,7 +1299,7 @@ class Connector:
             self._response["error"] = "Invalid parameters"
             return
 
-        cur_file = self.__find(self._request["target"])
+        cur_file = self.__find(target)
 
         if not cur_file:
             self._response["error"] = "File not found"
@@ -1430,6 +1441,9 @@ class Connector:
             return
         target = self._request["target"]
         makedir = self._request.get("makedir")
+        if not target:
+            self._response["error"] = "Invalid parameters"
+            return
         cur_file = self.__find(target)
         if cur_file is None or os.path.isdir(cur_file):
             self._response["error"] = "File not found"
