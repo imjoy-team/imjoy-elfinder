@@ -448,7 +448,7 @@ class Connector:
         }
 
     def __parents(self) -> None:
-        # TODO: implement according to the spec 
+        # TODO: implement according to the spec
         # https://github.com/Studio-42/elFinder/wiki/Client-Server-API-2.1#parents
         self._response["tree"] = []
 
@@ -1447,17 +1447,17 @@ class Connector:
         cur_cwd = os.getcwd()
         target_dir = cur_dir
         added = None
-        if makedir and makedir != '0':
+        if makedir and makedir != "0":
             try:
-                base_name = os.path.basename(cur_file).split('.')[0] or 'New Folder'
+                base_name = os.path.basename(cur_file).split(".")[0] or "New Folder"
                 target_dir = os.path.join(target_dir, base_name)
                 target_dir = _unique_name(target_dir, copy="")
-                
+
                 os.mkdir(target_dir, int(self._options["dirMode"]))
                 cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
                 added = [self.__info(target_dir)]
             except OSError:
-                self._response["error"] = "Unable to create folder: " +  base_name
+                self._response["error"] = "Unable to create folder: " + base_name
                 return
         if added is None:
             existing_files = os.listdir(cur_dir)
@@ -1467,7 +1467,9 @@ class Connector:
         if ret:
             if added is None:
                 added = [
-                    dname for dname in os.listdir(cur_dir) if dname not in existing_files
+                    dname
+                    for dname in os.listdir(cur_dir)
+                    if dname not in existing_files
                 ]
                 self._response["added"] = [
                     self.__info(os.path.join(cur_dir, item)) for item in added
@@ -1777,30 +1779,49 @@ class Connector:
         if tar:
             mime = "application/x-tar"
             create.update({mime: {"cmd": "tar", "argc": "-cf", "ext": "tar"}})
-            extract.update({mime: {"cmd": "tar", "argc": "-xf", "ext": "tar", "argd": "-C {}"}})
+            extract.update(
+                {mime: {"cmd": "tar", "argc": "-xf", "ext": "tar", "argd": "-C {}"}}
+            )
 
         if tar and gzip:
             mime = "application/x-gzip"
             create.update({mime: {"cmd": "tar", "argc": "-czf", "ext": "tar.gz"}})
-            extract.update({mime: {"cmd": "tar", "argc": "-xzf", "ext": "tar.gz", "argd": "-C {}"}})
+            extract.update(
+                {mime: {"cmd": "tar", "argc": "-xzf", "ext": "tar.gz", "argd": "-C {}"}}
+            )
 
         if tar and bzip2:
             mime = "application/x-bzip2"
             create.update({mime: {"cmd": "tar", "argc": "-cjf", "ext": "tar.bz2"}})
-            extract.update({mime: {"cmd": "tar", "argc": "-xjf", "ext": "tar.bz2", "argd": "-C {}"}})
+            extract.update(
+                {
+                    mime: {
+                        "cmd": "tar",
+                        "argc": "-xjf",
+                        "ext": "tar.bz2",
+                        "argd": "-C {}",
+                    }
+                }
+            )
 
         mime = "application/zip"
         if zipc:
             create.update({mime: {"cmd": "zip", "argc": "-r9", "ext": "zip"}})
         if unzip:
-            extract.update({mime: {"cmd": "unzip", "argc": "", "ext": "zip", "argd": "-d {}"}})
+            extract.update(
+                {mime: {"cmd": "unzip", "argc": "", "ext": "zip", "argd": "-d {}"}}
+            )
 
         mime = "application/x-rar"
         if rar:
             create.update({mime: {"cmd": "rar", "argc": "a -inul", "ext": "rar"}})
-            extract.update({mime: {"cmd": "rar", "argc": "x -y", "ext": "rar", "argd": "{}"}})
+            extract.update(
+                {mime: {"cmd": "rar", "argc": "x -y", "ext": "rar", "argd": "{}"}}
+            )
         elif unrar:
-            extract.update({mime: {"cmd": "unrar", "argc": "x -y", "ext": "rar", "argd": "{}"}})
+            extract.update(
+                {mime: {"cmd": "unrar", "argc": "x -y", "ext": "rar", "argd": "{}"}}
+            )
 
         p7zip = None
         if p7z:
@@ -1813,14 +1834,30 @@ class Connector:
         if p7zip:
             mime = "application/x-7z-compressed"
             create.update({mime: {"cmd": p7zip, "argc": "a -t7z", "ext": "7z"}})
-            extract.update({mime: {"cmd": p7zip, "argc": "extract -y", "ext": "7z", "argd": "-o{}"}})
+            extract.update(
+                {
+                    mime: {
+                        "cmd": p7zip,
+                        "argc": "extract -y",
+                        "ext": "7z",
+                        "argd": "-o{}",
+                    }
+                }
+            )
 
             mime = "application/x-tar"
             if mime not in create:
                 create.update({mime: {"cmd": p7zip, "argc": "a -ttar", "ext": "tar"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar", "argd": "-o{}"}}
+                    {
+                        mime: {
+                            "cmd": p7zip,
+                            "argc": "extract -y",
+                            "ext": "tar",
+                            "argd": "-o{}",
+                        }
+                    }
                 )
 
             mime = "application/x-gzip"
@@ -1828,7 +1865,14 @@ class Connector:
                 create.update({mime: {"cmd": p7zip, "argc": "a -tgzip", "ext": "gz"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar.gz", "argd": "-o{}"}}
+                    {
+                        mime: {
+                            "cmd": p7zip,
+                            "argc": "extract -y",
+                            "ext": "tar.gz",
+                            "argd": "-o{}",
+                        }
+                    }
                 )
 
             mime = "application/x-bzip2"
@@ -1836,7 +1880,14 @@ class Connector:
                 create.update({mime: {"cmd": p7zip, "argc": "a -tbzip2", "ext": "bz2"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "tar.bz2", "argd": "-o{}"}}
+                    {
+                        mime: {
+                            "cmd": p7zip,
+                            "argc": "extract -y",
+                            "ext": "tar.bz2",
+                            "argd": "-o{}",
+                        }
+                    }
                 )
 
             mime = "application/zip"
@@ -1844,7 +1895,14 @@ class Connector:
                 create.update({mime: {"cmd": p7zip, "argc": "a -tzip", "ext": "zip"}})
             if mime not in extract:
                 extract.update(
-                    {mime: {"cmd": p7zip, "argc": "extract -y", "ext": "zip", "argd": "-o{}"}}
+                    {
+                        mime: {
+                            "cmd": p7zip,
+                            "argc": "extract -y",
+                            "ext": "zip",
+                            "argd": "-o{}",
+                        }
+                    }
                 )
 
         if not self._options["archiveMimes"]:
