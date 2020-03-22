@@ -1,11 +1,13 @@
 """Test elfinder."""
 from jupyter_elfinder.api_const import (
     API_CMD,
+    API_CURRENT,
     API_INIT,
     API_TARGET,
     API_TARGETS,
     API_TREE,
     API_TYPE,
+    R_ADDED,
     R_API,
     R_CWD,
     R_DIM,
@@ -188,3 +190,21 @@ def test_dim_errors(p_request, settings, jpeg_file):
 
     # TODO: Add a test if the image library cannot calculate dimensions.
     # Change the code to return an error in the response first.
+
+
+def test_duplicate(p_request, settings, txt_file):
+    """Test the duplicate command."""
+    current = txt_file.parent / "duplicate_dir"
+    ext = txt_file.suffix
+    duplicated_file = "{} copy{}".format(txt_file.stem, ext)
+    duplicated_path = txt_file.parent / duplicated_file
+    p_request.params[API_CMD] = "duplicate"
+    p_request.params[API_CURRENT] = make_hash(str(current))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_ADDED in body
+    assert body[R_ADDED][0]["hash"] == make_hash(str(duplicated_path))
