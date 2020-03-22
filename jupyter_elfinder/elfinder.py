@@ -89,7 +89,7 @@ Info = TypedDict(  # pylint: disable=invalid-name
         "size": int,
         "url": str,
         "dim": str,
-        "tmb": Union[str, None],
+        "tmb": str,
         "path": str,
     },
     total=False,
@@ -1128,8 +1128,6 @@ class Connector:
                     else:
                         if info["mime"].startswith("image/"):
                             info["tmb"] = "1"
-                        else:
-                            info["tmb"] = None
 
         if info["mime"] == "application/x-empty" or info["mime"] == "inode/x-empty":
             info["mime"] = "text/plain"
