@@ -6,162 +6,142 @@
  **/
 (function(){
 	"use strict";
-	window.ELFINDER_CONFIG = window.ELFINDER_CONFIG || {};
-	window.ELFINDER_CONFIG['static_url'] = window.window.ELFINDER_CONFIG['static_url'] || '/static'
-	window.ELFINDER_CONFIG['connector_url'] = window.window.ELFINDER_CONFIG['connector_url'] || '/connector/'
-	window.ELFINDER_CONFIG['connector_query'] = window.window.ELFINDER_CONFIG['connector_query'] || null
-	if(!window.ELFINDER_CONFIG['connector_url'].endsWith('/')) window.ELFINDER_CONFIG['connector_url'] = window.ELFINDER_CONFIG['connector_url'] + '/';
-	var // jQuery and jQueryUI version
-		jqver = '3.4.1',
-		uiver = '1.12.1',
+	var jqver = '3.4.1', uiver = '1.12.1';
 		
-		// Detect language (optional)
-		lang = (function() {
-			var locq = window.location.search,
-				map = {
-					'pt' : 'pt_BR',
-					'ug' : 'ug_CN',
-					'zh' : 'zh_CN'
-				},
-				full = {
-					'zh_tw' : 'zh_TW',
-					'zh_cn' : 'zh_CN',
-					'fr_ca' : 'fr_CA'
-				},
-				fullLang, locm, lang;
-			if (locq && (locm = locq.match(/lang=([a-zA-Z_-]+)/))) {
-				// detection by url query (?lang=xx)
-				fullLang = locm[1];
-			} else {
-				// detection by browser language
-				fullLang = (navigator.browserLanguage || navigator.language || navigator.userLanguage || '');
+	// Detect language (optional)
+	var lang = (function() {
+		var locq = window.location.search,
+			map = {
+				'pt' : 'pt_BR',
+				'ug' : 'ug_CN',
+				'zh' : 'zh_CN'
+			},
+			full = {
+				'zh_tw' : 'zh_TW',
+				'zh_cn' : 'zh_CN',
+				'fr_ca' : 'fr_CA'
+			},
+			fullLang, locm, lang;
+		if (locq && (locm = locq.match(/lang=([a-zA-Z_-]+)/))) {
+			// detection by url query (?lang=xx)
+			fullLang = locm[1];
+		} else {
+			// detection by browser language
+			fullLang = (navigator.browserLanguage || navigator.language || navigator.userLanguage || '');
+		}
+		fullLang = fullLang.replace('-', '_').substr(0,5).toLowerCase();
+		if (full[fullLang]) {
+			lang = full[fullLang];
+		} else {
+			lang = (fullLang || 'en').substr(0,2);
+			if (map[lang]) {
+				lang = map[lang];
 			}
-			fullLang = fullLang.replace('-', '_').substr(0,5).toLowerCase();
-			if (full[fullLang]) {
-				lang = full[fullLang];
-			} else {
-				lang = (fullLang || 'en').substr(0,2);
-				if (map[lang]) {
-					lang = map[lang];
-				}
-			}
-			return lang;
-		})(),
+		}
+		return lang;
+	})()
 		
 		// Start elFinder (REQUIRED)
-		start = function(elFinder, editors, config) {
-			// load jQueryUI CSS
-			elFinder.prototype.loadCss('//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
-			// config.defaultOpts.transport = new window.elFinderSupportVer1(null, window.ELFINDER_CONFIG['connector_query']);
-			if(window.ELFINDER_CONFIG['connector_query']){
-				config.defaultOpts.urlUpload = config.defaultOpts.url;
-				if(config.defaultOpts.urlUpload.includes('?')){
-					config.defaultOpts.urlUpload = config.defaultOpts.urlUpload + '&' + window.ELFINDER_CONFIG['connector_query']
-				}
-				else{
-					config.defaultOpts.urlUpload = config.defaultOpts.urlUpload + '?' + window.ELFINDER_CONFIG['connector_query']
-				}
+	var start = function(elFinder, editors, config) {
+		// load jQueryUI CSS
+		elFinder.prototype.loadCss('//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
+		// config.defaultOpts.transport = new window.elFinderSupportVer1(null, connectorQuery]);
+		if(config.extraQuery){
+			config.defaultOpts.urlUpload = config.defaultOpts.url;
+			if(config.defaultOpts.urlUpload.includes('?')){
+				config.defaultOpts.urlUpload = config.defaultOpts.urlUpload + '&' + config.extraQuery
 			}
 			else{
-				config.defaultOpts.urlUpload = config.defaultOpts.url;
+				config.defaultOpts.urlUpload = config.defaultOpts.urlUpload + '?' + config.extraQuery
 			}
-			$(function() {
-				var optEditors = {
-						commandsOptions: {
-							edit: {
-								editors: Array.isArray(editors)? editors : []
-							}
+		}
+		else{
+			config.defaultOpts.urlUpload = config.defaultOpts.url;
+		}
+		$(function() {
+			var optEditors = {
+					commandsOptions: {
+						edit: {
+							editors: Array.isArray(editors)? editors : []
 						}
-					},
-					opts = {};
-				
-				// Interpretation of "elFinderConfig"
-				if (config && config.managers) {
-					$.each(config.managers, function(id, mOpts) {
-						opts = Object.assign(opts, config.defaultOpts || {});
-						// editors marges to opts.commandOptions.edit
-						try {
-							mOpts.commandsOptions.edit.editors = mOpts.commandsOptions.edit.editors.concat(editors || []);
-						} catch(e) {
-							Object.assign(mOpts, optEditors);
-						}
-						// Make elFinder
-						$('#' + id).elfinder(
-							// 1st Arg - options
-							$.extend(true, { lang: lang }, opts, mOpts || {}),
-							// 2nd Arg - before boot up function
-							function(fm, extraObj) {
-								// `init` event callback function
-								fm.bind('init', function() {
-									// Optional for Japanese decoder "encoding-japanese"
-									if (fm.lang === 'ja') {
-										require(
-											[ 'encoding-japanese' ],
-											function(Encoding) {
-												if (Encoding && Encoding.convert) {
-													fm.registRawStringDecoder(function(s) {
-														return Encoding.convert(s, {to:'UNICODE',type:'string'});
-													});
-												}
+					}
+				},
+				opts = {};
+			
+			// Interpretation of "elFinderConfig"
+			if (config && config.managers) {
+				$.each(config.managers, function(id, mOpts) {
+					opts = Object.assign(opts, config.defaultOpts || {});
+					// editors marges to opts.commandOptions.edit
+					try {
+						mOpts.commandsOptions.edit.editors = mOpts.commandsOptions.edit.editors.concat(editors || []);
+					} catch(e) {
+						Object.assign(mOpts, optEditors);
+					}
+					// Make elFinder
+					$('#' + id).elfinder(
+						// 1st Arg - options
+						$.extend(true, { lang: lang }, opts, mOpts || {}),
+						// 2nd Arg - before boot up function
+						function(fm, extraObj) {
+							// `init` event callback function
+							fm.bind('init', function() {
+								// Optional for Japanese decoder "encoding-japanese"
+								if (fm.lang === 'ja') {
+									require(
+										[ 'encoding-japanese' ],
+										function(Encoding) {
+											if (Encoding && Encoding.convert) {
+												fm.registRawStringDecoder(function(s) {
+													return Encoding.convert(s, {to:'UNICODE',type:'string'});
+												});
 											}
-										);
-									}
-								});
-							}
-						);
-					});
-				} else {
-					alert('"elFinderConfig" object is wrong.');
-				}
-			});
-		},
-		
-		// JavaScript loader (REQUIRED)
-		load = function() {
-			require(
-				[
-					'elfinder'
-					, window.ELFINDER_CONFIG['static_url'] + '/js/extras/editors.default.js'               // load text, image editors
-					, 'elFinderConfig'
-					, 'elFinderSupportVer1'
-				//	, 'extras/quicklook.googledocs.min'          // optional preview for GoogleApps contents on the GoogleDrive volume
-				],
-				start,
-				function(error) {
-					alert(error.message);
-				}
-			);
-		},
-		
-		// is IE8 or :? for determine the jQuery version to use (optional)
-		old = (typeof window.addEventListener === 'undefined' && typeof document.getElementsByClassName === 'undefined')
-		       ||
-		      (!window.chrome && !document.unqueID && !window.opera && !window.sidebar && 'WebkitAppearance' in document.documentElement.style && document.body.style && typeof document.body.style.webkitFilter === 'undefined');
+										}
+									);
+								}
+							});
+						}
+					);
+				});
+			} else {
+				alert('"elFinderConfig" object is wrong.');
+			}
+		});
+	}
 
-	// config of RequireJS (REQUIRED)
-	require.config({
-		baseUrl : 'js',
-		paths : {
-			'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
-			'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
-			'elfinder' : window.ELFINDER_CONFIG['static_url'] + '/js/elfinder.full',
-			'elFinderSupportVer1' : window.ELFINDER_CONFIG['static_url'] + '/js/proxy/elFinderSupportVer1',
-			'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
-		},
-		waitSeconds : 10 // optional
-	});
+	// is IE8 or :? for determine the jQuery version to use (optional)
+	var old = (typeof window.addEventListener === 'undefined' && typeof document.getElementsByClassName === 'undefined')
+			||
+			(!window.chrome && !document.unqueID && !window.opera && !window.sidebar && 'WebkitAppearance' in document.documentElement.style && document.body.style && typeof document.body.style.webkitFilter === 'undefined');
 
+	// JavaScript loader (REQUIRED)
+	function loadElFinder(elConfig) {
+		elConfig = elConfig || {};
+		elConfig['static_url'] = elConfig['static_url'] || '/static'
+		elConfig['connector_url'] = elConfig['connector_url'] || '/connector/'
+		elConfig['connector_query'] = elConfig['connector_query'] || null
+		if(!elConfig['connector_url'].endsWith('/')) elConfig['connector_url'] = elConfig['connector_url'] + '/';
 
-	// check elFinderConfig and fallback
-	// This part don't used if you are using elfinder.html, see elfinder.html
-	if (! require.defined('elFinderConfig')) {
+		// config of RequireJS (REQUIRED)
+		require.config({
+			baseUrl : 'js',
+			paths : {
+				'jquery'   : '//cdnjs.cloudflare.com/ajax/libs/jquery/'+(old? '1.12.4' : jqver)+'/jquery.min',
+				'jquery-ui': '//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/jquery-ui.min',
+				'elfinder' : elConfig['static_url'] + '/js/elfinder.full',
+				'elFinderSupportVer1' : elConfig['static_url'] + '/js/proxy/elFinderSupportVer1',
+				'encoding-japanese': '//cdn.rawgit.com/polygonplanet/encoding.js/1.0.26/encoding.min'
+			},
+			waitSeconds : 10 // optional
+		});
+
 		define('elFinderConfig', {
 			// elFinder options (REQUIRED)
 			// Documentation for client options:
 			// https://github.com/Studio-42/elFinder/wiki/Client-configuration-options
 			defaultOpts : {
-				url : window.ELFINDER_CONFIG['connector_url'], // connector URL (REQUIRED
-				file_base_url: window.ELFINDER_CONFIG['file_base_url'],
+				url : elConfig['connector_url'], // connector URL (REQUIRED
+				file_base_url: elConfig['file_base_url'],
 				height: '100%',
 				rememberLastDir: false,
 				cssAutoLoad: true,
@@ -173,8 +153,8 @@
 					'win10'         : 'https://nao-pon.github.io/elfinder-theme-manifests/win10.json'
 				},
 				// transport : new elFinderSupportVer1(),
-				extraQuery: window.ELFINDER_CONFIG['connector_query'],
-				onReady: window.ELFINDER_CONFIG['on_ready'],
+				extraQuery: elConfig['connector_query'],
+				onReady: elConfig['on_ready'],
 				commandsOptions : {
 					edit : {
 						extraOptions : {
@@ -201,11 +181,18 @@
 				'elfinder': {},
 			}
 		});
+		require(
+			[
+				'elfinder'
+				, elConfig['static_url'] + '/js/extras/editors.default.js'               // load text, image editors
+				, 'elFinderConfig'
+			],
+			start,
+			function(error) {
+				alert(error.message);
+			}
+		);
 	}
 
-
-
-	// load JavaScripts (REQUIRED)
-	load();
-
+	loadElFinder(window.ELFINDER_CONFIG);
 })();
