@@ -1527,7 +1527,6 @@ class Connector:
             cmd.append(arg)
         cmd.append(os.path.basename(cur_file))
 
-        cur_cwd = os.getcwd()
         target_dir = cur_dir
         added = None
         if makedir and makedir != "0":
@@ -1542,8 +1541,8 @@ class Connector:
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
-        if added is None:
-            existing_files = os.listdir(cur_dir)
+
+        cur_cwd = os.getcwd()
         os.chdir(cur_dir)
         ret = _run_sub_process(cmd)
         os.chdir(cur_cwd)
@@ -1552,6 +1551,7 @@ class Connector:
             return
 
         if added is None:
+            existing_files = os.listdir(cur_dir)
             added_names = [
                 dname for dname in os.listdir(cur_dir) if dname not in existing_files
             ]
