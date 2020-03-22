@@ -1127,7 +1127,7 @@ class Connector:
                         info["tmb"] = tmb_url
                     else:
                         if info["mime"].startswith("image/"):
-                            info["tmb"] = 1
+                            info["tmb"] = "1"
                         else:
                             info["tmb"] = None
 
