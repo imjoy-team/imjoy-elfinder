@@ -165,6 +165,7 @@
 				height: '100%',
 				rememberLastDir: false,
 				cssAutoLoad: true,
+				theme: 'material-light',
 				themes : {
 					'dark-slim'     : 'https://johnfort.github.io/elFinder.themes/dark-slim/manifest.json',
 					'material'      : 'https://nao-pon.github.io/elfinder-theme-manifests/material-default.json',
