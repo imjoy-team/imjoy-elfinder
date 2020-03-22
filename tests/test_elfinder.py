@@ -2,6 +2,7 @@
 from jupyter_elfinder.api_const import (
     API_CMD,
     API_INIT,
+    API_MAKEDIR,
     API_TARGET,
     API_TARGETS,
     API_TREE,
@@ -255,6 +256,7 @@ def test_duplicate_errors(p_request, settings, txt_file):
 
 def test_extract(p_request, settings, zip_file):
     """Test the extract command."""
+    extracted_file = zip_file.parent / "{}.txt".format(zip_file.stem)
     p_request.params[API_CMD] = "extract"
     p_request.params[API_TARGET] = make_hash(str(zip_file))
     response = connector(p_request)
@@ -263,6 +265,17 @@ def test_extract(p_request, settings, zip_file):
     body = response.json
     assert R_ERROR not in body
     assert R_ADDED in body
+    assert body[R_ADDED][0]["hash"] == make_hash(str(extracted_file))
+
+    new_dir = zip_file.parent / zip_file.stem
+    p_request.params[API_MAKEDIR] = "1"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_ADDED in body
+    assert body[R_ADDED][0]["hash"] == make_hash(str(new_dir))
 
 
 def test_extract_errors(p_request, settings, zip_file):

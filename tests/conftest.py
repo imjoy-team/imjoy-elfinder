@@ -66,7 +66,7 @@ def zip_file_fixture(tmp_path):
     foo_zip = ROOT_PATH / "example-data" / "test" / "foo.zip"
     tmp_dir = tmp_path / "sub"
     tmp_dir.mkdir()
-    test_fil = tmp_dir / "test.zip"
+    test_fil = tmp_dir / "foo.zip"
     # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
     shutil.copyfile(str(foo_zip), str(test_fil))
     yield test_fil
