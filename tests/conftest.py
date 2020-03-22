@@ -55,5 +55,6 @@ def jpeg_file_fixture(tmp_path):
     tmp_dir = tmp_path / "sub"
     tmp_dir.mkdir()
     test_fil = tmp_dir / "test.jpeg"
-    shutil.copyfile(fly_img, test_fil)
+    # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
+    shutil.copyfile(str(fly_img), str(test_fil))
     yield test_fil
