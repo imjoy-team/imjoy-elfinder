@@ -53,7 +53,6 @@ from .api_const import (
     R_DEBUG,
     R_DIM,
     R_ERROR,
-    R_FILE,
     R_FILES,
     R_HASHES,
     R_IMAGES,
@@ -428,9 +427,7 @@ class Connector:
         if target:
             target = self.__find_dir(target)
             if not target:
-                self._response[R_ERROR] = (
-                    "Invalid parameters: " + self._request[API_TARGET]
-                )
+                self._response[R_ERROR] = "Invalid parameters"
             elif not self.__is_allowed(target, "read"):
                 self._response[R_ERROR] = "Access denied"
                 return
@@ -542,14 +539,9 @@ class Connector:
 
         self.http_status_code = 200
         self.http_header["Content-type"] = mime
-        self.http_header["Content-Disposition"] = disp + ";"
-        self.http_header["Content-Location"] = cur_file.replace(
-            self._options["root"], ""
-        )
-        self.http_header["Content-Transfer-Encoding"] = "binary"
         self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
-        self.http_header["Connection"] = "close"
-        self._response[R_FILE] = cur_file  # FIXME: This is not part of api 2.1
+        self.http_header["Content-Disposition"] = disp + ";"
+        self._response["__send_file"] = cur_file
 
     def __rename(self) -> None:
         """Rename file or dir."""
@@ -782,7 +774,6 @@ class Connector:
                 else:
                     self._response[R_WARNING] = "Some files was not uploaded"
         else:
-            self._response["added"] = []
             self._response[R_WARNING] = "Invalid parameters"
 
     def __paste(self) -> None:
@@ -1113,10 +1104,10 @@ class Connector:
                         tmb_url = self.__path2url(tmb)
                         info["tmb"] = tmb_url
                     else:
-                        # FIXME: This is not part of api 2.1
-                        self._response[R_TMB] = True
                         if info["mime"].startswith("image/"):
                             info["tmb"] = 1
+                        else:
+                            info["tmb"] = None
 
         if info["mime"] == "application/x-empty" or info["mime"] == "inode/x-empty":
             info["mime"] = "text/plain"
@@ -1217,17 +1208,6 @@ class Connector:
         if not self.__is_allowed(path, "read"):
             self._response[R_ERROR] = "Access denied"
             return
-
-        tree = []
-        for directory in sorted(os.listdir(path)):
-            dir_path = os.path.join(path, directory)
-            if (
-                os.path.isdir(dir_path)
-                and not os.path.islink(dir_path)
-                and self.__is_accepted(directory)
-            ):
-                tree.append(self.__info(dir_path))
-        self._response["tree"] = tree
 
         tree = []
         for directory in sorted(os.listdir(path)):
