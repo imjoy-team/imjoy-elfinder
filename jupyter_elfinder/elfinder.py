@@ -89,7 +89,7 @@ Info = TypedDict(  # pylint: disable=invalid-name
         "size": int,
         "url": str,
         "dim": str,
-        "tmb": Union[str, int, None],
+        "tmb": Union[str, None],
         "path": str,
     },
     total=False,
