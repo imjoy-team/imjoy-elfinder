@@ -413,7 +413,7 @@ class Connector:
                 self.__set_error_data(target, "File not found")
             else:
                 files.append(self.__info(path))
-        self._response["files"] = files
+        self._response[R_FILES] = files
 
     def __open(self) -> None:
         """Open file or directory."""
@@ -442,7 +442,7 @@ class Connector:
         self.__cwd(path)
         self.__files(path, False)
         if self._request.get(API_TREE):
-            self._response["files"].append(self.__info(path))
+            self._response[R_FILES].append(self.__info(path))
 
         self.__check_archivers()
         if not self._options["fileURL"]:
@@ -973,7 +973,7 @@ class Connector:
                 files.append(info)
 
         dirs.extend(files)
-        self._response["files"] = dirs
+        self._response[R_FILES] = dirs
 
     def __cwd(self, path: str) -> None:
         """Get Current Working Directory."""

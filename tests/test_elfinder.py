@@ -8,6 +8,7 @@ from jupyter_elfinder.api_const import (
     R_API,
     R_CWD,
     R_ERROR,
+    R_FILES,
     R_NETDRIVERS,
     R_OPTIONS,
     R_UPLMAXFILE,
@@ -31,8 +32,7 @@ def test_open(p_request, settings):
     assert body[R_API] >= 2.1
     assert R_CWD in body
     assert R_NETDRIVERS in body
-    # Part of api 2.1 but currently not implemented in our Python backend
-    # assert "files" in body
+    assert R_FILES in body
     # Optional
     assert R_UPLMAXFILE in body
     assert R_UPLMAXSIZE in body
