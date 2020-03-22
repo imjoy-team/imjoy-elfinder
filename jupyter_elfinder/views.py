@@ -115,16 +115,12 @@ def connector(request: Request) -> Response:
     # run connector with parameters
     status, header, response = elf.run(http_request)
 
-    if status == 200 and "file" in response:
+    if status == 200 and "__send_file" in response:
         # send file
-        file_path = response["file"]
+        file_path = response["__send_file"]
         if os.path.exists(file_path) and not os.path.isdir(file_path):
             result = make_response(file_path)
-            result.headers["Content-Length"] = elf.http_header["Content-Length"]
-            result.headers["Content-type"] = elf.http_header["Content-type"]
-            result.headers["Content-Disposition"] = elf.http_header[
-                "Content-Disposition"
-            ]
+            result.headers.update(header)
             return result
 
         result = Response("Unable to find: {}".format(request.path_info))
