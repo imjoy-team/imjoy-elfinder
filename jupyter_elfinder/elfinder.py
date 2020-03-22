@@ -1542,6 +1542,9 @@ class Connector:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
 
+        if added is None:
+            existing_files = os.listdir(cur_dir)
+
         cur_cwd = os.getcwd()
         os.chdir(cur_dir)
         ret = _run_sub_process(cmd)
@@ -1551,7 +1554,6 @@ class Connector:
             return
 
         if added is None:
-            existing_files = os.listdir(cur_dir)
             added_names = [
                 dname for dname in os.listdir(cur_dir) if dname not in existing_files
             ]
