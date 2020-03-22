@@ -57,7 +57,7 @@ def test_archive(p_request, settings, txt_file):
 
 def test_archive_error(p_request, settings, txt_file):
     """Test the archive command with error conditions."""
-    # Missing parameters
+    # Invalid parameters
     p_request.params[API_CMD] = "archive"
     response = connector(p_request)
 
@@ -153,3 +153,38 @@ def test_dim(p_request, settings, jpeg_file):
     body = response.json
     assert R_ERROR not in body
     assert body[R_DIM] == "420x420"
+
+
+def test_dim_errors(p_request, settings, jpeg_file):
+    """Test the dim command with errors."""
+    # Invalid parameters
+    p_request.params[API_CMD] = "dim"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Invalid parameters"
+
+    # File not found
+    p_request.params.clear()
+    p_request.params[API_CMD] = "dim"
+    p_request.params[API_TARGET] = make_hash(str("missing"))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "File not found"
+
+    # Access denied
+    jpeg_file.chmod(0o100)  # Set execute permission only
+    p_request.params.clear()
+    p_request.params[API_CMD] = "dim"
+    p_request.params[API_TARGET] = make_hash(str(jpeg_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Access denied"
+
+    # TODO: Add a test if the image library cannot calculate dimensions.
+    # Change the code to return an error in the response first.
