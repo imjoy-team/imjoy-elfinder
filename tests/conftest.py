@@ -1,8 +1,10 @@
 """Provide pytest fixtures.."""
+import shutil
+
 import pytest
 from pyramid import testing
 
-from . import TEST_CONTENT
+from . import ROOT_PATH, TEST_CONTENT
 
 
 @pytest.fixture(name="p_config", autouse=True)
@@ -44,3 +46,14 @@ def txt_file_fixture(tmp_path):
     fil = tmp_dir / "test.txt"
     fil.write_text(TEST_CONTENT)
     yield fil
+
+
+@pytest.fixture(name="jpeg_file")
+def jpeg_file_fixture(tmp_path):
+    """Provide a temporary text file."""
+    fly_img = ROOT_PATH / "example-data" / "fly.jpeg"
+    tmp_dir = tmp_path / "sub"
+    tmp_dir.mkdir()
+    test_fil = tmp_dir / "test.jpeg"
+    shutil.copyfile(fly_img, test_fil)
+    yield test_fil

@@ -8,6 +8,7 @@ from jupyter_elfinder.api_const import (
     API_TYPE,
     R_API,
     R_CWD,
+    R_DIM,
     R_ERROR,
     R_FILES,
     R_NETDRIVERS,
@@ -138,3 +139,17 @@ def test_archive_error(p_request, settings, txt_file):
     assert response.status_code == 200
     body = response.json
     assert R_ERROR in body
+
+
+def test_dim(p_request, settings, jpeg_file):
+    """Test the dim command."""
+    p_request.params[API_CMD] = "dim"
+    # "substitute" is not supported in our backend yet. It's optional in api 2.1
+    # p_request.params[API_SUBSTITUTE] = "640x480"
+    p_request.params[API_TARGET] = make_hash(str(jpeg_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert body[R_DIM] == "420x420"

@@ -1395,6 +1395,7 @@ class Connector:
         if dim:
             self._response[R_DIM] = str(dim)
         else:
+            # FIXME This should be an error in the response instead.
             self._response[R_DIM] = None
 
     def __put(self) -> None:
