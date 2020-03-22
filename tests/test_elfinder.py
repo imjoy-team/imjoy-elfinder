@@ -2,6 +2,7 @@
 from jupyter_elfinder.api_const import (
     API_CMD,
     API_INIT,
+    API_TARGET,
     API_TARGETS,
     API_TREE,
     API_TYPE,
@@ -23,7 +24,7 @@ def test_open(p_request, settings):
     p_request.params[API_CMD] = "open"
     p_request.params[API_INIT] = True
     p_request.params[API_TREE] = True
-    p_request.params["target"] = None
+    p_request.params[API_TARGET] = None
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -43,7 +44,7 @@ def test_archive(p_request, settings, txt_file):
     """Test the archive command."""
     p_request.params[API_CMD] = "archive"
     p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
     p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
@@ -75,7 +76,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
     p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -94,7 +95,7 @@ def test_archive_error(p_request, settings, txt_file):
 
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
-    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
     p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
@@ -106,7 +107,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
     p_request.params[API_TYPE] = "missing"
-    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
     p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
@@ -118,7 +119,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
     p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params["target"] = make_hash(str("missing"))
+    p_request.params[API_TARGET] = make_hash(str("missing"))
     p_request.params[API_TARGETS] = make_hash(str(txt_file))
     response = connector(p_request)
 
@@ -130,7 +131,7 @@ def test_archive_error(p_request, settings, txt_file):
     p_request.params.clear()
     p_request.params[API_CMD] = "archive"
     p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params["target"] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
     p_request.params[API_TARGETS] = make_hash(str(txt_file.parent / "missing"))
     response = connector(p_request)
 
