@@ -549,7 +549,7 @@ class Connector:
         self.http_header["Content-Transfer-Encoding"] = "binary"
         self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
         self.http_header["Connection"] = "close"
-        self._response[R_FILE] = cur_file
+        self._response[R_FILE] = cur_file  # FIXME: This is not part of api 2.1
 
     def __rename(self) -> None:
         """Rename file or dir."""
