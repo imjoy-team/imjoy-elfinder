@@ -263,3 +263,47 @@ def test_extract(p_request, settings, zip_file):
     body = response.json
     assert R_ERROR not in body
     assert R_ADDED in body
+
+
+def test_extract_errors(p_request, settings, zip_file):
+    """Test the extract command with errors."""
+    # Invalid parameters
+    p_request.params[API_CMD] = "extract"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Invalid parameters"
+
+    # File not found
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str("missing"))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "File not found"
+
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "File not found"
+
+    # Access denied
+    current = zip_file.parent
+    current.chmod(0o500)  # Set read and execute permission only
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Access denied"
+
+    # TODO: Add a test for when the copy action fails.
