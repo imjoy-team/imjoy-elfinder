@@ -1241,9 +1241,13 @@ var elFinder = function(elm, opts, bootCallback) {
 
 				// Delay 'visibility' check it required for browsers such as Safari
 				requestAnimationFrame(function() {
+					var cssUrl = baseUrl+'css/elfinder.min.css';
 					if (node.css('visibility') === 'hidden') {
+						if(self.extraQuery){
+							cssUrl = cssUrl+ '?' + self.extraQuery
+						}
 						// load CSS
-						self.loadCss([baseUrl+'css/elfinder.min.css'], {
+						self.loadCss([cssUrl], {
 							dfd: $.Deferred().done(function() {
 								loaded();
 							}).fail(function() {
