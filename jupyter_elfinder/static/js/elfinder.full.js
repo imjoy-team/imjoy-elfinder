@@ -3997,11 +3997,11 @@ var elFinder = function(elm, opts, bootCallback) {
 	}
 
 	// extra query for transport
-	if(this.options.extra_query){
-		this.extra_query = this.options.extra_query.startsWith('&')?this.options.extra_query.slice(1):this.options.extra_query;
+	if(this.options.extraQuery){
+		this.extraQuery = this.options.extraQuery.startsWith('&')?this.options.extraQuery.slice(1):this.options.extraQuery;
 	}
 	else{
-		this.extra_query = null;
+		this.extraQuery = null;
 	}
 	
 	if (typeof(this.transport.send) != 'function') {
@@ -4011,12 +4011,12 @@ var elFinder = function(elm, opts, bootCallback) {
 				opts._xhr = new XMLHttpRequest();
 				opts.xhr = function() { return opts._xhr; };
 			}
-			if(self.extra_query){
+			if(self.extraQuery){
 				if(opts.url.includes('?')){
-					opts.url = opts.url + '&' + self.extra_query
+					opts.url = opts.url + '&' + self.extraQuery
 				}
 				else{
-					opts.url = opts.url + '?' + self.extra_query
+					opts.url = opts.url + '?' + self.extraQuery
 				}
 			}
 			return $.ajax(opts);
@@ -10615,6 +10615,9 @@ $.fn.elfinder = function(o, o2) {
 		if (!elfinder) {
 			if ($.isPlainObject(o)) {
 				window.elfinder = new elFinder(this, o, bootCallback);
+				if(window.elfinder.options.onReady){
+					window.elfinder.options.onReady(window.elfinder)
+				}
 			}
 		} else {
 			switch(cmd) {
@@ -10642,6 +10645,9 @@ $.fn.elfinder = function(o, o2) {
 						} else {
 							elfinder.destroy();
 							window.elfinder = new elFinder(this, opts, bootCallback);
+							if(window.elfinder.options.onReady){
+								window.elfinder.options.onReady(window.elfinder)
+							}
 						}
 					}
 					break;
@@ -20159,7 +20165,6 @@ $.fn.elfinderstat = function(fm) {
 				sel.attr('title', sel.text());
 				fm.trigger('uistatchange');
 			};
-
 		fm.getUI('statusbar').prepend(size).append(sel).show();
 		if (fm.UA.Mobile && $.fn.tooltip) {
 			fm.getUI('statusbar').tooltip({

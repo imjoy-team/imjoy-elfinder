@@ -173,7 +173,8 @@
 					'win10'         : 'https://nao-pon.github.io/elfinder-theme-manifests/win10.json'
 				},
 				// transport : new elFinderSupportVer1(),
-				extra_query: window.ELFINDER_CONFIG['connector_query'],
+				extraQuery: window.ELFINDER_CONFIG['connector_query'],
+				onReady: window.ELFINDER_CONFIG['on_ready'],
 				commandsOptions : {
 					edit : {
 						extraOptions : {
