@@ -19,13 +19,52 @@ import shlex
 import time
 import traceback
 import uuid
-from datetime import datetime
 from collections.abc import Callable
+from datetime import datetime
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
-from urllib.parse import urljoin, quote
+from urllib.parse import quote, urljoin
 
 from typing_extensions import Literal, TypedDict
+
+from .api_const import (
+    API_CMD,
+    API_CONTENT,
+    API_CURRENT,
+    API_CUT,
+    API_DST,
+    API_HEIGHT,
+    API_INIT,
+    API_NAME,
+    API_Q,
+    API_SRC,
+    API_TARGET,
+    API_TARGETS,
+    API_TREE,
+    API_TYPE,
+    API_UPLOAD,
+    API_WIDTH,
+    ARCHIVE_ARGC,
+    ARCHIVE_CMD,
+    ARCHIVE_EXT,
+    R_ADDED,
+    R_API,
+    R_CWD,
+    R_DEBUG,
+    R_DIM,
+    R_ERROR,
+    R_FILE,
+    R_FILES,
+    R_HASHES,
+    R_IMAGES,
+    R_NETDRIVERS,
+    R_OPTIONS,
+    R_REMOVED,
+    R_TMB,
+    R_UPLMAXFILE,
+    R_UPLMAXSIZE,
+    R_WARNING,
+)
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
@@ -202,22 +241,22 @@ class Connector:
 
     # public variables
     http_allowed_parameters = (
-        "cmd",
-        "target",
-        "targets[]",
-        "current",
-        "tree",
-        "name",
-        "content",
-        "src",
-        "dst",
-        "cut",
-        "init",
-        "type",
-        "width",
-        "height",
-        "upload[]",
-        "q",
+        API_CMD,
+        API_TARGET,
+        API_TARGETS,
+        API_CURRENT,
+        API_TREE,
+        API_NAME,
+        API_CONTENT,
+        API_SRC,
+        API_DST,
+        API_CUT,
+        API_INIT,
+        API_TYPE,
+        API_WIDTH,
+        API_HEIGHT,
+        API_UPLOAD,
+        API_Q,
         "makedir",
     )
     # return variables
@@ -246,7 +285,7 @@ class Connector:
         )
         self._options["expose_real_path"] = expose_real_path
 
-        self._response["debug"] = {}
+        self._response[R_DEBUG] = {}
         self._options["files_url"] = self.__check_utf8(self._options["files_url"])
         self._options["files_url"] = self._options["files_url"].rstrip("/")
         self._options["root"] = self.__check_utf8(self._options["root"])
@@ -294,7 +333,7 @@ class Connector:
         )
         self._yesterday = self._today - 86400
 
-        self._response["debug"] = {}
+        self._response[R_DEBUG] = {}
 
     def run(
         self, http_request: Optional[Dict[str, Any]] = None
@@ -306,19 +345,19 @@ class Connector:
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
             root_ok = False
-            self._response["error"] = "Invalid backend configuration"
+            self._response[R_ERROR] = "Invalid backend configuration"
         elif not self.__is_allowed(self._options["root"], "read"):
             root_ok = False
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
 
         for field in self.http_allowed_parameters:
             if field in http_request:
                 self._request[field] = http_request[field]
 
         if root_ok is True:
-            if "cmd" in self._request:
-                if self._request["cmd"] in self._commands:
-                    cmd = self._commands[self._request["cmd"]]
+            if API_CMD in self._request:
+                if self._request[API_CMD] in self._commands:
+                    cmd = self._commands[self._request[API_CMD]]
                     func = getattr(self, "_" + self.__class__.__name__ + cmd, None)
                     # https://github.com/python/mypy/issues/6864
                     is_callable = isinstance(func, Callable)  # type: ignore
@@ -327,13 +366,15 @@ class Connector:
                         try:
                             func()
                         except Exception as exc:  # pylint: disable=broad-except
-                            self._response["error"] = (
+                            self._response[R_ERROR] = (
                                 "Command Failed: " + cmd + ", Error: \n" + str(exc)
                             )
                             traceback.print_exc()
                             self.__debug("exception", exception_to_string(exc))
                 else:
-                    self._response["error"] = "Unknown command: " + self._request["cmd"]
+                    self._response[R_ERROR] = (
+                        "Unknown command: " + self._request[API_CMD]
+                    )
 
         if self._error_data:
             self.__debug("errorData", self._error_data)
@@ -341,15 +382,15 @@ class Connector:
         if self._options["debug"]:
             self.__debug("time", (time.time() - self._time))
         else:
-            if "debug" in self._response:
-                del self._response["debug"]
+            if R_DEBUG in self._response:
+                del self._response[R_DEBUG]
 
         if self.http_status_code < 100:
             self.http_status_code = 200
 
         if "Content-type" not in self.http_header:
             if (
-                "cmd" in self._request and self._request["cmd"] == "upload"
+                API_CMD in self._request and self._request[API_CMD] == "upload"
             ) or self._options["debug"]:
                 self.http_header["Content-type"] = "text/html"
             else:
@@ -360,11 +401,11 @@ class Connector:
         return self.http_status_code, self.http_header, self.http_response
 
     def __places(self) -> None:
-        if "targets[]" not in self._request:
-            self._response["error"] = "Invalid parameters"
+        if API_TARGETS not in self._request:
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
-        targets = self._request["targets[]"]
+        targets = self._request[API_TARGETS]
         files = []
         for target in targets:
             path = self.__find(target)
@@ -372,26 +413,26 @@ class Connector:
                 self.__set_error_data(target, "File not found")
             else:
                 files.append(self.__info(path))
-        self._response["files"] = files
+        self._response[R_FILES] = files
 
     def __open(self) -> None:
         """Open file or directory."""
-        if "target" not in self._request:
-            self._response["error"] = "Invalid parameters"
+        if API_TARGET not in self._request:
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
-        if "init" in self._request and self._request["init"]:
-            self._response["api"] = 2.1
+        if API_INIT in self._request and self._request[API_INIT]:
+            self._response[R_API] = 2.1
 
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if target:
             target = self.__find_dir(target)
             if not target:
-                self._response["error"] = (
-                    "Invalid parameters: " + self._request["target"]
+                self._response[R_ERROR] = (
+                    "Invalid parameters: " + self._request[API_TARGET]
                 )
             elif not self.__is_allowed(target, "read"):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
             else:
                 path = target
@@ -400,8 +441,8 @@ class Connector:
 
         self.__cwd(path)
         self.__files(path, False)
-        if self._request.get("tree"):
-            self._response["files"].append(self.__info(path))
+        if self._request.get(API_TREE):
+            self._response[R_FILES].append(self.__info(path))
 
         self.__check_archivers()
         if not self._options["fileURL"]:
@@ -409,9 +450,9 @@ class Connector:
         else:
             url = self._options["files_url"]
 
-        self._response["netDrivers"] = []
-        self._response["uplMaxFile"] = 1000
-        self._response["uplMaxSize"] = (
+        self._response[R_NETDRIVERS] = []
+        self._response[R_UPLMAXFILE] = 1000
+        self._response[R_UPLMAXSIZE] = (
             str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
         )
         thumbs_dir = self._options["tmbDir"]
@@ -419,7 +460,7 @@ class Connector:
             thumbs_url = self.__path2url(thumbs_dir)
         else:
             thumbs_url = ""
-        self._response["options"] = {
+        self._response[R_OPTIONS] = {
             "path": path,
             "separator": os.path.sep,
             "url": url,
@@ -430,7 +471,7 @@ class Connector:
                 "create": list(self._options["archivers"]["create"].keys()),
                 "extract": list(self._options["archivers"]["extract"].keys()),
                 "createext": {
-                    k: self._options["archivers"]["create"][k]["ext"]
+                    k: self._options["archivers"]["create"][k][ARCHIVE_EXT]
                     for k in self._options["archivers"]["create"]
                 },
             },
@@ -454,9 +495,9 @@ class Connector:
         self._response["tree"] = []
 
     def __file(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         download = self._request.get("download")
@@ -508,21 +549,21 @@ class Connector:
         self.http_header["Content-Transfer-Encoding"] = "binary"
         self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
         self.http_header["Connection"] = "close"
-        self._response["file"] = cur_file
+        self._response[R_FILE] = cur_file  # FIXME: This is not part of api 2.1
 
     def __rename(self) -> None:
         """Rename file or dir."""
-        name = self._request.get("name")
-        target = self._request.get("target")
+        name = self._request.get(API_NAME)
+        target = self._request.get(API_TARGET)
 
         if not (name and target):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_name = self.__find(target)
 
         if not cur_name:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         cur_dir = os.path.dirname(cur_name)
@@ -530,19 +571,19 @@ class Connector:
         if not self.__is_allowed(cur_dir, "write") and self.__is_allowed(
             cur_name, "rm"
         ):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         name = self.__check_utf8(name)
 
         if not name or not _check_name(name):
-            self._response["error"] = "Invalid name"
+            self._response[R_ERROR] = "Invalid name"
             return
 
         new_name = os.path.join(cur_dir, name)
 
         if os.path.exists(new_name):
-            self._response["error"] = (
+            self._response[R_ERROR] = (
                 "File or folder with the same name" + "already exists"
             )
             return
@@ -550,96 +591,96 @@ class Connector:
         self.__rm_tmb(cur_name)
         try:
             os.rename(cur_name, new_name)
-            self._response["added"] = [self.__info(new_name)]
-            self._response["removed"] = [target]
+            self._response[R_ADDED] = [self.__info(new_name)]
+            self._response[R_REMOVED] = [target]
         except OSError:
-            self._response["error"] = "Unable to rename file"
+            self._response[R_ERROR] = "Unable to rename file"
 
     def __mkdir(self) -> None:
         """Create new directory."""
         path = None
         new_dir = None
-        if "name" in self._request and "target" in self._request:
-            name = self._request["name"]
+        if API_NAME in self._request and API_TARGET in self._request:
+            name = self._request[API_NAME]
             name = self.__check_utf8(name)
-            target = self._request["target"]
+            target = self._request[API_TARGET]
             if not target:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             path = self.__find_dir(target)
 
         dirs = self._request.get("dirs[]") or []
 
         if not path:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         if not self.__is_allowed(path, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
         if not _check_name(name):
-            self._response["error"] = "Invalid name"
+            self._response[R_ERROR] = "Invalid name"
             return
 
         new_dir = os.path.join(path, name)
 
         if os.path.exists(new_dir):
-            self._response["error"] = (
+            self._response[R_ERROR] = (
                 "File or folder with the same name" + " already exists"
             )
         else:
             try:
                 os.mkdir(new_dir, int(self._options["dirMode"]))
-                self._response["added"] = [self.__info(new_dir)]
-                self._response["hashes"] = []
+                self._response[R_ADDED] = [self.__info(new_dir)]
+                self._response[R_HASHES] = []
                 for subdir in dirs:
                     new_subdir = os.path.join(new_dir, subdir)
                     os.mkdir(new_subdir, int(self._options["dirMode"]))
-                    self._response["hashes"].append(self.__hash(new_subdir))
+                    self._response[R_HASHES].append(self.__hash(new_subdir))
             except OSError:
-                self._response["error"] = "Unable to create folder"
+                self._response[R_ERROR] = "Unable to create folder"
 
     def __mkfile(self) -> None:
         """Create new file."""
         name = None
         cur_dir = new_file = None
-        if "name" in self._request and "target" in self._request:
-            name = self._request["name"]
-            target = self._request["target"]
+        if API_NAME in self._request and API_TARGET in self._request:
+            name = self._request[API_NAME]
+            target = self._request[API_TARGET]
             if not target:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             cur_dir = self.__find_dir(target)
             name = self.__check_utf8(name)
 
         if not cur_dir or not name:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         if not self.__is_allowed(cur_dir, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
         if not _check_name(name):
-            self._response["error"] = "Invalid name"
+            self._response[R_ERROR] = "Invalid name"
             return
 
         new_file = os.path.join(cur_dir, name)
 
         if os.path.exists(new_file):
-            self._response["error"] = "File or folder with the same name already exists"
+            self._response[R_ERROR] = "File or folder with the same name already exists"
         else:
             try:
                 open(new_file, "w").close()
-                self._response["added"] = [self.__info(new_file)]
+                self._response[R_ADDED] = [self.__info(new_file)]
             except OSError:
-                self._response["error"] = "Unable to create file"
+                self._response[R_ERROR] = "Unable to create file"
 
     def __rm(self) -> None:
         """Delete files and directories."""
         rm_file = rm_list = None
-        if "targets[]" in self._request:
-            rm_list = self._request["targets[]"]
+        if API_TARGETS in self._request:
+            rm_list = self._request[API_TARGETS]
 
         if not rm_list:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         if not isinstance(rm_list, list):
@@ -653,10 +694,10 @@ class Connector:
             if self.__remove(rm_file):
                 removed.append(rm_hash)
             else:
-                self._response["error"] = "Failed to remove: " + rm_file
+                self._response[R_ERROR] = "Failed to remove: " + rm_file
                 return
 
-        self._response["removed"] = removed
+        self._response[R_REMOVED] = removed
 
     def __upload(self) -> None:
         """Upload files."""
@@ -671,28 +712,28 @@ class Connector:
         except ImportError:
             pass
 
-        if "target" in self._request:
-            dir_hash = self._request["target"]
+        if API_TARGET in self._request:
+            dir_hash = self._request[API_TARGET]
             cur_dir = self.__find_dir(dir_hash)
             if not cur_dir:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             if not self.__is_allowed(cur_dir, "write"):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
-            if "upload[]" not in self._request:
-                self._response["error"] = "No file to upload"
+            if API_UPLOAD not in self._request:
+                self._response[R_ERROR] = "No file to upload"
                 return
 
-            up_files = self._request["upload[]"]
+            up_files = self._request[API_UPLOAD]
             # invalid format
             # must be dict('filename1': 'filedescriptor1',
             #              'filename2': 'filedescriptor2', ...)
             if not isinstance(up_files, dict):
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
 
-            self._response["added"] = []
+            self._response[R_ADDED] = []
             total = 0
             up_size = 0
             max_size = self._options["uploadMaxSize"]
@@ -713,7 +754,7 @@ class Connector:
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
                                 os.chmod(name, self._options["fileMode"])
-                                self._response["added"].append(self.__info(name))
+                                self._response[R_ADDED].append(self.__info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
                                 try:
@@ -737,35 +778,35 @@ class Connector:
 
             if self._error_data:
                 if len(self._error_data) == total:
-                    self._response["warning"] = "Unable to upload files"
+                    self._response[R_WARNING] = "Unable to upload files"
                 else:
-                    self._response["warning"] = "Some files was not uploaded"
+                    self._response[R_WARNING] = "Some files was not uploaded"
         else:
             self._response["added"] = []
-            self._response["warning"] = "Invalid parameters"
+            self._response[R_WARNING] = "Invalid parameters"
 
     def __paste(self) -> None:
         """Copy or cut files/directories."""
-        if "src" in self._request and "dst" in self._request:
-            src = self.__find_dir(self._request["src"])
-            dst = self.__find_dir(self._request["dst"])
+        if API_SRC in self._request and API_DST in self._request:
+            src = self.__find_dir(self._request[API_SRC])
+            dst = self.__find_dir(self._request[API_DST])
             cur_dir = dst
-            if not cur_dir or not src or not dst or "targets[]" not in self._request:
-                self._response["error"] = "Invalid parameters"
+            if not cur_dir or not src or not dst or API_TARGETS not in self._request:
+                self._response[R_ERROR] = "Invalid parameters"
                 return
-            files = self._request["targets[]"]
+            files = self._request[API_TARGETS]
             if not isinstance(files, list):
                 files = [files]
 
             cut = False
-            if "cut" in self._request:
-                if self._request["cut"] == "1":
+            if API_CUT in self._request:
+                if self._request[API_CUT] == "1":
                     cut = True
 
             if not self.__is_allowed(src, "read") or not self.__is_allowed(
                 dst, "write"
             ):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
 
             added = []
@@ -773,21 +814,21 @@ class Connector:
             for fhash in files:
                 fil = self.__find(fhash, src)
                 if not fil:
-                    self._response["error"] = "File not found"
+                    self._response[R_ERROR] = "File not found"
                     return
                 new_dst = os.path.join(dst, os.path.basename(fil))
                 if dst.find(fil) == 0:
-                    self._response["error"] = "Unable to copy into itself"
+                    self._response[R_ERROR] = "Unable to copy into itself"
                     return
 
                 if cut:
                     if not self.__is_allowed(fil, "rm"):
-                        self._response["error"] = "Move failed"
+                        self._response[R_ERROR] = "Move failed"
                         self.__set_error_data(fil, "Access denied")
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
-                        self._response["error"] = "Unable to move files"
+                        self._response[R_ERROR] = "Unable to move files"
                         self.__set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
@@ -799,73 +840,73 @@ class Connector:
                         removed.append(fhash)
                         continue
                     except OSError:
-                        self._response["error"] = "Unable to move files"
+                        self._response[R_ERROR] = "Unable to move files"
                         self.__set_error_data(fil, "Unable to move")
                         return
                 else:
                     if not self.__copy(fil, new_dst):
-                        self._response["error"] = "Unable to copy files"
+                        self._response[R_ERROR] = "Unable to copy files"
                         return
                     added.append(self.__info(new_dst))
                     continue
-            self._response["added"] = added
-            self._response["removed"] = removed
+            self._response[R_ADDED] = added
+            self._response[R_REMOVED] = removed
         else:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
 
     def __duplicate(self) -> None:
         """Create copy of files/directories."""
-        targets = self._request.get("targets[]")
+        targets = self._request.get(API_TARGETS)
         if not targets:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         added = []
         for target in targets:
             target = self.__find(target)
             if not target:
-                self._response["error"] = "File not found"
+                self._response[R_ERROR] = "File not found"
                 return
             cur_dir = os.path.dirname(target)
             if not self.__is_allowed(target, "read") or not self.__is_allowed(
                 cur_dir, "write"
             ):
-                self._response["error"] = "Access denied"
+                self._response[R_ERROR] = "Access denied"
                 return
             new_name = _unique_name(target)
             if not self.__copy(target, new_name):
-                self._response["error"] = "Unable to create file copy"
+                self._response[R_ERROR] = "Unable to create file copy"
                 return
             added.append(self.__info(new_name))
-        self._response["added"] = added
+        self._response[R_ADDED] = added
 
     def __resize(self) -> None:
         """Scale image size."""
-        target = self._request.get("target")
-        width = self._request.get("width")
-        height = self._request.get("height")
+        target = self._request.get(API_TARGET)
+        width = self._request.get(API_WIDTH)
+        height = self._request.get(API_HEIGHT)
         if not (target and width is not None and height is not None):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         width = int(width)
         height = int(height)
 
         if width < 1 or height < 1:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
         if self.__mimetype(cur_file).find("image") != 0:
-            self._response["error"] = "File is not an image"
+            self._response[R_ERROR] = "File is not an image"
             return
 
         self.__debug("resize " + cur_file, str(width) + ":" + str(height))
@@ -881,7 +922,7 @@ class Connector:
         except OSError as exc:  # UnidentifiedImageError requires Pillow 7.0.0
             # self.__debug('resizeFailed_' + path, str(exc))
             self.__debug("resizeFailed_" + self._options["root"], str(exc))
-            self._response["error"] = "Unable to resize image"
+            self._response[R_ERROR] = "Unable to resize image"
             return
 
         self._response["changed"] = [self.__info(cur_file)]
@@ -889,7 +930,7 @@ class Connector:
     def __thumbnails(self) -> None:
         """Create previews for images."""
         thumbs_dir = self._options["tmbDir"]
-        targets = self._request.get("targets[]")
+        targets = self._request.get(API_TARGETS)
         if not targets:
             return
 
@@ -900,7 +941,7 @@ class Connector:
             tmb_max = self._options["tmbAtOnce"]
         else:
             tmb_max = 5
-        self._response["images"] = {}
+        self._response[R_IMAGES] = {}
         i = 0
         for fhash in targets:
             path = self.__find(fhash)
@@ -912,7 +953,7 @@ class Connector:
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
                     if self.__tmb(path, tmb):
-                        self._response["images"].update({fhash: self.__path2url(tmb)})
+                        self._response[R_IMAGES].update({fhash: self.__path2url(tmb)})
                         i += 1
             if i >= tmb_max:
                 break
@@ -932,7 +973,7 @@ class Connector:
                 files.append(info)
 
         dirs.extend(files)
-        self._response["files"] = dirs
+        self._response[R_FILES] = dirs
 
     def __cwd(self, path: str) -> None:
         """Get Current Working Directory."""
@@ -971,7 +1012,7 @@ class Connector:
         except StopIteration:
             info["dirs"] = 0
 
-        self._response["cwd"] = info
+        self._response[R_CWD] = info
 
     def __info(self, path: str) -> Info:
         # mime = ''
@@ -1072,7 +1113,8 @@ class Connector:
                         tmb_url = self.__path2url(tmb)
                         info["tmb"] = tmb_url
                     else:
-                        self._response["tmb"] = True
+                        # FIXME: This is not part of api 2.1
+                        self._response[R_TMB] = True
                         if info["mime"].startswith("image/"):
                             info["tmb"] = 1
 
@@ -1082,11 +1124,11 @@ class Connector:
         return info
 
     def __size(self) -> None:
-        if "targets[]" not in self._request:
-            self._response["error"] = "Invalid parameters"
+        if API_TARGETS not in self._request:
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
-        targets = self._request["targets[]"]
+        targets = self._request[API_TARGETS]
 
         all_total_size = 0
         all_file_count = 0
@@ -1132,16 +1174,16 @@ class Connector:
         self._response["sizes"] = sizes
 
     def __ls(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         intersect = self._request.get("intersect[]")
 
         path = self.__find(target)
         if path is None or not os.path.isdir(path):
-            self._response["error"] = "Target directory not found"
+            self._response[R_ERROR] = "Target directory not found"
             return
 
         items = {}
@@ -1156,24 +1198,24 @@ class Connector:
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         path = self.__find_dir(target)
 
         if path is None or not os.path.isdir(path):
-            self._response["error"] = "Directory not found"
+            self._response[R_ERROR] = "Directory not found"
             return
 
         if os.path.islink(path):
             path = self.__read_link(path)
             if path is None:
-                self._response["error"] = "Directory (link) not found"
+                self._response[R_ERROR] = "Directory (link) not found"
                 return
 
         if not self.__is_allowed(path, "read"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         tree = []
@@ -1309,109 +1351,109 @@ class Connector:
         return None
 
     def __get(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "read"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         try:
             with open(cur_file, "r") as text_fil:
-                self._response["content"] = text_fil.read()
+                self._response[API_CONTENT] = text_fil.read()
         except UnicodeDecodeError:
             with open(cur_file, "rb") as bin_fil:
-                self._response["content"] = base64.b64encode(bin_fil.read()).decode(
+                self._response[API_CONTENT] = base64.b64encode(bin_fil.read()).decode(
                     "ascii"
                 )
 
     def __dim(self) -> None:
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "read"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         dim = self.__get_img_size(cur_file)
         if dim:
-            self._response["dim"] = str(dim)
+            self._response[R_DIM] = str(dim)
         else:
-            self._response["dim"] = None
+            self._response[R_DIM] = None
 
     def __put(self) -> None:
         """Save content in file."""
-        target = self._request.get("target")
-        content = self._request.get("content")
+        target = self._request.get(API_TARGET)
+        content = self._request.get(API_CONTENT)
         if not target or not content:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         cur_file = self.__find(target)
 
         if not cur_file:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         if not self.__is_allowed(cur_file, "write"):
-            self._response["error"] = "Access denied"
+            self._response[R_ERROR] = "Access denied"
             return
 
         try:
             if (
-                self._request["content"].startswith("data:")
-                and ";base64," in self._request["content"][:100]
+                self._request[API_CONTENT].startswith("data:")
+                and ";base64," in self._request[API_CONTENT][:100]
             ):
-                img_data = self._request["content"].split(";base64,")[1]
+                img_data = self._request[API_CONTENT].split(";base64,")[1]
                 img_data = base64.b64decode(img_data)
                 with open(cur_file, "wb") as bin_fil:
                     bin_fil.write(img_data)
             else:
                 with open(cur_file, "w+") as text_fil:
-                    text_fil.write(self._request["content"])
-            self._response["target"] = self.__info(cur_file)
+                    text_fil.write(self._request[API_CONTENT])
+            self._response[API_TARGET] = self.__info(cur_file)
         except OSError:
-            self._response["error"] = "Unable to write to file"
+            self._response[R_ERROR] = "Unable to write to file"
 
     def __archive(self) -> None:
         """Compress files/directories to archive."""
         if (
             not self._options["archivers"]["create"]
-            or "type" not in self._request
-            or "target" not in self._request
-            or "targets[]" not in self._request
+            or API_TYPE not in self._request
+            or API_TARGET not in self._request
+            or API_TARGETS not in self._request
         ):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_dir = self.__find_dir(self._request["target"])
-        archive_type = self._request["type"]
+        cur_dir = self.__find_dir(self._request[API_TARGET])
+        archive_type = self._request[API_TYPE]
         if (
             archive_type not in self._options["archivers"]["create"]
             or archive_type not in self._options["archiveMimes"]
             or not cur_dir
             or not self.__is_allowed(cur_dir, "write")
         ):
-            self._response["error"] = "Unable to create archive"
+            self._response[R_ERROR] = "Unable to create archive"
             return
 
-        files = self._request["targets[]"]
+        files = self._request[API_TARGETS]
         if not isinstance(files, list):
             files = [files]
 
@@ -1419,7 +1461,7 @@ class Connector:
         for fhash in files:
             cur_file = self.__find(fhash, cur_dir)
             if not cur_file:
-                self._response["error"] = "File not found"
+                self._response[R_ERROR] = "File not found"
                 return
             real_files.append(os.path.basename(cur_file))
 
@@ -1428,12 +1470,12 @@ class Connector:
             archive_name = "Archive"
         else:
             archive_name = real_files[0]
-        archive_name += "." + arc["ext"]
+        archive_name += "." + arc[ARCHIVE_EXT]
         archive_name = _unique_name(archive_name, "")
         archive_path = os.path.join(cur_dir, archive_name)
 
-        cmd = [arc["cmd"]]
-        for arg in arc["argc"].split():
+        cmd = [arc[ARCHIVE_CMD]]
+        for arg in arc[ARCHIVE_ARGC].split():
             cmd.append(arg)
         cmd.append(archive_name)
         for fil in real_files:
@@ -1447,22 +1489,22 @@ class Connector:
         if os.path.exists(archive_path):
             self._response["added"] = [self.__info(archive_path)]
         else:
-            self._response["error"] = "Unable to create archive"
+            self._response[R_ERROR] = "Unable to create archive"
 
     def __extract(self) -> None:
         """Uncompress archive."""
-        target = self._request.get("target")
+        target = self._request.get(API_TARGET)
         if not self._options["archivers"]["extract"] or not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         makedir = self._request.get("makedir")
         if not target:
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
         cur_file = self.__find(target)
         if cur_file is None or os.path.isdir(cur_file):
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         cur_dir = os.path.dirname(cur_file)
@@ -1472,13 +1514,13 @@ class Connector:
         if mime not in self._options["archivers"]["extract"] or not self.__is_allowed(
             cur_dir, "write"
         ):
-            self._response["error"] = "Invalid parameters"
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
         arc = self._options["archivers"]["extract"][mime]
 
-        cmd = [arc["cmd"]]
-        for arg in arc["argc"].split():
+        cmd = [arc[ARCHIVE_CMD]]
+        for arg in arc[ARCHIVE_ARGC].split():
             cmd.append(arg)
         cmd.append(os.path.basename(cur_file))
 
@@ -1495,7 +1537,7 @@ class Connector:
                 cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
                 added = [self.__info(target_dir)]
             except OSError:
-                self._response["error"] = "Unable to create folder: " + base_name
+                self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
         if added is None:
             existing_files = os.listdir(cur_dir)
@@ -1516,7 +1558,7 @@ class Connector:
                 self._response["added"] = added
             return
 
-        self._response["error"] = "Unable to extract files from archive"
+        self._response[R_ERROR] = "Unable to extract files from archive"
 
     def __ping(self) -> None:
         """Workaround for Safari."""
@@ -1524,27 +1566,27 @@ class Connector:
         self.http_header["Connection"] = "close"
 
     def __search(self) -> None:
-        if "q" not in self._request:
-            self._response["error"] = "Invalid parameters"
+        if API_Q not in self._request:
+            self._response[R_ERROR] = "Invalid parameters"
             return
 
-        if "target" in self._request:
-            target = self._request["target"]
+        if API_TARGET in self._request:
+            target = self._request[API_TARGET]
             if not target:
-                self._response["error"] = "Invalid parameters"
+                self._response[R_ERROR] = "Invalid parameters"
                 return
             search_path = self.__find_dir(target)
         else:
             search_path = self._options["root"]
 
         if not search_path:
-            self._response["error"] = "File not found"
+            self._response[R_ERROR] = "File not found"
             return
 
         mimes = self._request.get("mimes")
 
         result = []
-        query = self._request["q"]
+        query = self._request[API_Q]
         for root, dirs, files in os.walk(search_path):
             for fil in files:
                 if query.lower() in fil.lower():
@@ -1559,7 +1601,7 @@ class Connector:
                     file_path = os.path.join(root, folder)
                     if query.lower() in folder.lower():
                         result.append(self.__info(file_path))
-        self._response["files"] = result
+        self._response[R_FILES] = result
 
     def __mimetype(self, path: str) -> str:
         """Detect mimetype of file."""
@@ -1778,7 +1820,7 @@ class Connector:
 
     def __debug(self, key: str, val: Any) -> None:
         if self._options["debug"]:
-            self._response["debug"].update({key: val})
+            self._response[R_DEBUG].update({key: val})
 
     def __check_archivers(self) -> None:
         # import subprocess
@@ -1816,27 +1858,59 @@ class Connector:
 
         if tar:
             mime = "application/x-tar"
-            create.update({mime: {"cmd": "tar", "argc": "-cf", "ext": "tar"}})
+            create.update(
+                {mime: {ARCHIVE_CMD: "tar", ARCHIVE_ARGC: "-cf", ARCHIVE_EXT: "tar"}}
+            )
             extract.update(
-                {mime: {"cmd": "tar", "argc": "-xf", "ext": "tar", "argd": "-C {}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-xf",
+                        ARCHIVE_EXT: "tar",
+                        "argd": "-C {}",
+                    }
+                }
             )
 
         if tar and gzip:
             mime = "application/x-gzip"
-            create.update({mime: {"cmd": "tar", "argc": "-czf", "ext": "tar.gz"}})
+            create.update(
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-czf",
+                        ARCHIVE_EXT: "tar.gz",
+                    }
+                }
+            )
             extract.update(
-                {mime: {"cmd": "tar", "argc": "-xzf", "ext": "tar.gz", "argd": "-C {}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-xzf",
+                        ARCHIVE_EXT: "tar.gz",
+                        "argd": "-C {}",
+                    }
+                }
             )
 
         if tar and bzip2:
             mime = "application/x-bzip2"
-            create.update({mime: {"cmd": "tar", "argc": "-cjf", "ext": "tar.bz2"}})
+            create.update(
+                {
+                    mime: {
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-cjf",
+                        ARCHIVE_EXT: "tar.bz2",
+                    }
+                }
+            )
             extract.update(
                 {
                     mime: {
-                        "cmd": "tar",
-                        "argc": "-xjf",
-                        "ext": "tar.bz2",
+                        ARCHIVE_CMD: "tar",
+                        ARCHIVE_ARGC: "-xjf",
+                        ARCHIVE_EXT: "tar.bz2",
                         "argd": "-C {}",
                     }
                 }
@@ -1844,21 +1918,52 @@ class Connector:
 
         mime = "application/zip"
         if zipc:
-            create.update({mime: {"cmd": "zip", "argc": "-r9", "ext": "zip"}})
+            create.update(
+                {mime: {ARCHIVE_CMD: "zip", ARCHIVE_ARGC: "-r9", ARCHIVE_EXT: "zip"}}
+            )
         if unzip:
             extract.update(
-                {mime: {"cmd": "unzip", "argc": "", "ext": "zip", "argd": "-d {}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "unzip",
+                        ARCHIVE_ARGC: "",
+                        ARCHIVE_EXT: "zip",
+                        "argd": "-d {}",
+                    }
+                }
             )
 
         mime = "application/x-rar"
         if rar:
-            create.update({mime: {"cmd": "rar", "argc": "a -inul", "ext": "rar"}})
+            create.update(
+                {
+                    mime: {
+                        ARCHIVE_CMD: "rar",
+                        ARCHIVE_ARGC: "a -inul",
+                        ARCHIVE_EXT: "rar",
+                    }
+                }
+            )
             extract.update(
-                {mime: {"cmd": "rar", "argc": "x -y", "ext": "rar", "argd": "{}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "rar",
+                        ARCHIVE_ARGC: "x -y",
+                        ARCHIVE_EXT: "rar",
+                        "argd": "{}",
+                    }
+                }
             )
         elif unrar:
             extract.update(
-                {mime: {"cmd": "unrar", "argc": "x -y", "ext": "rar", "argd": "{}"}}
+                {
+                    mime: {
+                        ARCHIVE_CMD: "unrar",
+                        ARCHIVE_ARGC: "x -y",
+                        ARCHIVE_EXT: "rar",
+                        "argd": "{}",
+                    }
+                }
             )
 
         p7zip = None
@@ -1871,13 +1976,15 @@ class Connector:
 
         if p7zip:
             mime = "application/x-7z-compressed"
-            create.update({mime: {"cmd": p7zip, "argc": "a -t7z", "ext": "7z"}})
+            create.update(
+                {mime: {ARCHIVE_CMD: p7zip, ARCHIVE_ARGC: "a -t7z", ARCHIVE_EXT: "7z"}}
+            )
             extract.update(
                 {
                     mime: {
-                        "cmd": p7zip,
-                        "argc": "extract -y",
-                        "ext": "7z",
+                        ARCHIVE_CMD: p7zip,
+                        ARCHIVE_ARGC: "extract -y",
+                        ARCHIVE_EXT: "7z",
                         "argd": "-o{}",
                     }
                 }
@@ -1885,14 +1992,22 @@ class Connector:
 
             mime = "application/x-tar"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -ttar", "ext": "tar"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -ttar",
+                            ARCHIVE_EXT: "tar",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "tar",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "tar",
                             "argd": "-o{}",
                         }
                     }
@@ -1900,14 +2015,22 @@ class Connector:
 
             mime = "application/x-gzip"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -tgzip", "ext": "gz"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -tgzip",
+                            ARCHIVE_EXT: "gz",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "tar.gz",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "tar.gz",
                             "argd": "-o{}",
                         }
                     }
@@ -1915,14 +2038,22 @@ class Connector:
 
             mime = "application/x-bzip2"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -tbzip2", "ext": "bz2"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -tbzip2",
+                            ARCHIVE_EXT: "bz2",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "tar.bz2",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "tar.bz2",
                             "argd": "-o{}",
                         }
                     }
@@ -1930,14 +2061,22 @@ class Connector:
 
             mime = "application/zip"
             if mime not in create:
-                create.update({mime: {"cmd": p7zip, "argc": "a -tzip", "ext": "zip"}})
+                create.update(
+                    {
+                        mime: {
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "a -tzip",
+                            ARCHIVE_EXT: "zip",
+                        }
+                    }
+                )
             if mime not in extract:
                 extract.update(
                     {
                         mime: {
-                            "cmd": p7zip,
-                            "argc": "extract -y",
-                            "ext": "zip",
+                            ARCHIVE_CMD: p7zip,
+                            ARCHIVE_ARGC: "extract -y",
+                            ARCHIVE_EXT: "zip",
                             "argd": "-o{}",
                         }
                     }
