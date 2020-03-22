@@ -59,7 +59,6 @@ from .api_const import (
     R_NETDRIVERS,
     R_OPTIONS,
     R_REMOVED,
-    R_TMB,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
     R_WARNING,
