@@ -1113,6 +1113,7 @@ class Connector:
                         tmb_url = self.__path2url(tmb)
                         info["tmb"] = tmb_url
                     else:
+                        # FIXME: This is not part of api 2.1
                         self._response[R_TMB] = True
                         if info["mime"].startswith("image/"):
                             info["tmb"] = 1
