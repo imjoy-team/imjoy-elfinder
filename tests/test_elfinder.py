@@ -251,3 +251,15 @@ def test_duplicate_errors(p_request, settings, txt_file):
     assert body[R_ERROR] == "Access denied"
 
     # TODO: Add a test for when the copy action fails.
+
+
+def test_extract(p_request, settings, zip_file):
+    """Test the extract command."""
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_ADDED in body
