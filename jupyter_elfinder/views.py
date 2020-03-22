@@ -120,9 +120,7 @@ def connector(request: Request) -> Response:
         file_path = response["__send_file"]
         if os.path.exists(file_path) and not os.path.isdir(file_path):
             result = make_response(file_path)
-            result.headers["Content-Length"] = header["Content-Length"]
-            result.headers["Content-type"] = header["Content-type"]
-            result.headers["Content-Disposition"] = header["Content-Disposition"]
+            result.headers.update(header)
             return result
 
         result = Response("Unable to find: {}".format(request.path_info))
