@@ -49,6 +49,7 @@ from .api_const import (
     ARCHIVE_EXT,
     R_ADDED,
     R_API,
+    R_CHANGED,
     R_CWD,
     R_DEBUG,
     R_DIM,
@@ -56,12 +57,14 @@ from .api_const import (
     R_FILES,
     R_HASHES,
     R_IMAGES,
+    R_LIST,
     R_NETDRIVERS,
     R_OPTIONS,
     R_REMOVED,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
     R_WARNING,
+    R_TREE,
 )
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
@@ -161,8 +164,6 @@ class Connector:
         "uploadAllow": [],
         "uploadDeny": [],
         "uploadOrder": ["deny", "allow"],
-        # 'aclObj': None, # TODO  # pylint: disable=fixme
-        # 'aclRole': 'user', # TODO  # pylint: disable=fixme
         "defaults": {"read": True, "write": True, "rm": True},
         "perms": {},
         "archiveMimes": [],
@@ -196,6 +197,9 @@ class Connector:
         "ls": "__ls",
         "file": "__file",
         "parents": "__parents",
+        "chmod": "__chmod",
+        "zipdl": "__zipdl",
+        "netmount": "__netmount",
     }
 
     _mimeType = {
@@ -488,7 +492,22 @@ class Connector:
     def __parents(self) -> None:
         # TODO: implement according to the spec
         # https://github.com/Studio-42/elFinder/wiki/Client-Server-API-2.1#parents
-        self._response["tree"] = []
+        self._response[R_TREE] = []
+
+    def __chmod(self) -> None:
+        # TODO: implement according to the spec
+        # https://github.com/Studio-42/elFinder/wiki/Client-Server-API-2.1#chmod
+        self._response[R_CHANGED] = []
+
+    def __netmount(self) -> None:
+        # TODO: implement according to the spec
+        # https://github.com/Studio-42/elFinder/wiki/Client-Server-API-2.1#netmount
+        pass
+
+    def __zipdl(self) -> None:
+        # TODO: implement according to the spec
+        # https://github.com/Studio-42/elFinder/wiki/Client-Server-API-2.1#zipdl
+        pass
 
     def __file(self) -> None:
         target = self._request.get(API_TARGET)
@@ -737,6 +756,7 @@ class Connector:
                         self.__set_error_data(name, "Invalid name: " + name)
                     else:
                         name = os.path.join(cur_dir, name)
+                        replace = os.path.exists(name)
                         try:
                             fil = open(name, "wb", self._options["uploadWriteChunk"])
                             for chunk in self.__fbuffer(data):
@@ -745,6 +765,8 @@ class Connector:
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
                                 os.chmod(name, self._options["fileMode"])
+                                if replace:  # update thumbnail
+                                    self.__rm_tmb(name)
                                 self._response[R_ADDED].append(self.__info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
@@ -909,13 +931,14 @@ class Connector:
                 (width, height), self._img.ANTIALIAS  # type: ignore
             )
             img_resized.save(cur_file)
+            self.__rm_tmb(cur_file)
         except OSError as exc:  # UnidentifiedImageError requires Pillow 7.0.0
             # self.__debug('resizeFailed_' + path, str(exc))
             self.__debug("resizeFailed_" + self._options["root"], str(exc))
             self._response[R_ERROR] = "Unable to resize image"
             return
 
-        self._response["changed"] = [self.__info(cur_file)]
+        self._response[R_CHANGED] = [self.__info(cur_file)]
 
     def __thumbnails(self) -> None:
         """Create previews for images."""
@@ -1184,7 +1207,7 @@ class Connector:
                     items[fhash] = fname
             else:
                 items[fhash] = fname
-        self._response["list"] = items
+        self._response[R_LIST] = items
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
@@ -1217,7 +1240,7 @@ class Connector:
                 and self.__is_accepted(directory)
             ):
                 tree.append(self.__info(dir_path))
-        self._response["tree"] = tree
+        self._response[R_TREE] = tree
 
     def __remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
@@ -1227,6 +1250,7 @@ class Connector:
         if not os.path.isdir(target):
             try:
                 os.unlink(target)
+                self.__rm_tmb(target)
                 return True
             except OSError:
                 self.__set_error_data(target, "Remove failed")
@@ -1406,7 +1430,8 @@ class Connector:
             else:
                 with open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
-            self._response[API_TARGET] = self.__info(cur_file)
+            self.__rm_tmb(cur_file)
+            self._response[R_CHANGED] = self.__info(cur_file)
         except OSError:
             self._response[R_ERROR] = "Unable to write to file"
 
@@ -1466,7 +1491,7 @@ class Connector:
         os.chdir(cur_cwd)
 
         if os.path.exists(archive_path):
-            self._response["added"] = [self.__info(archive_path)]
+            self._response[R_ADDED] = [self.__info(archive_path)]
         else:
             self._response[R_ERROR] = "Unable to create archive"
 
@@ -1530,11 +1555,11 @@ class Connector:
                     for dname in os.listdir(cur_dir)
                     if dname not in existing_files
                 ]
-                self._response["added"] = [
+                self._response[R_ADDED] = [
                     self.__info(os.path.join(cur_dir, item)) for item in added_names
                 ]
             else:
-                self._response["added"] = added
+                self._response[R_ADDED] = added
             return
 
         self._response[R_ERROR] = "Unable to extract files from archive"
@@ -1606,7 +1631,7 @@ class Connector:
         # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
         return mime
 
-    def __tmb(self, path: str, tmb: str) -> bool:
+    def __tmb(self, path: str, tmb_path: str) -> bool:
         """Provide internal thumbnail create procedure."""
         try:
             img = self._img.open(path).copy()  # type: ignore
@@ -1615,7 +1640,7 @@ class Connector:
             if box:
                 img = img.crop(box)
             img.thumbnail(size, self._img.ANTIALIAS)  # type: ignore
-            img.save(tmb, "PNG")
+            img.save(tmb_path, "PNG")
         # UnidentifiedImageError requires Pillow 7.0.0
         except (OSError, ValueError) as exc:
             self.__debug("tmbFailed_" + path, str(exc))
@@ -1624,7 +1649,7 @@ class Connector:
 
     def __rm_tmb(self, path: str) -> None:
         tmb = self.__tmb_path(path)
-        if tmb and self._options["tmbDir"]:
+        if tmb:
             if os.path.exists(tmb):
                 try:
                     os.unlink(tmb)
