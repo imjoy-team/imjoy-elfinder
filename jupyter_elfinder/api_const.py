@@ -1,5 +1,7 @@
 """Provide constants used in the elfinder api."""
 # API requests constants
+API_CHUNK = "chunk"
+API_CID = "cid"
 API_CMD = "cmd"
 API_CONTENT = "content"
 API_CURRENT = "current"
@@ -8,8 +10,11 @@ API_DIRS = "dirs[]"
 API_DST = "dst"
 API_HEIGHT = "height"
 API_INIT = "init"
+API_MAKEDIR = "makedir"
+API_MTIME = "mtime"
 API_NAME = "name"
 API_Q = "q"
+API_RANGE = "range"
 API_SRC = "src"
 API_SUBSTITUTE = "substitute"
 API_TARGET = "target"
@@ -17,6 +22,7 @@ API_TARGETS = "targets[]"
 API_TREE = "tree"
 API_TYPE = "type"
 API_UPLOAD = "upload[]"
+API_UPLOADPATH = 'upload_path'
 API_WIDTH = "width"
 
 # Archive constants

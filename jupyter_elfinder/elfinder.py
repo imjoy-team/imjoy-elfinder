@@ -28,6 +28,7 @@ from urllib.parse import quote, urljoin
 from typing_extensions import Literal, TypedDict
 
 from .api_const import (
+    API_CHUNK,
     API_CMD,
     API_CONTENT,
     API_CURRENT,
@@ -35,14 +36,17 @@ from .api_const import (
     API_DST,
     API_HEIGHT,
     API_INIT,
+    API_MAKEDIR,
     API_NAME,
     API_Q,
+    API_RANGE,
     API_SRC,
     API_TARGET,
     API_TARGETS,
     API_TREE,
     API_TYPE,
     API_UPLOAD,
+    API_UPLOADPATH,
     API_WIDTH,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
@@ -244,6 +248,7 @@ class Connector:
     # public variables
     http_allowed_parameters = (
         API_CMD,
+        API_CHUNK,
         API_TARGET,
         API_TARGETS,
         API_CURRENT,
@@ -254,12 +259,14 @@ class Connector:
         API_DST,
         API_CUT,
         API_INIT,
+        API_RANGE,
         API_TYPE,
         API_WIDTH,
         API_HEIGHT,
         API_UPLOAD,
+        API_UPLOADPATH,
         API_Q,
-        "makedir",
+        API_MAKEDIR,
     )
     # return variables
     http_status_code = 0
@@ -760,6 +767,7 @@ class Connector:
                         try:
                             fil = open(name, "wb", self._options["uploadWriteChunk"])
                             for chunk in self.__fbuffer(data):
+                                print('wriging chunk to ...', name)
                                 fil.write(chunk)
                             fil.close()
                             up_size += os.lstat(name).st_size
@@ -1501,7 +1509,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        makedir = self._request.get("makedir")
+        makedir = self._request.get(API_MAKEDIR)
         if not target:
             self._response[R_ERROR] = "Invalid parameters"
             return
