@@ -1105,7 +1105,7 @@ class Connector:
             info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
-            if self._options["fileURL"] and info["read"] is True:
+            if self._options["fileURL"] and info["read"]:
                 if lpath:
                     info["url"] = self.__path2url(lpath)
                 else:
