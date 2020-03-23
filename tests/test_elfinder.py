@@ -115,6 +115,18 @@ def test_open_errors(p_request, settings, txt_file):
     body = response.json
     assert body[R_ERROR] == "File not found"
 
+    # Access denied
+    txt_file.parent.chmod(0o100)
+    p_request.params.clear()
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Access denied"
+    txt_file.parent.chmod(0o600)  # Reset permissions
+
 
 def test_archive(p_request, settings, txt_file):
     """Test the archive command."""
