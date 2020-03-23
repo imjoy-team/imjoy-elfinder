@@ -1,7 +1,11 @@
 """Test elfinder."""
+import subprocess
+from unittest.mock import patch
+
 from jupyter_elfinder.api_const import (
     API_CMD,
     API_INIT,
+    API_MAKEDIR,
     API_TARGET,
     API_TARGETS,
     API_TREE,
@@ -141,6 +145,8 @@ def test_archive_errors(p_request, settings, txt_file):
     body = response.json
     assert R_ERROR in body
 
+    # TODO: Add a test of when the archive action fails
+
 
 def test_dim(p_request, settings, jpeg_file):
     """Test the dim command."""
@@ -251,3 +257,120 @@ def test_duplicate_errors(p_request, settings, txt_file):
     assert body[R_ERROR] == "Access denied"
 
     # TODO: Add a test for when the copy action fails.
+
+
+def test_extract(p_request, settings, zip_file):
+    """Test the extract command."""
+    extracted_file = zip_file.parent / "{}.txt".format(zip_file.stem)
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_ADDED in body
+    assert body[R_ADDED][0]["hash"] == make_hash(str(extracted_file))
+
+    new_dir = zip_file.parent / zip_file.stem
+    p_request.params[API_MAKEDIR] = "1"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_ADDED in body
+    assert body[R_ADDED][0]["hash"] == make_hash(str(new_dir))
+
+
+def test_extract_errors(p_request, settings, zip_file):
+    """Test the extract command with errors."""
+    # Invalid parameters
+    p_request.params[API_CMD] = "extract"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Invalid parameters"
+
+    # File not found
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str("missing"))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "File not found"
+
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "File not found"
+
+    # Access denied
+    current = zip_file.parent
+    current.chmod(0o500)  # Set read and execute permission only
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Access denied"
+    current.chmod(0o700)  # Reset permissions
+
+    # Bad mime type
+    bad_mime = zip_file.parent / "{}.bad".format(zip_file.stem)
+    zip_file.rename(bad_mime)
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(bad_mime))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Unable to extract files from archive"
+    bad_mime.rename(zip_file)  # Reset file name
+
+    # mkdir fails
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file))
+    p_request.params[API_MAKEDIR] = "1"
+    with patch("os.mkdir", side_effect=OSError("Boom")):
+        response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Unable to create folder: {}".format(zip_file.stem)
+
+    # unzip fails
+    p_request.params.clear()
+    p_request.params[API_CMD] = "extract"
+    p_request.params[API_TARGET] = make_hash(str(zip_file))
+
+    programs = set()
+    orig_subprocess_run = subprocess.run
+
+    def mock_subprocess_run(args, **kwargs):
+        """Raise the second time a program is called."""
+        prog = args[0]
+        if prog in programs:
+            raise OSError("Boom")
+        programs.add(prog)
+        return orig_subprocess_run(  # pylint: disable=subprocess-run-check
+            args, **kwargs
+        )
+
+    with patch("subprocess.run", side_effect=mock_subprocess_run):
+        response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Unable to extract files from archive"

@@ -35,6 +35,7 @@ from .api_const import (
     API_DST,
     API_HEIGHT,
     API_INIT,
+    API_MAKEDIR,
     API_NAME,
     API_Q,
     API_SRC,
@@ -259,7 +260,7 @@ class Connector:
         API_HEIGHT,
         API_UPLOAD,
         API_Q,
-        "makedir",
+        API_MAKEDIR,
     )
     # return variables
     http_status_code = 0
@@ -1501,10 +1502,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        makedir = self._request.get("makedir")
-        if not target:
-            self._response[R_ERROR] = "Invalid parameters"
-            return
+        makedir = self._request.get(API_MAKEDIR)
         cur_file = self.__find(target)
         if cur_file is None or os.path.isdir(cur_file):
             self._response[R_ERROR] = "File not found"
@@ -1512,12 +1510,14 @@ class Connector:
 
         cur_dir = os.path.dirname(cur_file)
 
+        if not self.__is_allowed(cur_dir, "write"):
+            self._response[R_ERROR] = "Access denied"
+            return
+
         mime = self.__mimetype(cur_file)
         self.__check_archivers()
-        if mime not in self._options["archivers"]["extract"] or not self.__is_allowed(
-            cur_dir, "write"
-        ):
-            self._response[R_ERROR] = "Invalid parameters"
+        if mime not in self._options["archivers"]["extract"]:
+            self._response[R_ERROR] = "Unable to extract files from archive"
             return
 
         arc = self._options["archivers"]["extract"][mime]
@@ -1527,7 +1527,6 @@ class Connector:
             cmd.append(arg)
         cmd.append(os.path.basename(cur_file))
 
-        cur_cwd = os.getcwd()
         target_dir = cur_dir
         added = None
         if makedir and makedir != "0":
@@ -1542,26 +1541,27 @@ class Connector:
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
+
         if added is None:
             existing_files = os.listdir(cur_dir)
+
+        cur_cwd = os.getcwd()
         os.chdir(cur_dir)
         ret = _run_sub_process(cmd)
         os.chdir(cur_cwd)
-        if ret:
-            if added is None:
-                added_names = [
-                    dname
-                    for dname in os.listdir(cur_dir)
-                    if dname not in existing_files
-                ]
-                self._response[R_ADDED] = [
-                    self.__info(os.path.join(cur_dir, item)) for item in added_names
-                ]
-            else:
-                self._response[R_ADDED] = added
+        if not ret:
+            self._response[R_ERROR] = "Unable to extract files from archive"
             return
 
-        self._response[R_ERROR] = "Unable to extract files from archive"
+        if added is None:
+            added_names = [
+                dname for dname in os.listdir(cur_dir) if dname not in existing_files
+            ]
+            self._response[R_ADDED] = [
+                self.__info(os.path.join(cur_dir, item)) for item in added_names
+            ]
+        else:
+            self._response[R_ADDED] = added
 
     def __ping(self) -> None:
         """Workaround for Safari."""
