@@ -24,7 +24,6 @@ from datetime import datetime
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
-from werkzeug.utils import secure_filename
 
 from typing_extensions import Literal, TypedDict
 
@@ -585,7 +584,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        name = secure_filename(self.__check_utf8(name))
+        name = self.__check_utf8(name)
 
         if not name or not _check_name(name):
             self._response[R_ERROR] = "Invalid name"
@@ -617,7 +616,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        name = secure_filename(self.__check_utf8(name))
+        name = self.__check_utf8(name)
         path = self.__find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
@@ -643,7 +642,10 @@ class Connector:
                 self._response[R_ADDED] = [self.__info(new_dir)]
                 self._response[R_HASHES] = []
                 for subdir in dirs:
-                    new_subdir = os.path.join(new_dir, secure_filename(subdir))
+                    if not _check_name(subdir):
+                        self._response[R_ERROR] = "Invalid dir name: " + subdir
+                        return
+                    new_subdir = os.path.join(new_dir, subdir)
                     os.mkdir(new_subdir, int(self._options["dirMode"]))
                     self._response[R_HASHES].append(self.__hash(new_subdir))
             except OSError:
@@ -657,7 +659,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        name = secure_filename(self.__check_utf8(name))
+        name = self.__check_utf8(name)
         cur_dir = self.__find_dir(target)
         if not cur_dir:
             self._response[R_ERROR] = "Invalid parameters"
