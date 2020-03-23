@@ -24,6 +24,7 @@ from datetime import datetime
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
+from werkzeug.utils import secure_filename
 
 from typing_extensions import Literal, TypedDict
 
@@ -431,11 +432,11 @@ class Connector:
             target = self.__find_dir(target)
             if not target:
                 self._response[R_ERROR] = "Invalid parameters"
-            elif not self.__is_allowed(target, "read"):
+                return
+            if not self.__is_allowed(target, "read"):
                 self._response[R_ERROR] = "Access denied"
                 return
-            else:
-                path = target
+            path = target
         else:
             path = self._options["root"]
 
@@ -584,7 +585,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        name = self.__check_utf8(name)
+        name = secure_filename(self.__check_utf8(name))
 
         if not name or not _check_name(name):
             self._response[R_ERROR] = "Invalid name"
@@ -610,17 +611,14 @@ class Connector:
         """Create new directory."""
         path = None
         new_dir = None
-        if API_NAME in self._request and API_TARGET in self._request:
-            name = self._request[API_NAME]
-            name = self.__check_utf8(name)
-            target = self._request[API_TARGET]
-            if not target:
-                self._response[R_ERROR] = "Invalid parameters"
-                return
-            path = self.__find_dir(target)
+        name = self._request.get(API_NAME)
+        target = self._request.get(API_TARGET)
+        if not target or not name:
+            self._response[R_ERROR] = "Invalid parameters"
+            return
 
-        dirs = self._request.get("dirs[]") or []
-
+        name = secure_filename(self.__check_utf8(name))
+        path = self.__find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
             return
@@ -630,6 +628,8 @@ class Connector:
         if not _check_name(name):
             self._response[R_ERROR] = "Invalid name"
             return
+
+        dirs = self._request.get("dirs[]") or []
 
         new_dir = os.path.join(path, name)
 
@@ -643,7 +643,7 @@ class Connector:
                 self._response[R_ADDED] = [self.__info(new_dir)]
                 self._response[R_HASHES] = []
                 for subdir in dirs:
-                    new_subdir = os.path.join(new_dir, subdir)
+                    new_subdir = os.path.join(new_dir, secure_filename(subdir))
                     os.mkdir(new_subdir, int(self._options["dirMode"]))
                     self._response[R_HASHES].append(self.__hash(new_subdir))
             except OSError:
@@ -651,18 +651,15 @@ class Connector:
 
     def __mkfile(self) -> None:
         """Create new file."""
-        name = None
-        cur_dir = new_file = None
-        if API_NAME in self._request and API_TARGET in self._request:
-            name = self._request[API_NAME]
-            target = self._request[API_TARGET]
-            if not target:
-                self._response[R_ERROR] = "Invalid parameters"
-                return
-            cur_dir = self.__find_dir(target)
-            name = self.__check_utf8(name)
+        name = self._request.get(API_NAME)
+        target = self._request.get(API_TARGET)
+        if not target or not name:
+            self._response[R_ERROR] = "Invalid parameters"
+            return
 
-        if not cur_dir or not name:
+        name = secure_filename(self.__check_utf8(name))
+        cur_dir = self.__find_dir(target)
+        if not cur_dir:
             self._response[R_ERROR] = "Invalid parameters"
             return
         if not self.__is_allowed(cur_dir, "write"):
