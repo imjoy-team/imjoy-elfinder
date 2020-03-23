@@ -420,31 +420,28 @@ class Connector:
 
     def __open(self) -> None:
         """Open file or directory."""
+        path = None
         init = self._request.get(API_INIT)
         target = self._request.get(API_TARGET)
         if not init and not target:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
+        if target:
+            path = self.__find_dir(target)
+
         if init:
             self._response[R_API] = 2.1
+            if not path:
+                path = self._options["root"]
 
-        if target:
-            target = self.__find_dir(target)
-            if not target:
-                if not init:
-                    self._response[R_ERROR] = "File not found"
-                    return
-                path = self._options["root"]
-            elif not self.__is_allowed(target, "read"):
-                if not init:
-                    self._response[R_ERROR] = "Access denied"
-                    return
-                path = self._options["root"]
-            else:
-                path = target
-        else:
-            path = self._options["root"]
+        if not path:
+            self._response[R_ERROR] = "File not found"
+            return
+
+        if not self.__is_allowed(path, "read"):
+            self._response[R_ERROR] = "Access denied"
+            return
 
         self.__cwd(path)
         self.__files(path, False)
@@ -617,17 +614,14 @@ class Connector:
         """Create new directory."""
         path = None
         new_dir = None
-        if API_NAME in self._request and API_TARGET in self._request:
-            name = self._request[API_NAME]
-            name = self.__check_utf8(name)
-            target = self._request[API_TARGET]
-            if not target:
-                self._response[R_ERROR] = "Invalid parameters"
-                return
-            path = self.__find_dir(target)
+        name = self._request.get(API_NAME)
+        target = self._request.get(API_TARGET)
+        if not target or not name:
+            self._response[R_ERROR] = "Invalid parameters"
+            return
 
-        dirs = self._request.get("dirs[]") or []
-
+        name = self.__check_utf8(name)
+        path = self.__find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
             return
@@ -637,6 +631,8 @@ class Connector:
         if not _check_name(name):
             self._response[R_ERROR] = "Invalid name"
             return
+
+        dirs = self._request.get("dirs[]") or []
 
         new_dir = os.path.join(path, name)
 
@@ -650,6 +646,9 @@ class Connector:
                 self._response[R_ADDED] = [self.__info(new_dir)]
                 self._response[R_HASHES] = []
                 for subdir in dirs:
+                    if not _check_name(subdir):
+                        self._response[R_ERROR] = "Invalid dir name: " + subdir
+                        return
                     new_subdir = os.path.join(new_dir, subdir)
                     os.mkdir(new_subdir, int(self._options["dirMode"]))
                     self._response[R_HASHES].append(self.__hash(new_subdir))
@@ -658,18 +657,15 @@ class Connector:
 
     def __mkfile(self) -> None:
         """Create new file."""
-        name = None
-        cur_dir = new_file = None
-        if API_NAME in self._request and API_TARGET in self._request:
-            name = self._request[API_NAME]
-            target = self._request[API_TARGET]
-            if not target:
-                self._response[R_ERROR] = "Invalid parameters"
-                return
-            cur_dir = self.__find_dir(target)
-            name = self.__check_utf8(name)
+        name = self._request.get(API_NAME)
+        target = self._request.get(API_TARGET)
+        if not target or not name:
+            self._response[R_ERROR] = "Invalid parameters"
+            return
 
-        if not cur_dir or not name:
+        name = self.__check_utf8(name)
+        cur_dir = self.__find_dir(target)
+        if not cur_dir:
             self._response[R_ERROR] = "Invalid parameters"
             return
         if not self.__is_allowed(cur_dir, "write"):

@@ -90,8 +90,7 @@ def test_open(p_request, settings, txt_file):
 
     assert response.status_code == 200
     body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
+    assert body[R_ERROR] == "Access denied"
     txt_file.parent.chmod(0o600)  # Reset permissions
 
 
