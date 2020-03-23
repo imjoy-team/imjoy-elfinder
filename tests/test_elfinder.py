@@ -25,12 +25,23 @@ from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
 
-def test_open(p_request, settings):
+def test_open(p_request, settings, txt_file):
     """Test the open command."""
+    # With target and no init
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_CWD in body
+
+    # With init and no target
+    p_request.params.clear()
     p_request.params[API_CMD] = "open"
     p_request.params[API_INIT] = True
     p_request.params[API_TREE] = True
-    p_request.params[API_TARGET] = None
     response = connector(p_request)
 
     assert response.status_code == 200
@@ -44,6 +55,77 @@ def test_open(p_request, settings):
     assert R_UPLMAXFILE in body
     assert R_UPLMAXSIZE in body
     assert R_OPTIONS in body
+
+    # With init and target
+    p_request.params.clear()
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_INIT] = True
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_CWD in body
+
+    # With init and missing target
+    p_request.params.clear()
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_INIT] = True
+    p_request.params[API_TARGET] = "missing"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_CWD in body
+
+    # With init and no read access to target
+    txt_file.parent.chmod(0o100)
+    p_request.params.clear()
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_INIT] = True
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert R_ERROR not in body
+    assert R_CWD in body
+    txt_file.parent.chmod(0o600)  # Reset permissions
+
+
+def test_open_errors(p_request, settings, txt_file):
+    """Test the open command with errors."""
+    # Invalid parameters
+    p_request.params[API_CMD] = "open"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Invalid parameters"
+
+    # File not found
+    p_request.params.clear()
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_TARGET] = "missing"
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "File not found"
+
+    # Access denied
+    txt_file.parent.chmod(0o100)
+    p_request.params.clear()
+    p_request.params[API_CMD] = "open"
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Access denied"
+    txt_file.parent.chmod(0o600)  # Reset permissions
 
 
 def test_archive(p_request, settings, txt_file):

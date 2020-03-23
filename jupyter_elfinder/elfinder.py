@@ -420,21 +420,27 @@ class Connector:
 
     def __open(self) -> None:
         """Open file or directory."""
-        if API_TARGET not in self._request:
+        init = self._request.get(API_INIT)
+        target = self._request.get(API_TARGET)
+        if not init and not target:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        if API_INIT in self._request and self._request[API_INIT]:
+        if init:
             self._response[R_API] = 2.1
 
-        target = self._request.get(API_TARGET)
         if target:
             target = self.__find_dir(target)
             if not target:
-                self._response[R_ERROR] = "Invalid parameters"
+                if not init:
+                    self._response[R_ERROR] = "File not found"
+                    return
+                path = self._options["root"]
             elif not self.__is_allowed(target, "read"):
-                self._response[R_ERROR] = "Access denied"
-                return
+                if not init:
+                    self._response[R_ERROR] = "Access denied"
+                    return
+                path = self._options["root"]
             else:
                 path = target
         else:
