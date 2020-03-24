@@ -37,26 +37,34 @@ def all_params_fixture(txt_file):
     }
 
 
+@pytest.fixture(name="set_request")
+def set_request_fixture(all_params, p_request, request):
+    """Return a mock request with set params."""
+    params = request.param
+    params = {key: all_params[val] for key, val in params.items()}
+    p_request.params.update(params)
+    return p_request
+
+
 @pytest.mark.parametrize(
-    "params, in_body, not_in_body",
-    [({API_TARGET: "text_file_parent"}, [R_CWD], [R_ERROR])],
-    indirect=[],
+    "set_request", [{API_TARGET: "text_file_parent"}], indirect=True,
 )
-def test_open_param(params, in_body, not_in_body, all_params, p_request, txt_file):
+@pytest.mark.parametrize(
+    "in_body, not_in_body", [([R_CWD], [R_ERROR])],
+)
+def test_open_param(in_body, not_in_body, set_request):
     """Test the open command."""
     # With target and no init
-    params = {key: all_params[val] for key, val in params.items()}
-    p_request.params[API_CMD] = "open"
-    p_request.params.update(params)
+    set_request.params[API_CMD] = "open"
 
-    response = connector(p_request)
+    response = connector(set_request)
 
     assert response.status_code == 200
     body = response.json
-    for response in in_body:
-        assert response in body
-    for response in not_in_body:
-        assert response not in body
+    for item in in_body:
+        assert item in body
+    for item in not_in_body:
+        assert item not in body
 
 
 def test_open(p_request, txt_file):
