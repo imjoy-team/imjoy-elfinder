@@ -125,6 +125,15 @@ def assert_response(response, body_items, in_body, not_in_body):
             {API_INIT: "true", API_TARGET: "txt_file_parent"},
             {"file": "txt_file_parent", "mode": 0o100},
         ),  # With init and no read access to target
+        (
+            {R_ERROR: "Access denied"},
+            [],
+            [],
+            {API_TARGET: "txt_file_parent"},
+            {"file": "txt_file_parent", "mode": 0o100},
+        ),  # With not init and no read access to target
+        ({R_ERROR: "Invalid parameters"}, [], [], {}, None,),
+        ({R_ERROR: "File not found"}, [], [], {API_TARGET: "missing"}, None,),
     ],
     indirect=["set_request", "access"],
 )
@@ -135,39 +144,6 @@ def test_open(body_items, in_body, not_in_body, set_request, access):
     response = connector(set_request)
 
     assert_response(response, body_items, in_body, not_in_body)
-
-
-def test_open_errors(p_request, settings, txt_file):
-    """Test the open command with errors."""
-    # Invalid parameters
-    p_request.params[API_CMD] = "open"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Invalid parameters"
-
-    # File not found
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_TARGET] = "missing"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "File not found"
-
-    # Access denied
-    txt_file.parent.chmod(0o100)
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-    txt_file.parent.chmod(0o600)  # Reset permissions
 
 
 def test_archive(p_request, settings, txt_file):
