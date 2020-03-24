@@ -1439,29 +1439,30 @@ class Connector:
 
     def __archive(self) -> None:
         """Compress files/directories to archive."""
-        if (
-            not self._options["archivers"]["create"]
-            or API_TYPE not in self._request
-            or API_TARGET not in self._request
-            or API_TARGETS not in self._request
-        ):
+        # TODO: We don't support "name" field yet.
+        # "name" is a parameter according to api 2.1.
+        archive_type = self._request.get(API_TYPE)
+        target = self._request.get(API_TARGET)
+        files = self._request.get(API_TARGETS)
+        if not archive_type or not target or not files:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_dir = self.__find_dir(self._request[API_TARGET])
-        archive_type = self._request[API_TYPE]
+        cur_dir = self.__find_dir(target)
+        if not cur_dir:
+            self._response[R_ERROR] = "File not found"
+            return
+
+        if not self.__is_allowed(cur_dir, "write"):
+            self._response[R_ERROR] = "Access denied"
+            return
+
         if (
             archive_type not in self._options["archivers"]["create"]
             or archive_type not in self._options["archiveMimes"]
-            or not cur_dir
-            or not self.__is_allowed(cur_dir, "write")
         ):
             self._response[R_ERROR] = "Unable to create archive"
             return
-
-        files = self._request[API_TARGETS]
-        if not isinstance(files, list):
-            files = [files]
 
         real_files = []
         for fhash in files:
@@ -1489,13 +1490,14 @@ class Connector:
 
         cur_cwd = os.getcwd()
         os.chdir(cur_dir)
-        _run_sub_process(cmd)
+        ret = _run_sub_process(cmd)
         os.chdir(cur_cwd)
 
-        if os.path.exists(archive_path):
-            self._response[R_ADDED] = [self.__info(archive_path)]
-        else:
+        if not ret:
             self._response[R_ERROR] = "Unable to create archive"
+            return
+
+        self._response[R_ADDED] = [self.__info(archive_path)]
 
     def __extract(self) -> None:
         """Uncompress archive."""
