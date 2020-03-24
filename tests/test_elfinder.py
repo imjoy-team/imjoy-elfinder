@@ -34,6 +34,7 @@ def all_params_fixture(txt_file):
         "missing": "missing",
         "text_file": make_hash(str(txt_file)),
         "text_file_parent": make_hash(str(txt_file.parent)),
+        "true": True,
     }
 
 
@@ -46,39 +47,47 @@ def set_request_fixture(all_params, p_request, request):
     return p_request
 
 
-@pytest.mark.parametrize(
-    "set_request", [{API_TARGET: "text_file_parent"}], indirect=True,
-)
-@pytest.mark.parametrize(
-    "in_body, not_in_body", [([R_CWD], [R_ERROR])],
-)
-def test_open_param(in_body, not_in_body, set_request):
-    """Test the open command."""
-    # With target and no init
-    set_request.params[API_CMD] = "open"
-
-    response = connector(set_request)
-
+def assert_response(response, body_items, in_body, not_in_body):
+    """Assert the response."""
     assert response.status_code == 200
     body = response.json
+    for key, val in body_items.items():
+        assert body[key] == val
     for item in in_body:
         assert item in body
     for item in not_in_body:
         assert item not in body
 
 
+@pytest.mark.parametrize(
+    "body_items, in_body, not_in_body, set_request",
+    [
+        (
+            {},
+            [R_CWD],
+            [R_ERROR],
+            {API_TARGET: "text_file_parent"},
+        ),  # With target and no init
+        (
+            {R_API: 2.1},
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            [R_ERROR],
+            {API_INIT: "true", API_TREE: "true"},
+        ),  # With init and no target
+    ],
+    indirect=["set_request"],
+)
+def test_open_param(body_items, in_body, not_in_body, set_request):
+    """Test the open command."""
+    set_request.params[API_CMD] = "open"
+
+    response = connector(set_request)
+
+    assert_response(response, body_items, in_body, not_in_body)
+
+
 def test_open(p_request, txt_file):
     """Test the open command."""
-    # With target and no init
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
-
     # With init and no target
     p_request.params.clear()
     p_request.params[API_CMD] = "open"
