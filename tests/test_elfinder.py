@@ -27,13 +27,41 @@ from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
 
+@pytest.fixture(name="all_files")
+def all_files_fixture(txt_file, jpeg_file, zip_file):
+    """Return a dict of different fixture file cases."""
+    return {
+        "txt_file": txt_file,
+        "txt_file_parent": txt_file.parent,
+        "jpeg_file": jpeg_file,
+        "zip_file": zip_file,
+    }
+
+
+@pytest.fixture(name="access")
+def access_fixture(all_files, request):
+    """Set file access mode on selected pathlib file path."""
+    settings = request.param
+    if not settings:
+        mode = 0o700
+        fixture_file = all_files["txt_file_parent"]
+    else:
+        mode = settings["mode"]
+        file_setting = settings["file"]
+        fixture_file = all_files[file_setting]
+
+    fixture_file.chmod(mode)
+    yield
+    fixture_file.chmod(0o700)  # Reset permissions
+
+
 @pytest.fixture(name="all_params")
 def all_params_fixture(txt_file):
     """Return a dict of different request param cases."""
     return {
         "missing": "missing",
-        "text_file": make_hash(str(txt_file)),
-        "text_file_parent": make_hash(str(txt_file.parent)),
+        "txt_file": make_hash(str(txt_file)),
+        "txt_file_parent": make_hash(str(txt_file.parent)),
         "true": True,
     }
 
@@ -60,64 +88,53 @@ def assert_response(response, body_items, in_body, not_in_body):
 
 
 @pytest.mark.parametrize(
-    "body_items, in_body, not_in_body, set_request",
+    "body_items, in_body, not_in_body, set_request, access",
     [
         (
             {},
             [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
             [R_ERROR],
-            {API_TARGET: "text_file_parent"},
+            {API_TARGET: "txt_file_parent"},
+            None,
         ),  # With target and no init
         (
             {R_API: 2.1},
             [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
             [R_ERROR],
             {API_INIT: "true", API_TREE: "true"},
+            None,
         ),  # With init and no target
         (
             {R_API: 2.1},
             [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
             [R_ERROR],
-            {API_INIT: "true", API_TARGET: "text_file_parent"},
+            {API_INIT: "true", API_TARGET: "txt_file_parent"},
+            None,
         ),  # With init and target
+        (
+            {R_API: 2.1},
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            [R_ERROR],
+            {API_INIT: "true", API_TARGET: "missing"},
+            None,
+        ),  # With init and missing target
+        (
+            {R_ERROR: "Access denied"},
+            [],
+            [],
+            {API_INIT: "true", API_TARGET: "txt_file_parent"},
+            {"file": "txt_file_parent", "mode": 0o100},
+        ),  # With init and no read access to target
     ],
-    indirect=["set_request"],
+    indirect=["set_request", "access"],
 )
-def test_open_param(body_items, in_body, not_in_body, set_request):
+def test_open(body_items, in_body, not_in_body, set_request, access):
     """Test the open command."""
     set_request.params[API_CMD] = "open"
 
     response = connector(set_request)
 
     assert_response(response, body_items, in_body, not_in_body)
-
-
-def test_open(p_request, txt_file):
-    """Test the open command."""
-    # With init and missing target
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TARGET] = "missing"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
-
-    # With init and no read access to target
-    txt_file.parent.chmod(0o100)
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-    txt_file.parent.chmod(0o600)  # Reset permissions
 
 
 def test_open_errors(p_request, settings, txt_file):
