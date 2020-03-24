@@ -2,6 +2,8 @@
 import subprocess
 from unittest.mock import patch
 
+import pytest
+
 from jupyter_elfinder.api_const import (
     API_CMD,
     API_INIT,
@@ -25,7 +27,39 @@ from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
 
-def test_open(p_request, settings, txt_file):
+@pytest.fixture(name="all_params")
+def all_params_fixture(txt_file):
+    """Return a dict of different request param cases."""
+    return {
+        "missing": "missing",
+        "text_file": make_hash(str(txt_file)),
+        "text_file_parent": make_hash(str(txt_file.parent)),
+    }
+
+
+@pytest.mark.parametrize(
+    "params, in_body, not_in_body",
+    [({API_TARGET: "text_file_parent"}, [R_CWD], [R_ERROR])],
+    indirect=[],
+)
+def test_open_param(params, in_body, not_in_body, all_params, p_request, txt_file):
+    """Test the open command."""
+    # With target and no init
+    params = {key: all_params[val] for key, val in params.items()}
+    p_request.params[API_CMD] = "open"
+    p_request.params.update(params)
+
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    for response in in_body:
+        assert response in body
+    for response in not_in_body:
+        assert response not in body
+
+
+def test_open(p_request, txt_file):
     """Test the open command."""
     # With target and no init
     p_request.params[API_CMD] = "open"
