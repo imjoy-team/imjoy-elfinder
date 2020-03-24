@@ -64,7 +64,7 @@ def assert_response(response, body_items, in_body, not_in_body):
     [
         (
             {},
-            [R_CWD],
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
             [R_ERROR],
             {API_TARGET: "text_file_parent"},
         ),  # With target and no init
@@ -74,6 +74,12 @@ def assert_response(response, body_items, in_body, not_in_body):
             [R_ERROR],
             {API_INIT: "true", API_TREE: "true"},
         ),  # With init and no target
+        (
+            {R_API: 2.1},
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            [R_ERROR],
+            {API_INIT: "true", API_TARGET: "text_file_parent"},
+        ),  # With init and target
     ],
     indirect=["set_request"],
 )
@@ -88,37 +94,6 @@ def test_open_param(body_items, in_body, not_in_body, set_request):
 
 def test_open(p_request, txt_file):
     """Test the open command."""
-    # With init and no target
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TREE] = True
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert body[R_API] >= 2.1
-    assert R_CWD in body
-    assert R_NETDRIVERS in body
-    assert R_FILES in body
-    # Optional
-    assert R_UPLMAXFILE in body
-    assert R_UPLMAXSIZE in body
-    assert R_OPTIONS in body
-
-    # With init and target
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
-
     # With init and missing target
     p_request.params.clear()
     p_request.params[API_CMD] = "open"
