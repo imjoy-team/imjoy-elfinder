@@ -352,7 +352,8 @@ def test_duplicate_errors(p_request, settings, txt_file):
     body = response.json
     assert body[R_ERROR] == "Access denied"
 
-    txt_file.chmod(0o400)  # Reset read permission
+    txt_file.chmod(0o600)  # Reset permissions
+
     current = txt_file.parent
     current.chmod(0o500)  # Set read and execute permission only
     p_request.params.clear()
@@ -364,7 +365,19 @@ def test_duplicate_errors(p_request, settings, txt_file):
     body = response.json
     assert body[R_ERROR] == "Access denied"
 
-    # TODO: Add a test for when the copy action fails.
+    current.chmod(0o700)  # Reset permissions
+
+    # duplicate action fails
+    p_request.params.clear()
+    p_request.params[API_CMD] = "duplicate"
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
+
+    with patch("shutil.copyfile", side_effect=OSError("Boom")):
+        response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Unable to create file copy"
 
 
 def test_extract(p_request, settings, zip_file):
