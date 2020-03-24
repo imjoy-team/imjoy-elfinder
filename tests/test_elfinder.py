@@ -226,7 +226,34 @@ def test_archive_errors(p_request, settings, txt_file):
     body = response.json
     assert R_ERROR in body
 
-    # TODO: Add a test of when the archive action fails
+    # Access denied
+    txt_file.parent.chmod(0o500)  # Set read and execute permission only
+    p_request.params.clear()
+    p_request.params[API_CMD] = "archive"
+    p_request.params[API_TYPE] = "application/x-tar"
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
+    response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Access denied"
+
+    txt_file.parent.chmod(0o700)  # Reset permissions
+
+    # archive action fails
+    p_request.params.clear()
+    p_request.params[API_CMD] = "archive"
+    p_request.params[API_TYPE] = "application/x-tar"
+    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+    p_request.params[API_TARGETS] = make_hash(str(txt_file))
+
+    with patch("subprocess.run", side_effect=OSError("Boom")):
+        response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body[R_ERROR] == "Unable to create archive"
 
 
 def test_dim(p_request, settings, jpeg_file):
