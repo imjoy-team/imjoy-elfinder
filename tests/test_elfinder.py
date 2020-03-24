@@ -1,5 +1,6 @@
 """Test elfinder."""
 import subprocess
+from contextlib import ExitStack as default_context
 from unittest.mock import patch
 
 import pytest
@@ -118,7 +119,7 @@ def update_params(p_request, params, hashed_files):
             "missing",
             None,
             None,
-        ),  # With init and missing target
+        ),  # With init and missing target file
         (
             "Access denied",
             2.1,
@@ -158,133 +159,119 @@ def test_open(error, api, in_body, init, target, tree, access, p_request, hashed
     assert body.get(R_API) == api
 
 
-def test_archive(p_request, settings, txt_file):
+@pytest.mark.parametrize(
+    "error, added, type_, target, targets, access, context",
+    [
+        (
+            None,  # error
+            True,  # added
+            "application/x-tar",  # type
+            "txt_file_parent",  # target
+            "txt_file",  # targets
+            None,  # access
+            default_context(),  # context
+        ),  # Archive success
+        ("Invalid parameters", False, None, None, None, None, default_context()),
+        (
+            "Invalid parameters",
+            False,
+            "application/x-tar",
+            None,
+            None,
+            None,
+            default_context(),
+        ),  # Missing parameters target and targets
+        (
+            "Invalid parameters",
+            False,
+            "application/x-tar",
+            "txt_file_parent",
+            None,
+            None,
+            default_context(),
+        ),  # Missing parameter targets
+        (
+            "Invalid parameters",
+            False,
+            "application/x-tar",
+            None,
+            "txt_file",
+            None,
+            default_context(),
+        ),  # Missing parameter target
+        (
+            "Invalid parameters",
+            False,
+            None,
+            "txt_file_parent",
+            "txt_file",
+            None,
+            default_context(),
+        ),  # Missing parameter type
+        (
+            "Unable to create archive",
+            False,
+            "missing",
+            "txt_file_parent",
+            "txt_file",
+            None,
+            default_context(),
+        ),  # Incorrect archive type
+        (
+            "File not found",
+            False,
+            "application/x-tar",
+            "missing",
+            "txt_file",
+            None,
+            default_context(),
+        ),  # Bad target directory
+        (
+            "File not found",
+            False,
+            "application/x-tar",
+            "txt_file_parent",
+            "missing",
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "Access denied",
+            False,
+            "application/x-tar",
+            "txt_file_parent",
+            "txt_file",
+            {"file": "txt_file_parent", "mode": 0o500},
+            default_context(),
+        ),  # Access denied
+        (
+            "Unable to create archive",
+            False,
+            "application/x-tar",
+            "txt_file_parent",
+            "txt_file",
+            None,
+            patch("subprocess.run", side_effect=OSError("Boom")),
+        ),  # Archive action fails
+    ],
+    indirect=["access"],
+)
+def test_archive(
+    error, added, type_, target, targets, access, context, p_request, all_params
+):
     """Test the archive command."""
+    params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
+    params = {key: val for key, val in params.items() if val}
     p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
+    p_request = update_params(p_request, params, all_params)
 
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert "added" in body
-
-
-def test_archive_errors(p_request, settings, txt_file):
-    """Test the archive command with errors."""
-    # Invalid parameters
-    p_request.params[API_CMD] = "archive"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    # Incorrect archive type
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "missing"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    # Bad target directory
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGET] = make_hash(str("missing"))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    # Bad target file
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file.parent / "missing"))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR in body
-
-    # Access denied
-    txt_file.parent.chmod(0o500)  # Set read and execute permission only
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-
-    txt_file.parent.chmod(0o700)  # Reset permissions
-
-    # archive action fails
-    p_request.params.clear()
-    p_request.params[API_CMD] = "archive"
-    p_request.params[API_TYPE] = "application/x-tar"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-
-    with patch("subprocess.run", side_effect=OSError("Boom")):
+    with context:
         response = connector(p_request)
 
     assert response.status_code == 200
     body = response.json
-    assert body[R_ERROR] == "Unable to create archive"
+    assert body.get(R_ERROR) == error
+    assert (R_ADDED in body) is added
 
 
 def test_dim(p_request, settings, jpeg_file):
