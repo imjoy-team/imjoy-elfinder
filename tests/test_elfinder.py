@@ -332,79 +332,67 @@ def test_dim(error, dim, target, access, context, p_request, hashed_files):
     assert body.get(R_DIM) == dim
 
 
-def test_duplicate(p_request, settings, txt_file):
+@pytest.mark.parametrize(
+    "error, added, targets, access, context",
+    [
+        (
+            None,  # error
+            True,  # added
+            "txt_file",  # targets
+            None,  # access
+            default_context(),  # context
+        ),  # Duplicate success
+        (
+            "Invalid parameters",
+            False,
+            None,
+            None,
+            default_context(),
+        ),  # Missing parameter targets
+        (
+            "File not found",
+            False,
+            "missing",
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "Access denied",
+            False,
+            "txt_file",
+            {"file": "txt_file", "mode": 0o100},
+            default_context(),
+        ),  # Access denied to target
+        (
+            "Access denied",
+            False,
+            "txt_file",
+            {"file": "txt_file_parent", "mode": 0o500},
+            default_context(),
+        ),  # Access denied to parent
+        (
+            "Unable to create file copy",
+            False,
+            "txt_file",
+            None,
+            patch("shutil.copyfile", side_effect=OSError("Boom")),
+        ),  # Duplicate action fails
+    ],
+    indirect=["access"],
+)
+def test_duplicate(error, added, targets, access, context, p_request, hashed_files):
     """Test the duplicate command."""
-    ext = txt_file.suffix
-    duplicated_file = "{} copy{}".format(txt_file.stem, ext)
-    duplicated_path = txt_file.parent / duplicated_file
     p_request.params[API_CMD] = "duplicate"
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
+    params = {API_TARGETS: targets}
+    p_request = update_params(p_request, params, hashed_files)
 
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_ADDED in body
-    assert body[R_ADDED][0]["hash"] == make_hash(str(duplicated_path))
-
-
-def test_duplicate_errors(p_request, settings, txt_file):
-    """Test the duplicate command with errors."""
-    # Invalid parameters
-    p_request.params[API_CMD] = "duplicate"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Invalid parameters"
-
-    # File not found
-    p_request.params.clear()
-    p_request.params[API_CMD] = "duplicate"
-    p_request.params[API_TARGETS] = make_hash(str("missing"))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "File not found"
-
-    # Access denied
-    txt_file.chmod(0o100)  # Set execute permission only
-    p_request.params.clear()
-    p_request.params[API_CMD] = "duplicate"
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-
-    txt_file.chmod(0o600)  # Reset permissions
-
-    current = txt_file.parent
-    current.chmod(0o500)  # Set read and execute permission only
-    p_request.params.clear()
-    p_request.params[API_CMD] = "duplicate"
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-
-    current.chmod(0o700)  # Reset permissions
-
-    # duplicate action fails
-    p_request.params.clear()
-    p_request.params[API_CMD] = "duplicate"
-    p_request.params[API_TARGETS] = make_hash(str(txt_file))
-
-    with patch("shutil.copyfile", side_effect=OSError("Boom")):
+    with context:
         response = connector(p_request)
 
     assert response.status_code == 200
     body = response.json
-    assert body[R_ERROR] == "Unable to create file copy"
+    assert body.get(R_ERROR) == error
+    assert (R_ADDED in body) is added
 
 
 def test_extract(p_request, settings, zip_file):
