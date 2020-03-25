@@ -1295,11 +1295,8 @@ class Connector:
     def __copy(self, src: str, dst: str) -> bool:
         """Provide internal copy procedure."""
         dst_dir = os.path.dirname(dst)
-        if not self.__is_allowed(src, "read"):
+        if not (self.__is_allowed(src, "read") and self.__is_allowed(dst_dir, "write")):
             self.__set_error_data(src, "Access denied")
-            return False
-        if not self.__is_allowed(dst_dir, "write"):
-            self.__set_error_data(dst_dir, "Access denied")
             return False
         if os.path.exists(dst):
             self.__set_error_data(
