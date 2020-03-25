@@ -25,6 +25,7 @@ from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
 
+from werkzeug.utils import secure_filename
 from typing_extensions import Literal, TypedDict
 
 from .api_const import (
@@ -446,10 +447,17 @@ class Connector:
         self.__cwd(path)
 
         try:
-            self.__files(path)
+            items = os.listdir(path)
         except PermissionError:
             self._response[R_ERROR] = "Access denied"
             return
+
+        files = []
+        for fil in sorted(items):
+            file_path = os.path.join(path, fil)
+            info = self.__info(file_path)
+            files.append(info)
+        self._response[R_FILES] = files
 
         if self._request.get(API_TREE):
             self._response[R_FILES].append(self.__info(path))
@@ -980,23 +988,6 @@ class Connector:
             if i >= tmb_max:
                 break
 
-    def __files(self, path: str) -> None:
-        """Get files and directories in current directory."""
-        files = []
-        dirs = []
-        for fil in sorted(os.listdir(path)):
-            if not self.__is_accepted(fil):
-                continue
-            file_path = os.path.join(path, fil)
-            info = self.__info(file_path)
-            if info["mime"] == "directory":
-                dirs.append(info)
-            else:
-                files.append(info)
-
-        dirs.extend(files)
-        self._response[R_FILES] = dirs
-
     def __cwd(self, path: str) -> None:
         """Get Current Working Directory."""
         name = os.path.basename(path)
@@ -1217,17 +1208,20 @@ class Connector:
             return
 
         try:
-            items = {}
-            for fname in os.listdir(path):
-                fhash = self.__hash(os.path.join(path, fname))
-                if intersect:
-                    if fhash in intersect:
-                        items[fhash] = fname
-                else:
-                    items[fhash] = fname
-            self._response[R_LIST] = items
+            file_names = os.listdir(path)
         except PermissionError:
             self._response[R_ERROR] = "Access denied"
+            return
+
+        items = {}
+        for fname in file_names:
+            fhash = self.__hash(os.path.join(path, fname))
+            if intersect:
+                if fhash in intersect:
+                    items[fhash] = fname
+            else:
+                items[fhash] = fname
+        self._response[R_LIST] = items
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
@@ -1251,8 +1245,14 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
+        try:
+            directories = os.listdir(path)
+        except PermissionError:
+            self._response[R_ERROR] = "Access denied"
+            return
+
         tree = []
-        for directory in sorted(os.listdir(path)):
+        for directory in sorted(directories):
             dir_path = os.path.join(path, directory)
             if (
                 os.path.isdir(dir_path)
@@ -1276,10 +1276,15 @@ class Connector:
                 self.__set_error_data(target, "Remove failed")
                 return False
         else:
-            for i in os.listdir(target):
-                if self.__is_accepted(i):
-                    self.__remove(os.path.join(target, i))
+            try:
+                targets = os.listdir(target)
+            except PermissionError:
+                self.__set_error_data(target, "Access denied")
+                return False
 
+            for fil in targets:
+                if self.__is_accepted(fil):
+                    self.__remove(os.path.join(target, fil))
             try:
                 os.rmdir(target)
                 return True
@@ -1318,7 +1323,13 @@ class Connector:
                 self.__set_error_data(src, "Unable to copy files")
                 return False
 
-            for i in os.listdir(src):
+            try:
+                srcs = os.listdir(src)
+            except PermissionError:
+                self.__set_error_data(src, "Access denied")
+                return False
+
+            for i in srcs:
                 new_src = os.path.join(src, i)
                 new_dst = os.path.join(dst, i)
                 if not self.__copy(new_src, new_dst):
@@ -1566,7 +1577,11 @@ class Connector:
                 return
 
         if added is None:
-            existing_files = os.listdir(cur_dir)
+            try:
+                existing_files = os.listdir(cur_dir)
+            except PermissionError:
+                self._response[R_ERROR] = "Access denied"
+                return
 
         cur_cwd = os.getcwd()
         os.chdir(cur_dir)
@@ -2127,8 +2142,7 @@ class Connector:
 
 def _check_name(name: str) -> bool:
     """Check for valid file/dir name."""
-    pattern = r"[\/\\\:\<\>]"
-    if re.search(pattern, name):
+    if secure_filename(name) != name:  # type: ignore
         return False
     return True
 
