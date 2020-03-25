@@ -68,7 +68,7 @@ def hashed_files_fixture(txt_file):
 
 def update_params(p_request, params, hashed_files):
     """Return a mock request with updated params."""
-    params = {key: hashed_files.get(val, val) for key, val in params.items()}
+    params = {key: hashed_files.get(val, val) for key, val in params.items() if val}
     p_request.params.update(params)
     return p_request
 
@@ -145,7 +145,6 @@ def update_params(p_request, params, hashed_files):
 def test_open(error, api, in_body, init, target, tree, access, p_request, hashed_files):
     """Test the open command."""
     params = {API_INIT: init, API_TARGET: target, API_TREE: tree}
-    params = {key: val for key, val in params.items() if val}
     p_request = update_params(p_request, params, hashed_files)
     p_request.params[API_CMD] = "open"
 
