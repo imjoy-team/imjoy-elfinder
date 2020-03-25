@@ -257,13 +257,12 @@ def test_open(error, api, in_body, init, target, tree, access, p_request, hashed
     indirect=["access"],
 )
 def test_archive(
-    error, added, type_, target, targets, access, context, p_request, all_params
+    error, added, type_, target, targets, access, context, p_request, hashed_files
 ):
     """Test the archive command."""
     params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
-    params = {key: val for key, val in params.items() if val}
     p_request.params[API_CMD] = "archive"
-    p_request = update_params(p_request, params, all_params)
+    p_request = update_params(p_request, params, hashed_files)
 
     with context:
         response = connector(p_request)
