@@ -228,6 +228,20 @@ class Connector:
         "doc": "application/msword",
         "ogg": "application/ogg",
         "7z": "application/x-7z-compressed",
+        "pb": "application/protobuf",
+        "proto": "application/protobuf",
+        "pth": "application/pytorch",
+        # hdf5
+        "h4": "application/x-hdf",
+        "hdf": "application/x-hdf",
+        "hdf4": "application/x-hdf",
+        "he2": "application/x-hdf",
+        "h5": "application/x-hdf5",
+        "he5": "application/x-hdf5",
+        "hdf5": "application/x-hdf5",
+        # pickle
+        "pkl": "application/python-pickle",
+        "pickle": "application/python-pickle",
         # video
         "ogm": "application/ogm",
         "mkv": "video/x-matroska",
