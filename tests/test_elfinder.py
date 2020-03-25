@@ -136,7 +136,7 @@ def update_params(p_request, params, hashed_files):
             "txt_file_parent",
             None,
             {"file": "txt_file_parent", "mode": 0o100},
-        ),  # With not init and no read access to target
+        ),  # With no init and no read access to target
         ("Invalid parameters", None, [], None, None, None, None,),
         ("File not found", None, [], None, "missing", None, None,),
     ],
