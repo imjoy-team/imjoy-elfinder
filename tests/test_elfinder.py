@@ -26,6 +26,8 @@ from jupyter_elfinder.api_const import (
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
+# pylint: disable=too-many-arguments
+
 
 @pytest.fixture(name="all_files")
 def all_files_fixture(txt_file, jpeg_file, zip_file):
@@ -55,95 +57,106 @@ def access_fixture(all_files, request):
     fixture_file.chmod(0o700)  # Reset permissions
 
 
-@pytest.fixture(name="all_params")
-def all_params_fixture(txt_file):
-    """Return a dict of different request param cases."""
+@pytest.fixture(name="hashed_files")
+def hashed_files_fixture(txt_file):
+    """Return a dict of different hashed files."""
     return {
-        "missing": "missing",
         "txt_file": make_hash(str(txt_file)),
         "txt_file_parent": make_hash(str(txt_file.parent)),
-        "true": True,
     }
 
 
-@pytest.fixture(name="set_request")
-def set_request_fixture(all_params, p_request, request):
-    """Return a mock request with set params."""
-    params = request.param
-    params = {key: all_params[val] for key, val in params.items()}
+def update_params(p_request, params, hashed_files):
+    """Return a mock request with updated params."""
+    params = {key: hashed_files.get(val, val) for key, val in params.items()}
     p_request.params.update(params)
     return p_request
 
 
-def assert_response(response, body_items, in_body, not_in_body):
-    """Assert the response."""
-    assert response.status_code == 200
-    body = response.json
-    for key, val in body_items.items():
-        assert body[key] == val
-    for item in in_body:
-        assert item in body
-    for item in not_in_body:
-        assert item not in body
-
-
 @pytest.mark.parametrize(
-    "body_items, in_body, not_in_body, set_request, access",
+    "error, api, in_body, init, target, tree, access",
     [
         (
-            {},
-            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
-            [R_ERROR],
-            {API_TARGET: "txt_file_parent"},
-            None,
+            None,  # error
+            None,  # api
+            [
+                R_CWD,
+                R_NETDRIVERS,
+                R_FILES,
+                R_UPLMAXFILE,
+                R_UPLMAXSIZE,
+                R_OPTIONS,
+            ],  # in_body
+            None,  # init
+            "txt_file_parent",  # target
+            None,  # tree
+            None,  # access
         ),  # With target and no init
         (
-            {R_API: 2.1},
-            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
-            [R_ERROR],
-            {API_INIT: "true", API_TREE: "true"},
             None,
-        ),  # With init and no target
-        (
-            {R_API: 2.1},
+            2.1,
             [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
-            [R_ERROR],
-            {API_INIT: "true", API_TARGET: "txt_file_parent"},
+            True,
+            None,
+            True,
+            None,
+        ),  # With init, tree and no target
+        (
+            None,
+            2.1,
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            True,
+            "txt_file_parent",
+            None,
             None,
         ),  # With init and target
         (
-            {R_API: 2.1},
+            None,
+            2.1,
             [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
-            [R_ERROR],
-            {API_INIT: "true", API_TARGET: "missing"},
+            True,
+            "missing",
+            None,
             None,
         ),  # With init and missing target
         (
-            {R_ERROR: "Access denied"},
+            "Access denied",
+            2.1,
             [],
-            [],
-            {API_INIT: "true", API_TARGET: "txt_file_parent"},
+            True,
+            "txt_file_parent",
+            None,
             {"file": "txt_file_parent", "mode": 0o100},
         ),  # With init and no read access to target
         (
-            {R_ERROR: "Access denied"},
+            "Access denied",
+            None,
             [],
-            [],
-            {API_TARGET: "txt_file_parent"},
+            None,
+            "txt_file_parent",
+            None,
             {"file": "txt_file_parent", "mode": 0o100},
         ),  # With not init and no read access to target
-        ({R_ERROR: "Invalid parameters"}, [], [], {}, None,),
-        ({R_ERROR: "File not found"}, [], [], {API_TARGET: "missing"}, None,),
+        ("Invalid parameters", None, [], None, None, None, None,),
+        ("File not found", None, [], None, "missing", None, None,),
     ],
-    indirect=["set_request", "access"],
+    indirect=["access"],
 )
-def test_open(body_items, in_body, not_in_body, set_request, access):
+def test_open(error, api, in_body, init, target, tree, access, p_request, hashed_files):
     """Test the open command."""
-    set_request.params[API_CMD] = "open"
+    params = {API_INIT: init, API_TARGET: target, API_TREE: tree}
+    params = {key: val for key, val in params.items() if val}
+    p_request = update_params(p_request, params, hashed_files)
+    p_request.params[API_CMD] = "open"
 
-    response = connector(set_request)
+    response = connector(p_request)
 
-    assert_response(response, body_items, in_body, not_in_body)
+    assert response.status_code == 200
+    body = response.json
+    for item in in_body:
+        assert item in body
+    assert body.get(R_ERROR) == error
+    assert body.get(R_API) == api
 
 
 def test_archive(p_request, settings, txt_file):
