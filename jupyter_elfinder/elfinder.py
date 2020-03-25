@@ -444,7 +444,13 @@ class Connector:
             return
 
         self.__cwd(path)
-        self.__files(path, False)
+
+        try:
+            self.__files(path)
+        except PermissionError:
+            self._response[R_ERROR] = "Access denied"
+            return
+
         if self._request.get(API_TREE):
             self._response[R_FILES].append(self.__info(path))
 
@@ -974,7 +980,7 @@ class Connector:
             if i >= tmb_max:
                 break
 
-    def __files(self, path: str, tree: bool) -> None:
+    def __files(self, path: str) -> None:
         """Get files and directories in current directory."""
         files = []
         dirs = []
@@ -1200,15 +1206,28 @@ class Connector:
             self._response[R_ERROR] = "Target directory not found"
             return
 
-        items = {}
-        for fname in os.listdir(path):
-            fhash = self.__hash(os.path.join(path, fname))
-            if intersect:
-                if fhash in intersect:
+        if os.path.islink(path):
+            path = self.__read_link(path)
+            if path is None:
+                self._response[R_ERROR] = "Directory (link) not found"
+                return
+
+        if not self.__is_allowed(path, "read"):
+            self._response[R_ERROR] = "Access denied"
+            return
+
+        try:
+            items = {}
+            for fname in os.listdir(path):
+                fhash = self.__hash(os.path.join(path, fname))
+                if intersect:
+                    if fhash in intersect:
+                        items[fhash] = fname
+                else:
                     items[fhash] = fname
-            else:
-                items[fhash] = fname
-        self._response[R_LIST] = items
+            self._response[R_LIST] = items
+        except PermissionError:
+            self._response[R_ERROR] = "Access denied"
 
     def __tree(self) -> None:
         """Return directory tree starting from path."""
