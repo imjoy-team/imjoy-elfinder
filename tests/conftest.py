@@ -42,7 +42,7 @@ def settings_fixture(tmp_path):
 def txt_file_fixture(tmp_path):
     """Provide a temporary text file."""
     tmp_dir = tmp_path / "sub"
-    tmp_dir.mkdir()
+    tmp_dir.mkdir(exist_ok=True)
     fil = tmp_dir / "test.txt"
     fil.write_text(TEST_CONTENT)
     yield fil
@@ -53,7 +53,7 @@ def jpeg_file_fixture(tmp_path):
     """Provide a temporary jpeg file."""
     fly_img = ROOT_PATH / "example-data" / "fly.jpeg"
     tmp_dir = tmp_path / "sub"
-    tmp_dir.mkdir()
+    tmp_dir.mkdir(exist_ok=True)
     test_fil = tmp_dir / "test.jpeg"
     # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
     shutil.copyfile(str(fly_img), str(test_fil))
@@ -65,7 +65,7 @@ def zip_file_fixture(tmp_path):
     """Provide a temporary zip file."""
     foo_zip = ROOT_PATH / "example-data" / "test" / "foo.zip"
     tmp_dir = tmp_path / "sub"
-    tmp_dir.mkdir()
+    tmp_dir.mkdir(exist_ok=True)
     test_fil = tmp_dir / "foo.zip"
     # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
     shutil.copyfile(str(foo_zip), str(test_fil))

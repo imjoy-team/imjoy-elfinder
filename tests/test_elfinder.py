@@ -2,6 +2,8 @@
 import subprocess
 from unittest.mock import patch
 
+import pytest
+
 from jupyter_elfinder.api_const import (
     API_CMD,
     API_INIT,
@@ -24,107 +26,136 @@ from jupyter_elfinder.api_const import (
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
+# pylint: disable=too-many-arguments
 
-def test_open(p_request, settings, txt_file):
+
+@pytest.fixture(name="all_files")
+def all_files_fixture(txt_file, jpeg_file, zip_file):
+    """Return a dict of different fixture file cases."""
+    return {
+        "txt_file": txt_file,
+        "txt_file_parent": txt_file.parent,
+        "jpeg_file": jpeg_file,
+        "zip_file": zip_file,
+    }
+
+
+@pytest.fixture(name="access")
+def access_fixture(all_files, request):
+    """Set file access mode on selected pathlib file path."""
+    settings = request.param
+    if not settings:
+        mode = 0o700
+        fixture_file = all_files["txt_file_parent"]
+    else:
+        mode = settings["mode"]
+        file_setting = settings["file"]
+        fixture_file = all_files[file_setting]
+
+    fixture_file.chmod(mode)
+    yield
+    fixture_file.chmod(0o700)  # Reset permissions
+
+
+@pytest.fixture(name="hashed_files")
+def hashed_files_fixture(txt_file):
+    """Return a dict of different hashed files."""
+    return {
+        "txt_file": make_hash(str(txt_file)),
+        "txt_file_parent": make_hash(str(txt_file.parent)),
+    }
+
+
+def update_params(p_request, params, hashed_files):
+    """Return a mock request with updated params."""
+    params = {key: hashed_files.get(val, val) for key, val in params.items() if val}
+    p_request.params.update(params)
+    return p_request
+
+
+@pytest.mark.parametrize(
+    "error, api, in_body, init, target, tree, access",
+    [
+        (
+            None,  # error
+            None,  # api
+            [
+                R_CWD,
+                R_NETDRIVERS,
+                R_FILES,
+                R_UPLMAXFILE,
+                R_UPLMAXSIZE,
+                R_OPTIONS,
+            ],  # in_body
+            None,  # init
+            "txt_file_parent",  # target
+            None,  # tree
+            None,  # access
+        ),  # With target and no init
+        (
+            None,
+            2.1,
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            True,
+            None,
+            True,
+            None,
+        ),  # With init, tree and no target
+        (
+            None,
+            2.1,
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            True,
+            "txt_file_parent",
+            None,
+            None,
+        ),  # With init and target
+        (
+            None,
+            2.1,
+            [R_CWD, R_NETDRIVERS, R_FILES, R_UPLMAXFILE, R_UPLMAXSIZE, R_OPTIONS],
+            True,
+            "missing",
+            None,
+            None,
+        ),  # With init and missing target
+        (
+            "Access denied",
+            2.1,
+            [],
+            True,
+            "txt_file_parent",
+            None,
+            {"file": "txt_file_parent", "mode": 0o100},
+        ),  # With init and no read access to target
+        (
+            "Access denied",
+            None,
+            [],
+            None,
+            "txt_file_parent",
+            None,
+            {"file": "txt_file_parent", "mode": 0o100},
+        ),  # With no init and no read access to target
+        ("Invalid parameters", None, [], None, None, None, None,),
+        ("File not found", None, [], None, "missing", None, None,),
+    ],
+    indirect=["access"],
+)
+def test_open(error, api, in_body, init, target, tree, access, p_request, hashed_files):
     """Test the open command."""
-    # With target and no init
+    params = {API_INIT: init, API_TARGET: target, API_TREE: tree}
+    p_request = update_params(p_request, params, hashed_files)
     p_request.params[API_CMD] = "open"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
+
     response = connector(p_request)
 
     assert response.status_code == 200
     body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
-
-    # With init and no target
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TREE] = True
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert body[R_API] >= 2.1
-    assert R_CWD in body
-    assert R_NETDRIVERS in body
-    assert R_FILES in body
-    # Optional
-    assert R_UPLMAXFILE in body
-    assert R_UPLMAXSIZE in body
-    assert R_OPTIONS in body
-
-    # With init and target
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
-
-    # With init and missing target
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TARGET] = "missing"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_CWD in body
-
-    # With init and no read access to target
-    txt_file.parent.chmod(0o100)
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_INIT] = True
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-    txt_file.parent.chmod(0o600)  # Reset permissions
-
-
-def test_open_errors(p_request, settings, txt_file):
-    """Test the open command with errors."""
-    # Invalid parameters
-    p_request.params[API_CMD] = "open"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Invalid parameters"
-
-    # File not found
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_TARGET] = "missing"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "File not found"
-
-    # Access denied
-    txt_file.parent.chmod(0o100)
-    p_request.params.clear()
-    p_request.params[API_CMD] = "open"
-    p_request.params[API_TARGET] = make_hash(str(txt_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-    txt_file.parent.chmod(0o600)  # Reset permissions
+    for item in in_body:
+        assert item in body
+    assert body.get(R_ERROR) == error
+    assert body.get(R_API) == api
 
 
 def test_archive(p_request, settings, txt_file):
