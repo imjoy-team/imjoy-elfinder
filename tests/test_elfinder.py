@@ -315,7 +315,7 @@ def test_archive(
     ],
     indirect=["access"],
 )
-def test_dim_param(error, dim, target, access, context, p_request, hashed_files):
+def test_dim(error, dim, target, access, context, p_request, hashed_files):
     """Test the dim command."""
     # "substitute" is not supported in our backend yet. It's optional in api 2.1
     # p_request.params[API_SUBSTITUTE] = "640x480"
