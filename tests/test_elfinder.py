@@ -59,11 +59,12 @@ def access_fixture(all_files, request):
 
 
 @pytest.fixture(name="hashed_files")
-def hashed_files_fixture(txt_file):
+def hashed_files_fixture(txt_file, jpeg_file):
     """Return a dict of different hashed files."""
     return {
         "txt_file": make_hash(str(txt_file)),
         "txt_file_parent": make_hash(str(txt_file.parent)),
+        "jpeg_file": make_hash(str(jpeg_file)),
     }
 
 
@@ -273,53 +274,62 @@ def test_archive(
     assert (R_ADDED in body) is added
 
 
-def test_dim(p_request, settings, jpeg_file):
+@pytest.mark.parametrize(
+    "error, dim, target, access, context",
+    [
+        (
+            None,  # error
+            "420x420",  # dim
+            "jpeg_file",  # target
+            None,  # access
+            default_context(),  # context
+        ),  # Dim success
+        (
+            "Invalid parameters",
+            None,
+            None,
+            None,
+            default_context(),
+        ),  # Missing parameter target
+        (
+            "File not found",
+            None,
+            "missing",
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "Access denied",
+            None,
+            "jpeg_file",
+            {"file": "jpeg_file", "mode": 0o100},
+            default_context(),
+        ),  # Access denied
+        (
+            None,
+            None,
+            "jpeg_file",
+            None,
+            patch("PIL.Image.open", side_effect=OSError("Boom")),
+        ),  # Dim action fails
+    ],
+    indirect=["access"],
+)
+def test_dim_param(error, dim, target, access, context, p_request, hashed_files):
     """Test the dim command."""
-    p_request.params[API_CMD] = "dim"
     # "substitute" is not supported in our backend yet. It's optional in api 2.1
     # p_request.params[API_SUBSTITUTE] = "640x480"
-    p_request.params[API_TARGET] = make_hash(str(jpeg_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert body[R_DIM] == "420x420"
-
-
-def test_dim_errors(p_request, settings, jpeg_file):
-    """Test the dim command with errors."""
-    # Invalid parameters
     p_request.params[API_CMD] = "dim"
-    response = connector(p_request)
+    params = {API_TARGET: target}
+    p_request = update_params(p_request, params, hashed_files)
+
+    with context:
+        response = connector(p_request)
 
     assert response.status_code == 200
     body = response.json
-    assert body[R_ERROR] == "Invalid parameters"
-
-    # File not found
-    p_request.params.clear()
-    p_request.params[API_CMD] = "dim"
-    p_request.params[API_TARGET] = make_hash(str("missing"))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "File not found"
-
-    # Access denied
-    jpeg_file.chmod(0o100)  # Set execute permission only
-    p_request.params.clear()
-    p_request.params[API_CMD] = "dim"
-    p_request.params[API_TARGET] = make_hash(str(jpeg_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-
-    # TODO: Add a test if the image library cannot calculate dimensions.
-    # Change the code to return an error in the response first.
+    assert body.get(R_ERROR) == error
+    assert body.get(R_DIM) == dim
 
 
 def test_duplicate(p_request, settings, txt_file):
