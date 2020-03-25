@@ -52,7 +52,8 @@ pip install -U jupyter
 Next, install Jupyter elFinder with jupyter server proxy extension:
 
 ```sh
-pip install -U jupyter-elfinder[jupyter]
+pip install -U jupyter-elfinder
+pip install -U http://github.com/oeway/jupyter-server-proxy/tarball/master#egg=jupyter-server-proxy
 ```
 
 Now start Jupyter notebook as you would do normally, for example:
