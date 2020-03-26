@@ -206,31 +206,31 @@ class Connector:
 
     _mimeType = {
         # text
-        "md": "text/markdown",
         "cfg": "text/plain",
-        "txt": "text/plain",
         "conf": "text/plain",
-        "ini": "text/plain",
-        "php": "text/x-php",
-        "html": "text/html",
-        "htm": "text/html",
-        "js": "text/javascript",
         "css": "text/css",
+        "htm": "text/html",
+        "html": "text/html",
+        "ini": "text/plain",
+        "java": "text/x-java-source",
+        "js": "text/javascript",
+        "md": "text/markdown",
+        "php": "text/x-php",
+        "pl": "text/x-perl",
+        "py": "text/x-python",
+        "rb": "text/x-ruby",
         "rtf": "text/rtf",
         "rtfd": "text/rtfd",
-        "py": "text/x-python",
-        "java": "text/x-java-source",
-        "rb": "text/x-ruby",
         "sh": "text/x-shellscript",
-        "pl": "text/x-perl",
         "sql": "text/x-sql",
+        "txt": "text/plain",
         # apps
+        "7z": "application/x-7z-compressed",
         "doc": "application/msword",
         "ogg": "application/ogg",
-        "7z": "application/x-7z-compressed",
         # video
-        "ogm": "application/ogm",
         "mkv": "video/x-matroska",
+        "ogm": "application/ogm",
     }
 
     _time = 0.0
