@@ -38,6 +38,7 @@ def all_files_fixture(txt_file, jpeg_file, zip_file):
         "txt_file_parent": txt_file.parent,
         "jpeg_file": jpeg_file,
         "zip_file": zip_file,
+        "zip_file_parent": zip_file.parent,
     }
 
 
@@ -59,12 +60,14 @@ def access_fixture(all_files, request):
 
 
 @pytest.fixture(name="hashed_files")
-def hashed_files_fixture(txt_file, jpeg_file):
+def hashed_files_fixture(txt_file, jpeg_file, zip_file):
     """Return a dict of different hashed files."""
     return {
         "txt_file": make_hash(str(txt_file)),
         "txt_file_parent": make_hash(str(txt_file.parent)),
         "jpeg_file": make_hash(str(jpeg_file)),
+        "zip_file": make_hash(str(zip_file)),
+        "zip_file_parent": make_hash(str(zip_file.parent)),
     }
 
 
@@ -395,87 +398,96 @@ def test_duplicate(error, added, targets, access, context, p_request, hashed_fil
     assert (R_ADDED in body) is added
 
 
-def test_extract(p_request, settings, zip_file):
+@pytest.mark.parametrize(
+    "error, added, target, makedir, access, context",
+    [
+        (
+            None,  # error
+            True,  # added
+            "zip_file",  # target
+            None,  # makedir
+            None,  # access
+            default_context(),  # context
+        ),  # Extract success
+        (
+            None,  # error
+            True,  # added
+            "zip_file",  # target
+            "1",  # makedir
+            None,  # access
+            default_context(),  # context
+        ),  # Extract success with makedir
+        (
+            "Invalid parameters",
+            False,
+            None,
+            None,
+            None,
+            default_context(),
+        ),  # Missing parameter target
+        (
+            "File not found",
+            False,
+            "missing",
+            None,
+            None,
+            default_context(),
+        ),  # Bad target directory
+        (
+            "File not found",
+            False,
+            "zip_file_parent",
+            None,
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "Unable to extract files from archive",
+            False,
+            "txt_file",
+            None,
+            None,
+            default_context(),
+        ),  # Incorrect archive type
+        (
+            "Access denied",
+            False,
+            "zip_file",
+            None,
+            {"file": "zip_file_parent", "mode": 0o500},
+            default_context(),
+        ),  # Access denied to write to parent dir
+        (
+            "File not found",
+            False,
+            "zip_file",
+            None,
+            {"file": "zip_file_parent", "mode": 0o300},
+            default_context(),
+        ),  # Access denied when listing parent files
+    ],
+    indirect=["access"],
+)
+def test_extract(
+    error, added, target, makedir, access, context, p_request, hashed_files
+):
     """Test the extract command."""
-    extracted_file = zip_file.parent / "{}.txt".format(zip_file.stem)
     p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str(zip_file))
-    response = connector(p_request)
+    params = {API_TARGET: target, API_MAKEDIR: makedir}
+    p_request = update_params(p_request, params, hashed_files)
+
+    with context:
+        response = connector(p_request)
 
     assert response.status_code == 200
     body = response.json
-    assert R_ERROR not in body
-    assert R_ADDED in body
-    assert body[R_ADDED][0]["hash"] == make_hash(str(extracted_file))
-
-    new_dir = zip_file.parent / zip_file.stem
-    p_request.params[API_MAKEDIR] = "1"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert R_ERROR not in body
-    assert R_ADDED in body
-    assert body[R_ADDED][0]["hash"] == make_hash(str(new_dir))
+    assert body.get(R_ERROR) == error
+    assert (R_ADDED in body) is added
 
 
-def test_extract_errors(p_request, settings, zip_file):
-    """Test the extract command with errors."""
-    # Invalid parameters
-    p_request.params[API_CMD] = "extract"
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Invalid parameters"
-
-    # File not found
-    p_request.params.clear()
-    p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str("missing"))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "File not found"
-
-    p_request.params.clear()
-    p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str(zip_file.parent))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "File not found"
-
-    # Access denied
-    current = zip_file.parent
-    current.chmod(0o500)  # Set read and execute permission only
-    p_request.params.clear()
-    p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str(zip_file))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Access denied"
-    current.chmod(0o700)  # Reset permissions
-
-    # Bad mime type
-    bad_mime = zip_file.parent / "{}.bad".format(zip_file.stem)
-    zip_file.rename(bad_mime)
-    p_request.params.clear()
-    p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str(bad_mime))
-    response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Unable to extract files from archive"
-    bad_mime.rename(zip_file)  # Reset file name
-
+def test_extract_mkdir_fails(p_request, settings, zip_file):
+    """Test the extract command when mkdir fails."""
     # mkdir fails
-    p_request.params.clear()
     p_request.params[API_CMD] = "extract"
     p_request.params[API_TARGET] = make_hash(str(zip_file))
     p_request.params[API_MAKEDIR] = "1"
@@ -486,8 +498,10 @@ def test_extract_errors(p_request, settings, zip_file):
     body = response.json
     assert body[R_ERROR] == "Unable to create folder: {}".format(zip_file.stem)
 
+
+def test_extract_unzip_fails(p_request, settings, zip_file):
+    """Test the extract command unzip fails."""
     # unzip fails
-    p_request.params.clear()
     p_request.params[API_CMD] = "extract"
     p_request.params[API_TARGET] = make_hash(str(zip_file))
 
