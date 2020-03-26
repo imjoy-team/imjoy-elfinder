@@ -1,5 +1,6 @@
 """Test elfinder."""
 import subprocess
+from pathlib import Path
 from contextlib import ExitStack as default_context
 from unittest.mock import patch
 
@@ -26,6 +27,8 @@ from jupyter_elfinder.api_const import (
 )
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
+
+from . import ZIP_FILE
 
 # pylint: disable=too-many-arguments
 
@@ -484,6 +487,14 @@ def test_duplicate(error, added, targets, access, context, p_request, hashed_fil
             default_context(),
         ),  # Access denied when listing parent files
         (
+            "Unable to create folder: {}".format(Path(ZIP_FILE).stem),
+            False,
+            "zip_file",
+            "1",
+            None,
+            patch("os.mkdir", side_effect=OSError("Boom")),
+        ),
+        (
             "Unable to extract files from archive",
             False,
             "zip_file",
@@ -511,17 +522,3 @@ def test_extract(
     body = response.json
     assert body.get(R_ERROR) == error
     assert (R_ADDED in body) is added
-
-
-def test_extract_mkdir_fails(p_request, settings, zip_file):
-    """Test the extract command when mkdir fails."""
-    # mkdir fails
-    p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str(zip_file))
-    p_request.params[API_MAKEDIR] = "1"
-    with patch("os.mkdir", side_effect=OSError("Boom")):
-        response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Unable to create folder: {}".format(zip_file.stem)
