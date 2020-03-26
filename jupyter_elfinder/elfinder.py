@@ -1576,6 +1576,9 @@ class Connector:
             try:
                 existing_files = os.listdir(cur_dir)
             except PermissionError:
+                # FIXME: This will likely never happen.
+                # The find helper will already have failed
+                # to find the file without parent dir read access.
                 self._response[R_ERROR] = "Access denied"
                 return
 
