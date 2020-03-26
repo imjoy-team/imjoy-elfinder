@@ -246,22 +246,22 @@ class Connector:
     # public variables
     http_allowed_parameters = (
         API_CMD,
+        API_CONTENT,
+        API_CURRENT,
+        API_CUT,
+        API_DST,
+        API_HEIGHT,
+        API_INIT,
+        API_MAKEDIR,
+        API_NAME,
+        API_Q,
+        API_SRC,
         API_TARGET,
         API_TARGETS,
-        API_CURRENT,
         API_TREE,
-        API_NAME,
-        API_CONTENT,
-        API_SRC,
-        API_DST,
-        API_CUT,
-        API_INIT,
         API_TYPE,
-        API_WIDTH,
-        API_HEIGHT,
         API_UPLOAD,
-        API_Q,
-        API_MAKEDIR,
+        API_WIDTH,
     )
     # return variables
     http_status_code = 0
