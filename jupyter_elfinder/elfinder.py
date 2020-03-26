@@ -1529,7 +1529,7 @@ class Connector:
     def __extract(self) -> None:
         """Uncompress archive."""
         target = self._request.get(API_TARGET)
-        if not self._options["archivers"]["extract"] or not target:
+        if not target:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
@@ -1561,22 +1561,24 @@ class Connector:
         target_dir = cur_dir
         added = None
         if makedir and makedir != "0":
+            base_name = os.path.splitext(os.path.basename(cur_file))[0] or "New Folder"
+            target_dir = os.path.join(target_dir, base_name)
+            target_dir = _unique_name(target_dir, copy="")
             try:
-                base_name = os.path.basename(cur_file).split(".")[0] or "New Folder"
-                target_dir = os.path.join(target_dir, base_name)
-                target_dir = _unique_name(target_dir, copy="")
-
                 os.mkdir(target_dir, int(self._options["dirMode"]))
-                cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
-                added = [self.__info(target_dir)]
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
+            cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
+            added = [self.__info(target_dir)]
 
         if added is None:
             try:
                 existing_files = os.listdir(cur_dir)
             except PermissionError:
+                # FIXME: This will likely never happen.
+                # The find helper will already have failed
+                # to find the file without parent dir read access.
                 self._response[R_ERROR] = "Access denied"
                 return
 
@@ -1589,14 +1591,13 @@ class Connector:
             return
 
         if added is None:
-            added_names = [
-                dname for dname in os.listdir(cur_dir) if dname not in existing_files
+            added = [
+                self.__info(os.path.join(cur_dir, dname))
+                for dname in os.listdir(cur_dir)
+                if dname not in existing_files
             ]
-            self._response[R_ADDED] = [
-                self.__info(os.path.join(cur_dir, item)) for item in added_names
-            ]
-        else:
-            self._response[R_ADDED] = added
+
+        self._response[R_ADDED] = added
 
     def __ping(self) -> None:
         """Workaround for Safari."""

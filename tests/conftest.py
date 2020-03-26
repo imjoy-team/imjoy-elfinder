@@ -4,7 +4,7 @@ import shutil
 import pytest
 from pyramid import testing
 
-from . import ROOT_PATH, TEST_CONTENT
+from . import ROOT_PATH, TEST_CONTENT, ZIP_FILE
 
 
 @pytest.fixture(name="p_config", autouse=True)
@@ -28,13 +28,16 @@ def request_fixture():
 @pytest.fixture(name="settings")
 def settings_fixture(tmp_path):
     """Provide default settings for the app."""
+    thumbs_dir = ".tmb"
     settings = {
         "root_dir": str(tmp_path),
         "files_url": "/files",
         "base_url": "",
         "expose_real_path": True,
-        "thumbnail_dir": ".tmb",
+        "thumbnail_dir": thumbs_dir,
     }
+    thumbs_dir = tmp_path / thumbs_dir
+    thumbs_dir.mkdir(exist_ok=True)
     return settings
 
 
@@ -63,10 +66,10 @@ def jpeg_file_fixture(tmp_path):
 @pytest.fixture(name="zip_file")
 def zip_file_fixture(tmp_path):
     """Provide a temporary zip file."""
-    foo_zip = ROOT_PATH / "example-data" / "test" / "foo.zip"
+    foo_zip = ROOT_PATH / "example-data" / "test" / ZIP_FILE
     tmp_dir = tmp_path / "sub"
     tmp_dir.mkdir(exist_ok=True)
-    test_fil = tmp_dir / "foo.zip"
+    test_fil = tmp_dir / ZIP_FILE
     # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
     shutil.copyfile(str(foo_zip), str(test_fil))
     yield test_fil
