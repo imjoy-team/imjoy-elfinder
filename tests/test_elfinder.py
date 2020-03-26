@@ -78,6 +78,24 @@ def update_params(p_request, params, hashed_files):
     return p_request
 
 
+def raise_subprocess_after_check_archivers():
+    """Return a mock subprocess.run function."""
+    programs = set()
+    orig_subprocess_run = subprocess.run
+
+    def mock_subprocess_run(args, **kwargs):
+        """Raise the second time a program is called."""
+        prog = args[0]
+        if prog in programs:
+            raise OSError("Boom")
+        programs.add(prog)
+        return orig_subprocess_run(  # pylint: disable=subprocess-run-check
+            args, **kwargs
+        )
+
+    return mock_subprocess_run
+
+
 @pytest.mark.parametrize(
     "error, api, in_body, init, target, tree, access",
     [
@@ -465,6 +483,16 @@ def test_duplicate(error, added, targets, access, context, p_request, hashed_fil
             {"file": "zip_file_parent", "mode": 0o300},
             default_context(),
         ),  # Access denied when listing parent files
+        (
+            "Unable to extract files from archive",
+            False,
+            "zip_file",
+            None,
+            None,
+            patch(
+                "subprocess.run", side_effect=raise_subprocess_after_check_archivers()
+            ),
+        ),
     ],
     indirect=["access"],
 )
@@ -497,30 +525,3 @@ def test_extract_mkdir_fails(p_request, settings, zip_file):
     assert response.status_code == 200
     body = response.json
     assert body[R_ERROR] == "Unable to create folder: {}".format(zip_file.stem)
-
-
-def test_extract_unzip_fails(p_request, settings, zip_file):
-    """Test the extract command unzip fails."""
-    # unzip fails
-    p_request.params[API_CMD] = "extract"
-    p_request.params[API_TARGET] = make_hash(str(zip_file))
-
-    programs = set()
-    orig_subprocess_run = subprocess.run
-
-    def mock_subprocess_run(args, **kwargs):
-        """Raise the second time a program is called."""
-        prog = args[0]
-        if prog in programs:
-            raise OSError("Boom")
-        programs.add(prog)
-        return orig_subprocess_run(  # pylint: disable=subprocess-run-check
-            args, **kwargs
-        )
-
-    with patch("subprocess.run", side_effect=mock_subprocess_run):
-        response = connector(p_request)
-
-    assert response.status_code == 200
-    body = response.json
-    assert body[R_ERROR] == "Unable to extract files from archive"
