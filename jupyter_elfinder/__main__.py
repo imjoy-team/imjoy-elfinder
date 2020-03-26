@@ -120,7 +120,12 @@ def main(args: Optional[List[str]] = None) -> None:
     print("==========Jupyter elFinder server is running=========\n{}\n".format(url))
 
     sys.stdout.flush()
-    httpd.serve_forever()
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nClosing server")
+        httpd.server_close()
 
 
 def setup_for_jupyter_server_proxy() -> dict:
