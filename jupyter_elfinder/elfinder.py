@@ -280,7 +280,6 @@ class Connector:
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = root
-        self._options["files_url"] = url
         self._options["uploadMaxSize"] = upload_max_size
         self._options["debug"] = debug
         self._options["tmbDir"] = tmb_dir
@@ -290,8 +289,7 @@ class Connector:
         self._options["expose_real_path"] = expose_real_path
 
         self._response[R_DEBUG] = {}
-        self._options["files_url"] = self.__check_utf8(self._options["files_url"])
-        self._options["files_url"] = self._options["files_url"].rstrip("/")
+        self._options["files_url"] = self.__check_utf8(url).rstrip("/")
         self._options["root"] = self.__check_utf8(self._options["root"])
         self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
