@@ -293,9 +293,6 @@ class Connector:
         self._options["files_url"] = self.__check_utf8(self._options["files_url"])
         self._options["files_url"] = self._options["files_url"].rstrip("/")
         self._options["root"] = self.__check_utf8(self._options["root"])
-        # only strip / if it's not root
-        if os.path.dirname(self._options["root"]) != self._options["root"]:
-            self._options["root"] = self._options["root"].rstrip(os.sep)
         self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
         self.volumeid = str(uuid.uuid4())
