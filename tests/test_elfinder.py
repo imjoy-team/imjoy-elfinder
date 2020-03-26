@@ -1,7 +1,7 @@
 """Test elfinder."""
 import subprocess
-from pathlib import Path
 from contextlib import ExitStack as default_context
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -170,9 +170,9 @@ def raise_subprocess_after_check_archivers():
 )
 def test_open(error, api, in_body, init, target, tree, access, p_request, hashed_files):
     """Test the open command."""
+    p_request.params[API_CMD] = "open"
     params = {API_INIT: init, API_TARGET: target, API_TREE: tree}
     p_request = update_params(p_request, params, hashed_files)
-    p_request.params[API_CMD] = "open"
 
     response = connector(p_request)
 
