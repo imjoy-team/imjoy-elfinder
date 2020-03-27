@@ -997,7 +997,7 @@ class Connector:
             if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
-                    if self.__tmb(path, tmb):
+                    if self._tmb(path, tmb):
                         self._response[R_IMAGES].update({fhash: self.__path2url(tmb)})
                         i += 1
             if i >= tmb_max:
@@ -1657,7 +1657,7 @@ class Connector:
 
         return None
 
-    def __tmb(self, path: str, tmb_path: str) -> bool:
+    def _tmb(self, path: str, tmb_path: str) -> bool:
         """Provide internal thumbnail create procedure."""
         try:
             img = self._img.open(path).copy()  # type: ignore
