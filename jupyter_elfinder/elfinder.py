@@ -13,9 +13,9 @@ import hashlib
 import mimetypes
 import os
 import re
+import shlex
 import shutil
 import subprocess
-import shlex
 import time
 import traceback
 import uuid
@@ -25,8 +25,8 @@ from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
 
-from werkzeug.utils import secure_filename
 from typing_extensions import Literal, TypedDict
+from werkzeug.utils import secure_filename
 
 from .api_const import (
     API_CMD,
@@ -62,11 +62,35 @@ from .api_const import (
     R_LIST,
     R_NETDRIVERS,
     R_OPTIONS,
+    R_OPTIONS_ARCHIVERS,
+    R_OPTIONS_COPY_OVERWRITE,
+    R_OPTIONS_CREATE,
+    R_OPTIONS_CREATE_EXT,
+    R_OPTIONS_DISABLED,
+    R_OPTIONS_DISP_INLINE_REGEX,
+    R_OPTIONS_DOT_FILES,
+    R_OPTIONS_EXTRACT,
+    R_OPTIONS_I18N_FOLDER_NAME,
+    R_OPTIONS_JPG_QUALITY,
+    R_OPTIONS_MIME_ALLOW,
+    R_OPTIONS_MIME_DENY,
+    R_OPTIONS_MIME_FIRST_ORDER,
+    R_OPTIONS_PATH,
+    R_OPTIONS_SEPARATOR,
+    R_OPTIONS_SYNC_CHK_AS_TS,
+    R_OPTIONS_SYNC_MIN_MS,
+    R_OPTIONS_TMB_URL,
+    R_OPTIONS_UI_CMD_MAP,
+    R_OPTIONS_UPLOAD_MAX_CONN,
+    R_OPTIONS_UPLOAD_MAX_SIZE,
+    R_OPTIONS_UPLOAD_MIME,
+    R_OPTIONS_UPLOAD_OVERWRITE,
+    R_OPTIONS_URL,
     R_REMOVED,
+    R_TREE,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
     R_WARNING,
-    R_TREE,
 )
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
@@ -470,32 +494,36 @@ class Connector:
         else:
             thumbs_url = ""
         self._response[R_OPTIONS] = {
-            "path": path,
-            "separator": os.path.sep,
-            "url": url,
-            "disabled": self._options["disabled"],
-            "tmbURL": thumbs_url,
-            "dotFiles": self._options["dotFiles"],
-            "archivers": {
-                "create": list(self._options["archivers"]["create"].keys()),
-                "extract": list(self._options["archivers"]["extract"].keys()),
-                "createext": {
+            R_OPTIONS_PATH: path,
+            R_OPTIONS_SEPARATOR: os.path.sep,
+            R_OPTIONS_URL: url,
+            R_OPTIONS_DISABLED: self._options["disabled"],
+            R_OPTIONS_TMB_URL: thumbs_url,
+            R_OPTIONS_DOT_FILES: self._options["dotFiles"],
+            R_OPTIONS_ARCHIVERS: {
+                R_OPTIONS_CREATE: list(self._options["archivers"]["create"].keys()),
+                R_OPTIONS_EXTRACT: list(self._options["archivers"]["extract"].keys()),
+                R_OPTIONS_CREATE_EXT: {
                     k: self._options["archivers"]["create"][k][ARCHIVE_EXT]
                     for k in self._options["archivers"]["create"]
                 },
             },
-            "copyOverwrite": True,
-            "uploadMaxSize": self._options["uploadMaxSize"],
-            "uploadOverwrite": True,
-            "uploadMaxConn": 3,
-            "uploadMime": {"allow": ["all"], "deny": [], "firstOrder": "deny"},
-            "i18nFolderName": True,
-            "dispInlineRegex": "^(?:(?:image|video|audio)|application/"
+            R_OPTIONS_COPY_OVERWRITE: True,
+            R_OPTIONS_UPLOAD_MAX_SIZE: self._options["uploadMaxSize"],
+            R_OPTIONS_UPLOAD_OVERWRITE: True,
+            R_OPTIONS_UPLOAD_MAX_CONN: 3,
+            R_OPTIONS_UPLOAD_MIME: {
+                R_OPTIONS_MIME_ALLOW: ["all"],
+                R_OPTIONS_MIME_DENY: [],
+                R_OPTIONS_MIME_FIRST_ORDER: R_OPTIONS_MIME_DENY,
+            },
+            R_OPTIONS_I18N_FOLDER_NAME: True,
+            R_OPTIONS_DISP_INLINE_REGEX: "^(?:(?:image|video|audio)|application/"
             + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
-            "jpgQuality": 100,
-            "syncChkAsTs": 1,
-            "syncMinMs": 30000,
-            "uiCmdMap": {},
+            R_OPTIONS_JPG_QUALITY: 100,
+            R_OPTIONS_SYNC_CHK_AS_TS: 1,
+            R_OPTIONS_SYNC_MIN_MS: 30000,
+            R_OPTIONS_UI_CMD_MAP: {},
         }
 
     def __parents(self) -> None:
