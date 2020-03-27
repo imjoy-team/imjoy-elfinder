@@ -123,33 +123,33 @@ Info = TypedDict(  # pylint: disable=invalid-name
 Options = TypedDict(  # pylint: disable=invalid-name
     "Options",
     {
-        "archiveMimes": List[str],
+        "archive_mimes": List[str],
         "archivers": Archivers,
         "base_url": str,
         "debug": bool,
         "defaults": Dict[str, bool],
-        "dirMode": Literal[493],
-        "dirSize": bool,
+        "dir_mode": Literal[493],
+        "dir_size": bool,
         "disabled": List[str],
-        "dotFiles": bool,
+        "dot_files": bool,
         "expose_real_path": bool,
-        "fileMode": Literal[420],
+        "file_mode": Literal[420],
+        "file_url": bool,
         "files_url": str,
-        "fileURL": bool,
-        "imgLib": Optional[str],
-        "maxFolderDepth": int,
+        "img_lib": Optional[str],
+        "max_folder_depth": int,
         "perms": Dict[str, Dict[str, bool]],
+        "root_alias": str,
         "root": str,
-        "rootAlias": str,
-        "tmbAtOnce": int,
-        "tmbDir": Optional[str],
-        "tmbSize": int,
-        "uploadAllow": List[str],
-        "uploadDeny": List[str],
-        "uploadMaxConn": int,
-        "uploadMaxSize": int,
-        "uploadOrder": List[Literal["deny", "allow"]],
-        "uploadWriteChunk": int,
+        "tmb_at_once": int,
+        "tmb_dir": Optional[str],
+        "tmb_size": int,
+        "upload_allow": List[str],
+        "upload_deny": List[str],
+        "upload_max_conn": int,
+        "upload_max_size": int,
+        "upload_order": List[Literal["deny", "allow"]],
+        "upload_write_chunk": int,
     },
 )
 
@@ -169,33 +169,33 @@ class Connector:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
 
     _options = {
-        "archiveMimes": [],
+        "archive_mimes": [],
         "archivers": {"create": {}, "extract": {}},
         "base_url": "",
         "debug": False,
         "defaults": {"read": True, "write": True, "rm": True},
-        "dirMode": 0o755,
-        "dirSize": False,
+        "dir_mode": 0o755,
+        "dir_size": False,
         "disabled": ["netmount", "zipdl"],
-        "dotFiles": False,
+        "dot_files": False,
         "expose_real_path": False,
-        "fileMode": 0o644,
+        "file_mode": 0o644,
+        "file_url": True,
         "files_url": "",
-        "fileURL": True,
-        "imgLib": "auto",
-        "maxFolderDepth": 256,
+        "img_lib": "auto",
+        "max_folder_depth": 256,
         "perms": {},
+        "root_alias": "HOME",
         "root": "",
-        "rootAlias": "HOME",
-        "tmbAtOnce": 5,
-        "tmbDir": ".tmb",
-        "tmbSize": 48,
-        "uploadAllow": [],
-        "uploadDeny": [],
-        "uploadMaxConn": -1,
-        "uploadMaxSize": 256 * 1024 * 1024,
-        "uploadOrder": ["deny", "allow"],
-        "uploadWriteChunk": 8192,
+        "tmb_at_once": 5,
+        "tmb_dir": ".tmb",
+        "tmb_size": 48,
+        "upload_allow": [],
+        "upload_deny": [],
+        "upload_max_conn": -1,
+        "upload_max_size": 256 * 1024 * 1024,
+        "upload_order": ["deny", "allow"],
+        "upload_write_chunk": 8192,
     }  # type: Options
 
     _commands = {
@@ -304,9 +304,9 @@ class Connector:
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = self.__check_utf8(root)
-        self._options["uploadMaxSize"] = upload_max_size
+        self._options["upload_max_size"] = upload_max_size
         self._options["debug"] = debug
-        self._options["tmbDir"] = tmb_dir
+        self._options["tmb_dir"] = tmb_dir
         self._options["base_url"] = (
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
@@ -327,9 +327,9 @@ class Connector:
             try:
                 if not os.path.exists(thumbs_dir):
                     os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
-                self._options["tmbDir"] = thumbs_dir
+                self._options["tmb_dir"] = thumbs_dir
             except PermissionError:
-                self._options["tmbDir"] = None
+                self._options["tmb_dir"] = None
                 self.__debug("thumbnail", " Permission denied: " + thumbs_dir)
                 print(
                     "WARNING: failed to create thumbnail folder "
@@ -478,7 +478,7 @@ class Connector:
             self._response[R_FILES].append(self.__info(path))
 
         self.__check_archivers()
-        if not self._options["fileURL"]:
+        if not self._options["file_url"]:
             url = ""
         else:
             url = self._options["files_url"]
@@ -486,9 +486,9 @@ class Connector:
         self._response[R_NETDRIVERS] = []
         self._response[R_UPLMAXFILE] = 1000
         self._response[R_UPLMAXSIZE] = (
-            str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
+            str(self._options["upload_max_size"] / (1024 * 1024)) + "M"
         )
-        thumbs_dir = self._options["tmbDir"]
+        thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
             thumbs_url = self.__path2url(thumbs_dir)
         else:
@@ -499,7 +499,7 @@ class Connector:
             R_OPTIONS_URL: url,
             R_OPTIONS_DISABLED: self._options["disabled"],
             R_OPTIONS_TMB_URL: thumbs_url,
-            R_OPTIONS_DOT_FILES: self._options["dotFiles"],
+            R_OPTIONS_DOT_FILES: self._options["dot_files"],
             R_OPTIONS_ARCHIVERS: {
                 R_OPTIONS_CREATE: list(self._options["archivers"]["create"].keys()),
                 R_OPTIONS_EXTRACT: list(self._options["archivers"]["extract"].keys()),
@@ -509,7 +509,7 @@ class Connector:
                 },
             },
             R_OPTIONS_COPY_OVERWRITE: True,
-            R_OPTIONS_UPLOAD_MAX_SIZE: self._options["uploadMaxSize"],
+            R_OPTIONS_UPLOAD_MAX_SIZE: self._options["upload_max_size"],
             R_OPTIONS_UPLOAD_OVERWRITE: True,
             R_OPTIONS_UPLOAD_MAX_CONN: 3,
             R_OPTIONS_UPLOAD_MIME: {
@@ -675,7 +675,7 @@ class Connector:
             )
         else:
             try:
-                os.mkdir(new_dir, int(self._options["dirMode"]))
+                os.mkdir(new_dir, int(self._options["dir_mode"]))
                 self._response[R_ADDED] = [self.__info(new_dir)]
                 self._response[R_HASHES] = []
                 for subdir in dirs:
@@ -683,7 +683,7 @@ class Connector:
                         self._response[R_ERROR] = "Invalid dir name: " + subdir
                         return
                     new_subdir = os.path.join(new_dir, subdir)
-                    os.mkdir(new_subdir, int(self._options["dirMode"]))
+                    os.mkdir(new_subdir, int(self._options["dir_mode"]))
                     self._response[R_HASHES].append(self.__hash(new_subdir))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder"
@@ -782,7 +782,7 @@ class Connector:
             self._response[R_ADDED] = []
             total = 0
             up_size = 0
-            max_size = self._options["uploadMaxSize"]
+            max_size = self._options["upload_max_size"]
             for name, data in up_files.items():
                 if name:
                     name = self.__check_utf8(name)
@@ -794,13 +794,13 @@ class Connector:
                         name = os.path.join(cur_dir, name)
                         replace = os.path.exists(name)
                         try:
-                            fil = open(name, "wb", self._options["uploadWriteChunk"])
+                            fil = open(name, "wb", self._options["upload_write_chunk"])
                             for chunk in self.__fbuffer(data):
                                 fil.write(chunk)
                             fil.close()
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
-                                os.chmod(name, self._options["fileMode"])
+                                os.chmod(name, self._options["file_mode"])
                                 if replace:  # update thumbnail
                                     self.__rm_tmb(name)
                                 self._response[R_ADDED].append(self.__info(name))
@@ -978,7 +978,7 @@ class Connector:
 
     def __thumbnails(self) -> None:
         """Create previews for images."""
-        thumbs_dir = self._options["tmbDir"]
+        thumbs_dir = self._options["tmb_dir"]
         targets = self._request.get(API_TARGETS)
         if not targets:
             return
@@ -986,8 +986,8 @@ class Connector:
         if not self.__init_img_lib() or not self.__can_create_tmb():
             return
         assert thumbs_dir  # typing
-        if self._options["tmbAtOnce"] > 0:
-            tmb_max = self._options["tmbAtOnce"]
+        if self._options["tmb_at_once"] > 0:
+            tmb_max = self._options["tmb_at_once"]
         else:
             tmb_max = 5
         self._response[R_IMAGES] = {}
@@ -1011,13 +1011,13 @@ class Connector:
         """Get Current Working Directory."""
         name = os.path.basename(path)
         if path == self._options["root"]:
-            name = self._options["rootAlias"]
+            name = self._options["root_alias"]
             root = True
         else:
             root = False
 
-        if self._options["rootAlias"]:
-            basename = self._options["rootAlias"]
+        if self._options["root_alias"]:
+            basename = self._options["root_alias"]
         else:
             basename = os.path.basename(self._options["root"])
 
@@ -1095,8 +1095,8 @@ class Connector:
             else:
                 info["mime"] = self.__mimetype(lpath)
 
-            if self._options["rootAlias"]:
-                basename = self._options["rootAlias"]
+            if self._options["root_alias"]:
+                basename = self._options["root_alias"]
             else:
                 basename = os.path.basename(self._options["root"])
 
@@ -1121,13 +1121,13 @@ class Connector:
             info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
-            if self._options["fileURL"] and info["read"]:
+            if self._options["file_url"] and info["read"]:
                 if lpath:
                     info["url"] = self.__path2url(lpath)
                 else:
                     info["url"] = self.__path2url(path)
             if info["mime"][0:5] == "image":
-                thumbs_dir = self._options["tmbDir"]
+                thumbs_dir = self._options["tmb_dir"]
                 if self.__can_create_tmb():
                     assert thumbs_dir  # typing
                     dim = self.__get_img_size(path)
@@ -1333,7 +1333,7 @@ class Connector:
                 return False
         else:
             try:
-                os.mkdir(dst, int(self._options["dirMode"]))
+                os.mkdir(dst, int(self._options["dir_mode"]))
                 shutil.copymode(src, dst)
             except (shutil.SameFileError, OSError):
                 self.__set_error_data(src, "Unable to copy files")
@@ -1505,7 +1505,7 @@ class Connector:
 
         if (
             archive_type not in self._options["archivers"]["create"]
-            or archive_type not in self._options["archiveMimes"]
+            or archive_type not in self._options["archive_mimes"]
         ):
             self._response[R_ERROR] = "Unable to create archive"
             return
@@ -1584,7 +1584,7 @@ class Connector:
             target_dir = os.path.join(target_dir, base_name)
             target_dir = _unique_name(target_dir, copy="")
             try:
-                os.mkdir(target_dir, int(self._options["dirMode"]))
+                os.mkdir(target_dir, int(self._options["dir_mode"]))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
@@ -1689,7 +1689,7 @@ class Connector:
         """Provide internal thumbnail create procedure."""
         try:
             img = self._img.open(path).copy()  # type: ignore
-            size = self._options["tmbSize"], self._options["tmbSize"]
+            size = self._options["tmb_size"], self._options["tmb_size"]
             box = _crop_tuple(img.size)
             if box:
                 img = img.crop(box)
@@ -1723,7 +1723,7 @@ class Connector:
 
     def __dir_size(self, path: str) -> int:
         total_size = 0
-        if self._options["dirSize"]:
+        if self._options["dir_size"]:
             for dirpath, _, filenames in os.walk(path):
                 for fil in filenames:
                     file_path = os.path.join(dirpath, fil)
@@ -1734,7 +1734,7 @@ class Connector:
         return total_size
 
     def __fbuffer(
-        self, fil: BinaryIO, chunk_size: int = _options["uploadWriteChunk"]
+        self, fil: BinaryIO, chunk_size: int = _options["upload_write_chunk"]
     ) -> Generator[bytes, None, None]:
         # pylint: disable=no-self-use
         while True:
@@ -1744,7 +1744,7 @@ class Connector:
             yield chunk
 
     def __can_create_tmb(self, path: Optional[str] = None) -> bool:
-        if self._options["imgLib"] and self._options["tmbDir"]:
+        if self._options["img_lib"] and self._options["tmb_dir"]:
             if path is not None:
                 mime = self.__mimetype(path)
                 if mime[0:5] != "image":
@@ -1754,7 +1754,7 @@ class Connector:
 
     def __tmb_path(self, path: str) -> Optional[str]:
         tmb = None
-        thumbs_dir = self._options["tmbDir"]
+        thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
             if not os.path.dirname(path) == thumbs_dir:
                 tmb = os.path.join(thumbs_dir, self.__hash(path) + ".png")
@@ -1765,21 +1765,21 @@ class Connector:
         deny = False
         mime = self.__mimetype(name)
 
-        if "all" in self._options["uploadAllow"]:
+        if "all" in self._options["upload_allow"]:
             allow = True
         else:
-            for opt in self._options["uploadAllow"]:
+            for opt in self._options["upload_allow"]:
                 if mime.find(opt) == 0:
                     allow = True
 
-        if "all" in self._options["uploadDeny"]:
+        if "all" in self._options["upload_deny"]:
             deny = True
         else:
-            for opt in self._options["uploadDeny"]:
+            for opt in self._options["upload_deny"]:
                 if mime.find(opt) == 0:
                     deny = True
 
-        if self._options["uploadOrder"][0] == "allow":  # ,deny
+        if self._options["upload_order"][0] == "allow":  # ,deny
             if deny is True:
                 return False
             return bool(allow)
@@ -1793,7 +1793,7 @@ class Connector:
     def __is_accepted(self, target: str) -> bool:
         if target in (".", ".."):
             return False
-        if target[0:1] == "." and not self._options["dotFiles"]:
+        if target[0:1] == "." and not self._options["dot_files"]:
             return False
         return True
 
@@ -1847,22 +1847,22 @@ class Connector:
         self._error_data[path] = msg
 
     def __init_img_lib(self) -> Optional[str]:
-        if not self._options["imgLib"] or self._options["imgLib"] == "auto":
-            self._options["imgLib"] = "PIL"
+        if not self._options["img_lib"] or self._options["img_lib"] == "auto":
+            self._options["img_lib"] = "PIL"
 
-        if self._options["imgLib"] == "PIL":
+        if self._options["img_lib"] == "PIL":
             try:
                 from PIL import Image  # pylint: disable=import-outside-toplevel
 
                 self._img = Image
             except ImportError:
                 self._img = None
-                self._options["imgLib"] = None
+                self._options["img_lib"] = None
         else:
             raise NotImplementedError
 
-        self.__debug("imgLib", self._options["imgLib"])
-        return self._options["imgLib"]
+        self.__debug("img_lib", self._options["img_lib"])
+        return self._options["img_lib"]
 
     def __get_img_size(self, path: str) -> Optional[str]:
         if not self.__init_img_lib():
@@ -1892,7 +1892,7 @@ class Connector:
             "archive" in self._options["disabled"]
             and "extract" in self._options["disabled"]
         ):
-            self._options["archiveMimes"] = []
+            self._options["archive_mimes"] = []
             self._options["archivers"] = archive
             return
 
@@ -2140,8 +2140,8 @@ class Connector:
                     }
                 )
 
-        if not self._options["archiveMimes"]:
-            self._options["archiveMimes"] = list(create.keys())
+        if not self._options["archive_mimes"]:
+            self._options["archive_mimes"] = list(create.keys())
         else:
             pass
         self._options["archivers"] = archive
