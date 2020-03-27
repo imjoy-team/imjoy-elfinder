@@ -175,6 +175,7 @@ class Connector:
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
 
+    # The options need to be persistent between connector instances.
     _options = {
         "archive_mimes": [],
         "archivers": {"create": {}, "extract": {}},
