@@ -487,7 +487,7 @@ class Connector:
         )
         thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
-            thumbs_url = self.__path2url(thumbs_dir)
+            thumbs_url = self._path2url(thumbs_dir)
         else:
             thumbs_url = ""
         self._response[R_OPTIONS] = {
@@ -998,7 +998,7 @@ class Connector:
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
                     if self._tmb(path, tmb):
-                        self._response[R_IMAGES].update({fhash: self.__path2url(tmb)})
+                        self._response[R_IMAGES].update({fhash: self._path2url(tmb)})
                         i += 1
             if i >= tmb_max:
                 break
@@ -1508,9 +1508,9 @@ class Connector:
         if not info["mime"] == "directory":
             if self._options["file_url"] and info["read"]:
                 if lpath:
-                    info["url"] = self.__path2url(lpath)
+                    info["url"] = self._path2url(lpath)
                 else:
-                    info["url"] = self.__path2url(path)
+                    info["url"] = self._path2url(path)
             if info["mime"][0:5] == "image":
                 thumbs_dir = self._options["tmb_dir"]
                 if self._can_create_tmb():
@@ -1521,13 +1521,13 @@ class Connector:
 
                     # if we are in tmb dir, files are thumbs itself
                     if os.path.dirname(path) == thumbs_dir:
-                        info["tmb"] = self.__path2url(path)
+                        info["tmb"] = self._path2url(path)
                         return info
 
                     tmb = os.path.join(thumbs_dir, info["hash"] + ".png")
 
                     if os.path.exists(tmb):
-                        tmb_url = self.__path2url(tmb)
+                        tmb_url = self._path2url(tmb)
                         info["tmb"] = tmb_url
                     else:
                         if info["mime"].startswith("image/"):
@@ -1804,7 +1804,7 @@ class Connector:
         self._cached_path[hash_code] = path
         return hash_code
 
-    def __path2url(self, path: str) -> str:
+    def _path2url(self, path: str) -> str:
         cur_dir = path
         length = len(self._options["root"])
         url = multi_urljoin(
