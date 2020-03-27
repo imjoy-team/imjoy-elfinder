@@ -142,7 +142,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "root": str,
         "root_alias": str,
         "tmb_at_once": int,
-        "tmbDir": Optional[str],
+        "tmb_dir": Optional[str],
         "tmbSize": int,
         "uploadAllow": List[str],
         "uploadDeny": List[str],
@@ -188,7 +188,7 @@ class Connector:
         "root": "",
         "root_alias": "HOME",
         "tmb_at_once": 5,
-        "tmbDir": ".tmb",
+        "tmb_dir": ".tmb",
         "tmbSize": 48,
         "uploadAllow": [],
         "uploadDeny": [],
@@ -306,7 +306,7 @@ class Connector:
         self._options["root"] = self.__check_utf8(root)
         self._options["uploadMaxSize"] = upload_max_size
         self._options["debug"] = debug
-        self._options["tmbDir"] = tmb_dir
+        self._options["tmb_dir"] = tmb_dir
         self._options["base_url"] = (
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
@@ -327,9 +327,9 @@ class Connector:
             try:
                 if not os.path.exists(thumbs_dir):
                     os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
-                self._options["tmbDir"] = thumbs_dir
+                self._options["tmb_dir"] = thumbs_dir
             except PermissionError:
-                self._options["tmbDir"] = None
+                self._options["tmb_dir"] = None
                 self.__debug("thumbnail", " Permission denied: " + thumbs_dir)
                 print(
                     "WARNING: failed to create thumbnail folder "
@@ -488,7 +488,7 @@ class Connector:
         self._response[R_UPLMAXSIZE] = (
             str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
         )
-        thumbs_dir = self._options["tmbDir"]
+        thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
             thumbs_url = self.__path2url(thumbs_dir)
         else:
@@ -978,7 +978,7 @@ class Connector:
 
     def __thumbnails(self) -> None:
         """Create previews for images."""
-        thumbs_dir = self._options["tmbDir"]
+        thumbs_dir = self._options["tmb_dir"]
         targets = self._request.get(API_TARGETS)
         if not targets:
             return
@@ -1127,7 +1127,7 @@ class Connector:
                 else:
                     info["url"] = self.__path2url(path)
             if info["mime"][0:5] == "image":
-                thumbs_dir = self._options["tmbDir"]
+                thumbs_dir = self._options["tmb_dir"]
                 if self.__can_create_tmb():
                     assert thumbs_dir  # typing
                     dim = self.__get_img_size(path)
@@ -1744,7 +1744,7 @@ class Connector:
             yield chunk
 
     def __can_create_tmb(self, path: Optional[str] = None) -> bool:
-        if self._options["img_lib"] and self._options["tmbDir"]:
+        if self._options["img_lib"] and self._options["tmb_dir"]:
             if path is not None:
                 mime = self.__mimetype(path)
                 if mime[0:5] != "image":
@@ -1754,7 +1754,7 @@ class Connector:
 
     def __tmb_path(self, path: str) -> Optional[str]:
         tmb = None
-        thumbs_dir = self._options["tmbDir"]
+        thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
             if not os.path.dirname(path) == thumbs_dir:
                 tmb = os.path.join(thumbs_dir, self.__hash(path) + ".png")
