@@ -66,10 +66,10 @@ R_OPTIONS = "options"
 R_REMOVED = "removed"
 R_SIZE = "size"
 R_SIZES = "sizes"
+R_TREE = "tree"
 R_UPLMAXFILE = "uplMaxFile"
 R_UPLMAXSIZE = "uplMaxSize"
 R_WARNING = "warning"
-R_TREE = "tree"
 
 # Response options constants
 R_OPTIONS_ARCHIVERS = "archivers"
