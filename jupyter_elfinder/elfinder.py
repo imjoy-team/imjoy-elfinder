@@ -128,7 +128,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "base_url": str,
         "debug": bool,
         "defaults": Dict[str, bool],
-        "dirMode": Literal[493],
+        "dir_mode": Literal[493],
         "dirSize": bool,
         "disabled": List[str],
         "dotFiles": bool,
@@ -174,7 +174,7 @@ class Connector:
         "base_url": "",
         "debug": False,
         "defaults": {"read": True, "write": True, "rm": True},
-        "dirMode": 0o755,
+        "dir_mode": 0o755,
         "dirSize": False,
         "disabled": ["netmount", "zipdl"],
         "dotFiles": False,
@@ -675,7 +675,7 @@ class Connector:
             )
         else:
             try:
-                os.mkdir(new_dir, int(self._options["dirMode"]))
+                os.mkdir(new_dir, int(self._options["dir_mode"]))
                 self._response[R_ADDED] = [self.__info(new_dir)]
                 self._response[R_HASHES] = []
                 for subdir in dirs:
@@ -683,7 +683,7 @@ class Connector:
                         self._response[R_ERROR] = "Invalid dir name: " + subdir
                         return
                     new_subdir = os.path.join(new_dir, subdir)
-                    os.mkdir(new_subdir, int(self._options["dirMode"]))
+                    os.mkdir(new_subdir, int(self._options["dir_mode"]))
                     self._response[R_HASHES].append(self.__hash(new_subdir))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder"
@@ -1333,7 +1333,7 @@ class Connector:
                 return False
         else:
             try:
-                os.mkdir(dst, int(self._options["dirMode"]))
+                os.mkdir(dst, int(self._options["dir_mode"]))
                 shutil.copymode(src, dst)
             except (shutil.SameFileError, OSError):
                 self.__set_error_data(src, "Unable to copy files")
@@ -1584,7 +1584,7 @@ class Connector:
             target_dir = os.path.join(target_dir, base_name)
             target_dir = _unique_name(target_dir, copy="")
             try:
-                os.mkdir(target_dir, int(self._options["dirMode"]))
+                os.mkdir(target_dir, int(self._options["dir_mode"]))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
