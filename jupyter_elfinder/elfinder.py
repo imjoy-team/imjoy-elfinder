@@ -141,7 +141,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "perms": Dict[str, Dict[str, bool]],
         "root": str,
         "root_alias": str,
-        "tmbAtOnce": int,
+        "tmb_at_once": int,
         "tmbDir": Optional[str],
         "tmbSize": int,
         "uploadAllow": List[str],
@@ -187,7 +187,7 @@ class Connector:
         "perms": {},
         "root": "",
         "root_alias": "HOME",
-        "tmbAtOnce": 5,
+        "tmb_at_once": 5,
         "tmbDir": ".tmb",
         "tmbSize": 48,
         "uploadAllow": [],
@@ -986,8 +986,8 @@ class Connector:
         if not self.__init_img_lib() or not self.__can_create_tmb():
             return
         assert thumbs_dir  # typing
-        if self._options["tmbAtOnce"] > 0:
-            tmb_max = self._options["tmbAtOnce"]
+        if self._options["tmb_at_once"] > 0:
+            tmb_max = self._options["tmb_at_once"]
         else:
             tmb_max = 5
         self._response[R_IMAGES] = {}
