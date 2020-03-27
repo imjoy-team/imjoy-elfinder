@@ -791,7 +791,7 @@ class Connector:
                         replace = os.path.exists(name)
                         try:
                             fil = open(name, "wb", self._options["upload_write_chunk"])
-                            for chunk in self.__fbuffer(data):
+                            for chunk in self._fbuffer(data):
                                 fil.write(chunk)
                             fil.close()
                             up_size += os.lstat(name).st_size
@@ -1705,7 +1705,7 @@ class Connector:
             total_size = os.lstat(path).st_size
         return total_size
 
-    def __fbuffer(
+    def _fbuffer(
         self, fil: BinaryIO, chunk_size: int = _options["upload_write_chunk"]
     ) -> Generator[bytes, None, None]:
         # pylint: disable=no-self-use
