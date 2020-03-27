@@ -143,7 +143,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "root_alias": str,
         "tmb_at_once": int,
         "tmb_dir": Optional[str],
-        "tmbSize": int,
+        "tmb_size": int,
         "uploadAllow": List[str],
         "uploadDeny": List[str],
         "uploadMaxConn": int,
@@ -189,7 +189,7 @@ class Connector:
         "root_alias": "HOME",
         "tmb_at_once": 5,
         "tmb_dir": ".tmb",
-        "tmbSize": 48,
+        "tmb_size": 48,
         "uploadAllow": [],
         "uploadDeny": [],
         "uploadMaxConn": -1,
@@ -1689,7 +1689,7 @@ class Connector:
         """Provide internal thumbnail create procedure."""
         try:
             img = self._img.open(path).copy()  # type: ignore
-            size = self._options["tmbSize"], self._options["tmbSize"]
+            size = self._options["tmb_size"], self._options["tmb_size"]
             box = _crop_tuple(img.size)
             if box:
                 img = img.crop(box)
