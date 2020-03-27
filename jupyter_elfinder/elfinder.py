@@ -63,6 +63,7 @@ from .api_const import (
     R_NETDRIVERS,
     R_OPTIONS,
     R_OPTIONS_ARCHIVERS,
+    R_OPTIONS_COPY_OVERWRITE,
     R_OPTIONS_CREATE,
     R_OPTIONS_CREATE_EXT,
     R_OPTIONS_DISABLED,
@@ -494,7 +495,7 @@ class Connector:
                     for k in self._options["archivers"]["create"]
                 },
             },
-            "copyOverwrite": True,
+            R_OPTIONS_COPY_OVERWRITE: True,
             "uploadMaxSize": self._options["uploadMaxSize"],
             "uploadOverwrite": True,
             "uploadMaxConn": 3,
