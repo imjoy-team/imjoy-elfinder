@@ -360,7 +360,7 @@ class Connector:
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
             root_ok = False
             self._response[R_ERROR] = "Invalid backend configuration"
-        elif not self.__is_allowed(self._options["root"], "read"):
+        elif not self._is_allowed(self._options["root"], "read"):
             root_ok = False
             self._response[R_ERROR] = "Access denied"
 
@@ -450,7 +450,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        if not self.__is_allowed(path, "read"):
+        if not self._is_allowed(path, "read"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -557,7 +557,7 @@ class Connector:
             self.http_response = "File not found"
             return
 
-        if not self.__is_allowed(cur_file, "read"):
+        if not self._is_allowed(cur_file, "read"):
             self.http_status_code = 403
             self.http_header["Content-type"] = "text/html"
             self.http_response = "Access denied"
@@ -570,9 +570,9 @@ class Connector:
                 self.http_header["Content-type"] = "text/html"
                 self.http_response = "File not found"
                 return
-            if not self.__is_allowed(
+            if not self._is_allowed(
                 os.path.dirname(cur_file), "read"
-            ) or not self.__is_allowed(cur_file, "read"):
+            ) or not self._is_allowed(cur_file, "read"):
                 self.http_status_code = 403
                 self.http_header["Content-type"] = "text/html"
                 self.http_response = "Access denied"
@@ -611,7 +611,7 @@ class Connector:
 
         cur_dir = os.path.dirname(cur_name)
 
-        if not self.__is_allowed(cur_dir, "write") and self.__is_allowed(
+        if not self._is_allowed(cur_dir, "write") and self._is_allowed(
             cur_name, "rm"
         ):
             self._response[R_ERROR] = "Access denied"
@@ -654,7 +654,7 @@ class Connector:
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
             return
-        if not self.__is_allowed(path, "write"):
+        if not self._is_allowed(path, "write"):
             self._response[R_ERROR] = "Access denied"
             return
         if not _check_name(name):
@@ -697,7 +697,7 @@ class Connector:
         if not cur_dir:
             self._response[R_ERROR] = "Invalid parameters"
             return
-        if not self.__is_allowed(cur_dir, "write"):
+        if not self._is_allowed(cur_dir, "write"):
             self._response[R_ERROR] = "Access denied"
             return
         if not _check_name(name):
@@ -760,7 +760,7 @@ class Connector:
             if not cur_dir:
                 self._response[R_ERROR] = "Invalid parameters"
                 return
-            if not self.__is_allowed(cur_dir, "write"):
+            if not self._is_allowed(cur_dir, "write"):
                 self._response[R_ERROR] = "Access denied"
                 return
             if API_UPLOAD not in self._request:
@@ -847,7 +847,7 @@ class Connector:
                 if self._request[API_CUT] == "1":
                     cut = True
 
-            if not self.__is_allowed(src, "read") or not self.__is_allowed(
+            if not self._is_allowed(src, "read") or not self._is_allowed(
                 dst, "write"
             ):
                 self._response[R_ERROR] = "Access denied"
@@ -866,7 +866,7 @@ class Connector:
                     return
 
                 if cut:
-                    if not self.__is_allowed(fil, "rm"):
+                    if not self._is_allowed(fil, "rm"):
                         self._response[R_ERROR] = "Move failed"
                         self.__set_error_data(fil, "Access denied")
                         return
@@ -912,7 +912,7 @@ class Connector:
                 self._response[R_ERROR] = "File not found"
                 return
             cur_dir = os.path.dirname(target)
-            if not self.__is_allowed(target, "read") or not self.__is_allowed(
+            if not self._is_allowed(target, "read") or not self._is_allowed(
                 cur_dir, "write"
             ):
                 self._response[R_ERROR] = "Access denied"
@@ -946,7 +946,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        if not self.__is_allowed(cur_file, "write"):
+        if not self._is_allowed(cur_file, "write"):
             self._response[R_ERROR] = "Access denied"
             return
         if _mimetype(cur_file).find("image") != 0:
@@ -994,7 +994,7 @@ class Connector:
                 continue
             if os.path.dirname(path) == thumbs_dir:
                 continue
-            if self._can_create_tmb(path) and self.__is_allowed(path, "read"):
+            if self._can_create_tmb(path) and self._is_allowed(path, "read"):
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
                     if self._tmb(path, tmb):
@@ -1072,7 +1072,7 @@ class Connector:
                 self._response[R_ERROR] = "Directory (link) not found"
                 return
 
-        if not self.__is_allowed(path, "read"):
+        if not self._is_allowed(path, "read"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1110,7 +1110,7 @@ class Connector:
                 self._response[R_ERROR] = "Directory (link) not found"
                 return
 
-        if not self.__is_allowed(path, "read"):
+        if not self._is_allowed(path, "read"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1143,7 +1143,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        if not self.__is_allowed(cur_file, "read"):
+        if not self._is_allowed(cur_file, "read"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1168,7 +1168,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        if not self.__is_allowed(cur_file, "read"):
+        if not self._is_allowed(cur_file, "read"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1193,7 +1193,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        if not self.__is_allowed(cur_file, "write"):
+        if not self._is_allowed(cur_file, "write"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1230,7 +1230,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        if not self.__is_allowed(cur_dir, "write"):
+        if not self._is_allowed(cur_dir, "write"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1291,7 +1291,7 @@ class Connector:
 
         cur_dir = os.path.dirname(cur_file)
 
-        if not self.__is_allowed(cur_dir, "write"):
+        if not self._is_allowed(cur_dir, "write"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -1418,9 +1418,9 @@ class Connector:
                 "%d %b %Y %H:%M"
             ),
             "read": 1,
-            "write": 1 if self.__is_allowed(path, "write") else 0,
+            "write": 1 if self._is_allowed(path, "write") else 0,
             "locked": 0,
-            "rm": not root and self.__is_allowed(path, "rm"),
+            "rm": not root and self._is_allowed(path, "rm"),
             "volumeid": self.volumeid,
         }
 
@@ -1442,9 +1442,9 @@ class Connector:
             filetype = "link"
 
         stat = os.lstat(path)
-        readable = self.__is_allowed(path, "read")
-        writable = self.__is_allowed(path, "write")
-        deletable = self.__is_allowed(path, "rm")
+        readable = self._is_allowed(path, "read")
+        writable = self._is_allowed(path, "write")
+        deletable = self._is_allowed(path, "rm")
 
         info = {
             "name": self.__check_utf8(os.path.basename(path)),
@@ -1487,16 +1487,16 @@ class Connector:
 
             info["link"] = self.__hash(lpath)
             info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
-            info["read"] = 1 if info["read"] and self.__is_allowed(lpath, "read") else 0
+            info["read"] = 1 if info["read"] and self._is_allowed(lpath, "read") else 0
             info["write"] = (
-                1 if info["write"] and self.__is_allowed(lpath, "write") else 0
+                1 if info["write"] and self._is_allowed(lpath, "write") else 0
             )
             info["locked"] = (
                 1
                 if (
                     not info["write"]
                     and not info["read"]
-                    and not self.__is_allowed(lpath, "rm")
+                    and not self._is_allowed(lpath, "rm")
                 )
                 else 0
             )
@@ -1540,7 +1540,7 @@ class Connector:
 
     def _remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
-        if not self.__is_allowed(target, "rm"):
+        if not self._is_allowed(target, "rm"):
             self.__set_error_data(target, "Access denied")
 
         if not os.path.isdir(target):
@@ -1571,7 +1571,7 @@ class Connector:
     def _copy(self, src: str, dst: str) -> bool:
         """Provide internal copy procedure."""
         dst_dir = os.path.dirname(dst)
-        if not (self.__is_allowed(src, "read") and self.__is_allowed(dst_dir, "write")):
+        if not (self._is_allowed(src, "read") and self._is_allowed(dst_dir, "write")):
             self.__set_error_data(src, "Access denied")
             return False
         if os.path.exists(dst):
@@ -1769,7 +1769,7 @@ class Connector:
             return False
         return True
 
-    def __is_allowed(self, path: str, access: str) -> bool:
+    def _is_allowed(self, path: str, access: str) -> bool:
         if not os.path.exists(path):
             return False
 
