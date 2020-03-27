@@ -454,7 +454,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        self.__cwd(path)
+        self._cwd(path)
 
         try:
             items = os.listdir(path)
@@ -1392,7 +1392,7 @@ class Connector:
                         result.append(self.__info(file_path))
         self._response[R_FILES] = result
 
-    def __cwd(self, path: str) -> None:
+    def _cwd(self, path: str) -> None:
         """Get Current Working Directory."""
         name = os.path.basename(path)
         if path == self._options["root"]:
