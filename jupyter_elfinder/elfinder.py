@@ -888,7 +888,7 @@ class Connector:
                         self.__set_error_data(fil, "Unable to move")
                         return
                 else:
-                    if not self.__copy(fil, new_dst):
+                    if not self._copy(fil, new_dst):
                         self._response[R_ERROR] = "Unable to copy files"
                         return
                     added.append(self._info(new_dst))
@@ -918,7 +918,7 @@ class Connector:
                 self._response[R_ERROR] = "Access denied"
                 return
             new_name = _unique_name(target)
-            if not self.__copy(target, new_name):
+            if not self._copy(target, new_name):
                 self._response[R_ERROR] = "Unable to create file copy"
                 return
             added.append(self._info(new_name))
@@ -1568,7 +1568,7 @@ class Connector:
                 self.__set_error_data(target, "Remove failed")
                 return False
 
-    def __copy(self, src: str, dst: str) -> bool:
+    def _copy(self, src: str, dst: str) -> bool:
         """Provide internal copy procedure."""
         dst_dir = os.path.dirname(dst)
         if not (self.__is_allowed(src, "read") and self.__is_allowed(dst_dir, "write")):
@@ -1605,7 +1605,7 @@ class Connector:
             for i in srcs:
                 new_src = os.path.join(src, i)
                 new_dst = os.path.join(dst, i)
-                if not self.__copy(new_src, new_dst):
+                if not self._copy(new_src, new_dst):
                     self.__set_error_data(new_src, "Unable to copy files")
                     return False
 
