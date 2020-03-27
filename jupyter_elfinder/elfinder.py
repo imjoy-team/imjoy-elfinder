@@ -264,6 +264,7 @@ class Connector:
         "ogm": "application/ogm",
     }
 
+    # The cache needs to be persistent between connector instances.
     _cached_path = {}  # type: Dict[str, str]
 
     # public variables
