@@ -954,7 +954,7 @@ class Connector:
             return
 
         self._debug("resize " + cur_file, str(width) + ":" + str(height))
-        if not self.__init_img_lib():
+        if not self._init_img_lib():
             return
 
         try:
@@ -979,7 +979,7 @@ class Connector:
         if not targets:
             return
 
-        if not self.__init_img_lib() or not self._can_create_tmb():
+        if not self._init_img_lib() or not self._can_create_tmb():
             return
         assert thumbs_dir  # typing
         if self._options["tmb_at_once"] > 0:
@@ -1818,7 +1818,7 @@ class Connector:
         """Collect error/warning messages."""
         self._error_data[path] = msg
 
-    def __init_img_lib(self) -> Optional[str]:
+    def _init_img_lib(self) -> Optional[str]:
         if not self._options["img_lib"] or self._options["img_lib"] == "auto":
             self._options["img_lib"] = "PIL"
 
@@ -1837,7 +1837,7 @@ class Connector:
         return self._options["img_lib"]
 
     def _get_img_size(self, path: str) -> Optional[str]:
-        if not self.__init_img_lib():
+        if not self._init_img_lib():
             return None
         if self._can_create_tmb():
             try:
