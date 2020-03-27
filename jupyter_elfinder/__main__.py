@@ -100,6 +100,14 @@ def main(args: Optional[List[str]] = None) -> None:
 
     opt = parser.parse_args(args=args)
 
+    # normalize base url, this is to fix duplicated slash from jupyter server proxy
+    if opt.base_url.startswith('http'):
+        tmp = opt.base_url.split('://')
+        tmp[1] = tmp[1].replace('//', '/')
+        opt.base_url = '://'.join(tmp)
+    else:
+        opt.base_url = opt.base_url.replace('//', '/')
+
     settings = {
         "root_dir": opt.root_dir or os.getcwd(),
         "files_url": "/files",
