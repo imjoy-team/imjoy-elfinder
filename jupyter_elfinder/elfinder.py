@@ -312,9 +312,6 @@ class Connector:
         self._response[R_DEBUG] = {}
         self._error_data = {}  # type: Dict[str, str]
         self._img = None  # type: Optional[ModuleType]
-        self._time = 0.0
-        self._today = 0.0
-        self._yesterday = 0.0
 
         # options
         self._options["root"] = self.__check_utf8(root)
@@ -355,12 +352,7 @@ class Connector:
         """Run main function."""
         if http_request is None:
             http_request = {}
-        self._time = time.time()
-        dt_time = datetime.fromtimestamp(self._time)
-        self._today = time.mktime(
-            datetime(dt_time.year, dt_time.month, dt_time.day).timetuple()
-        )
-        self._yesterday = self._today - 86400
+        start_time = time.time()
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
             root_ok = False
@@ -399,7 +391,7 @@ class Connector:
             self.__debug("errorData", self._error_data)
 
         if self._options["debug"]:
-            self.__debug("time", (time.time() - self._time))
+            self.__debug("time", (time.time() - start_time))
         else:
             if R_DEBUG in self._response:
                 del self._response[R_DEBUG]
