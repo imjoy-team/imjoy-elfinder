@@ -82,7 +82,7 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--base-url",
         type=str,
-        default=None,
+        default="",
         help="The base url for accessing the file browser",
     )
     parser.add_argument(
@@ -111,7 +111,7 @@ def main(args: Optional[List[str]] = None) -> None:
     settings = {
         "root_dir": opt.root_dir or os.getcwd(),
         "files_url": "/files",
-        "base_url": opt.base_url or "",
+        "base_url": opt.base_url,
         "expose_real_path": opt.expose_real_path,
         "thumbnail_dir": ".tmb" if opt.thumbnail else None,
     }  # type: Dict[str, Optional[str]]
