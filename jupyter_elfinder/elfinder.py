@@ -123,7 +123,7 @@ Info = TypedDict(  # pylint: disable=invalid-name
 Options = TypedDict(  # pylint: disable=invalid-name
     "Options",
     {
-        "archiveMimes": List[str],
+        "archive_mimes": List[str],
         "archivers": Archivers,
         "base_url": str,
         "debug": bool,
@@ -169,7 +169,7 @@ class Connector:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
 
     _options = {
-        "archiveMimes": [],
+        "archive_mimes": [],
         "archivers": {"create": {}, "extract": {}},
         "base_url": "",
         "debug": False,
@@ -1505,7 +1505,7 @@ class Connector:
 
         if (
             archive_type not in self._options["archivers"]["create"]
-            or archive_type not in self._options["archiveMimes"]
+            or archive_type not in self._options["archive_mimes"]
         ):
             self._response[R_ERROR] = "Unable to create archive"
             return
@@ -1892,7 +1892,7 @@ class Connector:
             "archive" in self._options["disabled"]
             and "extract" in self._options["disabled"]
         ):
-            self._options["archiveMimes"] = []
+            self._options["archive_mimes"] = []
             self._options["archivers"] = archive
             return
 
@@ -2140,8 +2140,8 @@ class Connector:
                     }
                 )
 
-        if not self._options["archiveMimes"]:
-            self._options["archiveMimes"] = list(create.keys())
+        if not self._options["archive_mimes"]:
+            self._options["archive_mimes"] = list(create.keys())
         else:
             pass
         self._options["archivers"] = archive
