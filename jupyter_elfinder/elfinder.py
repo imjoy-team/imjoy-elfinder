@@ -77,6 +77,7 @@ from .api_const import (
     R_OPTIONS_SYNC_CHK_AS_TS,
     R_OPTIONS_SYNC_MIN_MS,
     R_OPTIONS_TMB_URL,
+    R_OPTIONS_UI_CMD_MAP,
     R_OPTIONS_UPLOAD_MAX_CONN,
     R_OPTIONS_UPLOAD_MAX_SIZE,
     R_OPTIONS_UPLOAD_MIME,
@@ -515,7 +516,7 @@ class Connector:
             R_OPTIONS_JPG_QUALITY: 100,
             R_OPTIONS_SYNC_CHK_AS_TS: 1,
             R_OPTIONS_SYNC_MIN_MS: 30000,
-            "uiCmdMap": {},
+            R_OPTIONS_UI_CMD_MAP: {},
         }
 
     def __parents(self) -> None:
