@@ -144,7 +144,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "tmb_at_once": int,
         "tmb_dir": Optional[str],
         "tmb_size": int,
-        "uploadAllow": List[str],
+        "upload_allow": List[str],
         "uploadDeny": List[str],
         "uploadMaxConn": int,
         "uploadMaxSize": int,
@@ -190,7 +190,7 @@ class Connector:
         "tmb_at_once": 5,
         "tmb_dir": ".tmb",
         "tmb_size": 48,
-        "uploadAllow": [],
+        "upload_allow": [],
         "uploadDeny": [],
         "uploadMaxConn": -1,
         "uploadMaxSize": 256 * 1024 * 1024,
@@ -1765,10 +1765,10 @@ class Connector:
         deny = False
         mime = self.__mimetype(name)
 
-        if "all" in self._options["uploadAllow"]:
+        if "all" in self._options["upload_allow"]:
             allow = True
         else:
-            for opt in self._options["uploadAllow"]:
+            for opt in self._options["upload_allow"]:
                 if mime.find(opt) == 0:
                     allow = True
 
