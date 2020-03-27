@@ -65,6 +65,7 @@ from .api_const import (
     R_OPTIONS_DISABLED,
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
+    R_OPTIONS_TMB_URL,
     R_OPTIONS_URL,
     R_REMOVED,
     R_UPLMAXFILE,
@@ -478,7 +479,7 @@ class Connector:
             R_OPTIONS_SEPARATOR: os.path.sep,
             R_OPTIONS_URL: url,
             R_OPTIONS_DISABLED: self._options["disabled"],
-            "tmbURL": thumbs_url,
+            R_OPTIONS_TMB_URL: thumbs_url,
             "dotFiles": self._options["dotFiles"],
             "archivers": {
                 "create": list(self._options["archivers"]["create"].keys()),
