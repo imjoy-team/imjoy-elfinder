@@ -33,10 +33,14 @@ from .api_const import (
     API_CONTENT,
     API_CURRENT,
     API_CUT,
+    API_DIRS,
+    API_DOWNLOAD,
     API_DST,
     API_HEIGHT,
     API_INIT,
+    API_INTERSECT,
     API_MAKEDIR,
+    API_MIMES,
     API_NAME,
     API_Q,
     API_SRC,
@@ -55,7 +59,9 @@ from .api_const import (
     R_CWD,
     R_DEBUG,
     R_DIM,
+    R_DIR_CNT,
     R_ERROR,
+    R_FILE_CNT,
     R_FILES,
     R_HASHES,
     R_IMAGES,
@@ -87,6 +93,8 @@ from .api_const import (
     R_OPTIONS_UPLOAD_OVERWRITE,
     R_OPTIONS_URL,
     R_REMOVED,
+    R_SIZE,
+    R_SIZES,
     R_TREE,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
@@ -552,7 +560,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        download = self._request.get("download")
+        download = self._request.get(API_DOWNLOAD)
         cur_file = self.__find(target)
 
         if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
@@ -665,7 +673,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid name"
             return
 
-        dirs = self._request.get("dirs[]") or []
+        dirs = self._request.get(API_DIRS) or []
 
         new_dir = os.path.join(path, name)
 
@@ -1192,16 +1200,16 @@ class Connector:
                 total_size += size
                 file_count += 1
             sizes.append(
-                {"dirCnt": dir_count, "fileCnt": file_count, "size": total_size}
+                {R_DIR_CNT: dir_count, R_FILE_CNT: file_count, R_SIZE: total_size}
             )
             all_total_size += total_size
             all_file_count += file_count
             all_dir_count += dir_count
 
-        self._response["size"] = all_total_size
-        self._response["fileCnt"] = all_file_count
-        self._response["dirCnt"] = all_dir_count
-        self._response["sizes"] = sizes
+        self._response[R_SIZE] = all_total_size
+        self._response[R_FILE_CNT] = all_file_count
+        self._response[R_DIR_CNT] = all_dir_count
+        self._response[R_SIZES] = sizes
 
     def __ls(self) -> None:
         target = self._request.get(API_TARGET)
@@ -1209,7 +1217,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        intersect = self._request.get("intersect[]")
+        intersect = self._request.get(API_INTERSECT)
 
         path = self.__find(target)
         if path is None or not os.path.isdir(path):
@@ -1641,7 +1649,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        mimes = self._request.get("mimes")
+        mimes = self._request.get(API_MIMES)
 
         result = []
         query = self._request[API_Q]
