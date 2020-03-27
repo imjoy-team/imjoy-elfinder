@@ -63,6 +63,7 @@ from .api_const import (
     R_NETDRIVERS,
     R_OPTIONS,
     R_OPTIONS_PATH,
+    R_OPTIONS_SEPARATOR,
     R_REMOVED,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
@@ -472,7 +473,7 @@ class Connector:
             thumbs_url = ""
         self._response[R_OPTIONS] = {
             R_OPTIONS_PATH: path,
-            "separator": os.path.sep,
+            R_OPTIONS_SEPARATOR: os.path.sep,
             "url": url,
             "disabled": self._options["disabled"],
             "tmbURL": thumbs_url,

@@ -66,3 +66,4 @@ R_TREE = "tree"
 
 # Response options constants
 R_OPTIONS_PATH = "path"
+R_OPTIONS_SEPARATOR = "separator"
