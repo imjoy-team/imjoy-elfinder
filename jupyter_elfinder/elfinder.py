@@ -147,7 +147,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "upload_allow": List[str],
         "upload_deny": List[str],
         "upload_max_conn": int,
-        "uploadMaxSize": int,
+        "upload_max_size": int,
         "uploadOrder": List[Literal["deny", "allow"]],
         "uploadWriteChunk": int,
     },
@@ -193,7 +193,7 @@ class Connector:
         "upload_allow": [],
         "upload_deny": [],
         "upload_max_conn": -1,
-        "uploadMaxSize": 256 * 1024 * 1024,
+        "upload_max_size": 256 * 1024 * 1024,
         "uploadOrder": ["deny", "allow"],
         "uploadWriteChunk": 8192,
     }  # type: Options
@@ -304,7 +304,7 @@ class Connector:
     ) -> None:
         """Set up connector instance."""
         self._options["root"] = self.__check_utf8(root)
-        self._options["uploadMaxSize"] = upload_max_size
+        self._options["upload_max_size"] = upload_max_size
         self._options["debug"] = debug
         self._options["tmb_dir"] = tmb_dir
         self._options["base_url"] = (
@@ -486,7 +486,7 @@ class Connector:
         self._response[R_NETDRIVERS] = []
         self._response[R_UPLMAXFILE] = 1000
         self._response[R_UPLMAXSIZE] = (
-            str(self._options["uploadMaxSize"] / (1024 * 1024)) + "M"
+            str(self._options["upload_max_size"] / (1024 * 1024)) + "M"
         )
         thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
@@ -509,7 +509,7 @@ class Connector:
                 },
             },
             R_OPTIONS_COPY_OVERWRITE: True,
-            R_OPTIONS_UPLOAD_MAX_SIZE: self._options["uploadMaxSize"],
+            R_OPTIONS_UPLOAD_MAX_SIZE: self._options["upload_max_size"],
             R_OPTIONS_UPLOAD_OVERWRITE: True,
             R_OPTIONS_UPLOAD_MAX_CONN: 3,
             R_OPTIONS_UPLOAD_MIME: {
@@ -782,7 +782,7 @@ class Connector:
             self._response[R_ADDED] = []
             total = 0
             up_size = 0
-            max_size = self._options["uploadMaxSize"]
+            max_size = self._options["upload_max_size"]
             for name, data in up_files.items():
                 if name:
                     name = self.__check_utf8(name)
