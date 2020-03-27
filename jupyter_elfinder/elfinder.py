@@ -424,7 +424,7 @@ class Connector:
         for target in targets:
             path = self._find(target)
             if path is None:
-                self.__set_error_data(target, "File not found")
+                self._set_error_data(target, "File not found")
             else:
                 files.append(self._info(path))
         self._response[R_FILES] = files
@@ -785,7 +785,7 @@ class Connector:
                     total += 1
                     name = os.path.basename(name)
                     if not _check_name(name):
-                        self.__set_error_data(name, "Invalid name: " + name)
+                        self._set_error_data(name, "Invalid name: " + name)
                     else:
                         name = os.path.join(cur_dir, name)
                         replace = os.path.exists(name)
@@ -801,22 +801,22 @@ class Connector:
                                     self._rm_tmb(name)
                                 self._response[R_ADDED].append(self._info(name))
                             else:
-                                self.__set_error_data(name, "Not allowed file type")
+                                self._set_error_data(name, "Not allowed file type")
                                 try:
                                     os.unlink(name)
                                 except OSError:
                                     pass
                         except OSError:
-                            self.__set_error_data(name, "Unable to save uploaded file")
+                            self._set_error_data(name, "Unable to save uploaded file")
                         if up_size > max_size:
                             try:
                                 os.unlink(name)
-                                self.__set_error_data(
+                                self._set_error_data(
                                     name, "File exceeds the maximum allowed filesize"
                                 )
                             except OSError:
                                 # TODO ?  # pylint: disable=fixme
-                                self.__set_error_data(
+                                self._set_error_data(
                                     name, "File was only partially uploaded"
                                 )
                             break
@@ -868,12 +868,12 @@ class Connector:
                 if cut:
                     if not self._is_allowed(fil, "rm"):
                         self._response[R_ERROR] = "Move failed"
-                        self.__set_error_data(fil, "Access denied")
+                        self._set_error_data(fil, "Access denied")
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
                         self._response[R_ERROR] = "Unable to move files"
-                        self.__set_error_data(
+                        self._set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
                         return
@@ -885,7 +885,7 @@ class Connector:
                         continue
                     except OSError:
                         self._response[R_ERROR] = "Unable to move files"
-                        self.__set_error_data(fil, "Unable to move")
+                        self._set_error_data(fil, "Unable to move")
                         return
                 else:
                     if not self._copy(fil, new_dst):
@@ -1018,7 +1018,7 @@ class Connector:
         for target in targets:
             path = self._find(target)
             if path is None:
-                self.__set_error_data(target, "Target not found")
+                self._set_error_data(target, "Target not found")
                 continue
             total_size = 0
             file_count = 0
@@ -1541,7 +1541,7 @@ class Connector:
     def _remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
         if not self._is_allowed(target, "rm"):
-            self.__set_error_data(target, "Access denied")
+            self._set_error_data(target, "Access denied")
 
         if not os.path.isdir(target):
             try:
@@ -1549,13 +1549,13 @@ class Connector:
                 self._rm_tmb(target)
                 return True
             except OSError:
-                self.__set_error_data(target, "Remove failed")
+                self._set_error_data(target, "Remove failed")
                 return False
         else:
             try:
                 targets = os.listdir(target)
             except PermissionError:
-                self.__set_error_data(target, "Access denied")
+                self._set_error_data(target, "Access denied")
                 return False
 
             for fil in targets:
@@ -1565,17 +1565,17 @@ class Connector:
                 os.rmdir(target)
                 return True
             except OSError:
-                self.__set_error_data(target, "Remove failed")
+                self._set_error_data(target, "Remove failed")
                 return False
 
     def _copy(self, src: str, dst: str) -> bool:
         """Provide internal copy procedure."""
         dst_dir = os.path.dirname(dst)
         if not (self._is_allowed(src, "read") and self._is_allowed(dst_dir, "write")):
-            self.__set_error_data(src, "Access denied")
+            self._set_error_data(src, "Access denied")
             return False
         if os.path.exists(dst):
-            self.__set_error_data(
+            self._set_error_data(
                 dst, "File or folder with the same name already exists"
             )
             return False
@@ -1586,27 +1586,27 @@ class Connector:
                 shutil.copymode(src, dst)
                 return True
             except (shutil.SameFileError, OSError):
-                self.__set_error_data(src, "Unable to copy files")
+                self._set_error_data(src, "Unable to copy files")
                 return False
         else:
             try:
                 os.mkdir(dst, int(self._options["dir_mode"]))
                 shutil.copymode(src, dst)
             except (shutil.SameFileError, OSError):
-                self.__set_error_data(src, "Unable to copy files")
+                self._set_error_data(src, "Unable to copy files")
                 return False
 
             try:
                 srcs = os.listdir(src)
             except PermissionError:
-                self.__set_error_data(src, "Access denied")
+                self._set_error_data(src, "Access denied")
                 return False
 
             for i in srcs:
                 new_src = os.path.join(src, i)
                 new_dst = os.path.join(dst, i)
                 if not self._copy(new_src, new_dst):
-                    self.__set_error_data(new_src, "Unable to copy files")
+                    self._set_error_data(new_src, "Unable to copy files")
                     return False
 
         return True
@@ -1775,15 +1775,15 @@ class Connector:
 
         if access == "read":
             if not os.access(path, os.R_OK):
-                self.__set_error_data(path, access)
+                self._set_error_data(path, access)
                 return False
         elif access == "write":
             if not os.access(path, os.W_OK):
-                self.__set_error_data(path, access)
+                self._set_error_data(path, access)
                 return False
         elif access == "rm":
             if not os.access(os.path.dirname(path), os.W_OK):
-                self.__set_error_data(path, access)
+                self._set_error_data(path, access)
                 return False
         else:
             return False
@@ -1814,7 +1814,7 @@ class Connector:
         url = quote(url, safe="/")
         return url
 
-    def __set_error_data(self, path: str, msg: str) -> None:
+    def _set_error_data(self, path: str, msg: str) -> None:
         """Collect error/warning messages."""
         self._error_data[path] = msg
 
