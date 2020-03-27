@@ -34,6 +34,7 @@ from .api_const import (
     API_CURRENT,
     API_CUT,
     API_DIRS,
+    API_DOWNLOAD,
     API_DST,
     API_HEIGHT,
     API_INIT,
@@ -553,7 +554,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        download = self._request.get("download")
+        download = self._request.get(API_DOWNLOAD)
         cur_file = self.__find(target)
 
         if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
