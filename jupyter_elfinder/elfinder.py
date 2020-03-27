@@ -67,6 +67,7 @@ from .api_const import (
     R_OPTIONS_CREATE,
     R_OPTIONS_CREATE_EXT,
     R_OPTIONS_DISABLED,
+    R_OPTIONS_DISP_INLINE_REGEX,
     R_OPTIONS_DOT_FILES,
     R_OPTIONS_EXTRACT,
     R_OPTIONS_I18N_FOLDER_NAME,
@@ -506,7 +507,7 @@ class Connector:
             R_OPTIONS_UPLOAD_MAX_CONN: 3,
             R_OPTIONS_UPLOAD_MIME: {"allow": ["all"], "deny": [], "firstOrder": "deny"},
             R_OPTIONS_I18N_FOLDER_NAME: True,
-            "dispInlineRegex": "^(?:(?:image|video|audio)|application/"
+            R_OPTIONS_DISP_INLINE_REGEX: "^(?:(?:image|video|audio)|application/"
             + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
             "jpgQuality": 100,
             "syncChkAsTs": 1,
