@@ -317,7 +317,7 @@ class Connector:
         self._img = None  # type: Optional[ModuleType]
 
         # options
-        self._options["root"] = self.__check_utf8(root)
+        self._options["root"] = self._check_utf8(root)
         self._options["upload_max_size"] = upload_max_size
         self._options["debug"] = debug
         self._options["base_url"] = (
@@ -325,7 +325,7 @@ class Connector:
         )
         self._options["expose_real_path"] = expose_real_path
         self._options["dot_files"] = dot_files
-        self._options["files_url"] = self.__check_utf8(url).rstrip("/")
+        self._options["files_url"] = self._check_utf8(url).rstrip("/")
 
         self._debug("files_url", self._options["files_url"])
         self._debug("root", self._options["root"])
@@ -617,7 +617,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        name = self.__check_utf8(name)
+        name = self._check_utf8(name)
 
         if not name or not _check_name(name):
             self._response[R_ERROR] = "Invalid name"
@@ -649,7 +649,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        name = self.__check_utf8(name)
+        name = self._check_utf8(name)
         path = self._find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
@@ -692,7 +692,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        name = self.__check_utf8(name)
+        name = self._check_utf8(name)
         cur_dir = self._find_dir(target)
         if not cur_dir:
             self._response[R_ERROR] = "Invalid parameters"
@@ -781,7 +781,7 @@ class Connector:
             max_size = self._options["upload_max_size"]
             for name, data in up_files.items():
                 if name:
-                    name = self.__check_utf8(name)
+                    name = self._check_utf8(name)
                     total += 1
                     name = os.path.basename(name)
                     if not _check_name(name):
@@ -1410,9 +1410,9 @@ class Connector:
 
         info = {
             "hash": self._hash(path),
-            "name": self.__check_utf8(name),
+            "name": self._check_utf8(name),
             "mime": "directory",
-            "rel": self.__check_utf8(rel),
+            "rel": self._check_utf8(rel),
             "size": 0,
             "date": datetime.fromtimestamp(os.stat(path).st_mtime).strftime(
                 "%d %b %Y %H:%M"
@@ -1447,7 +1447,7 @@ class Connector:
         deletable = self._is_allowed(path, "rm")
 
         info = {
-            "name": self.__check_utf8(os.path.basename(path)),
+            "name": self._check_utf8(os.path.basename(path)),
             "hash": self._hash(path),
             "mime": "directory" if filetype == "dir" else _mimetype(path),
             "read": 1 if readable else 0,
@@ -1810,7 +1810,7 @@ class Connector:
         url = multi_urljoin(
             self._options["base_url"], self._options["files_url"], cur_dir[length:],
         )
-        url = self.__check_utf8(url).replace(os.sep, "/")
+        url = self._check_utf8(url).replace(os.sep, "/")
         url = quote(url, safe="/")
         return url
 
@@ -2118,7 +2118,7 @@ class Connector:
             pass
         self._options["archivers"] = archive
 
-    def __check_utf8(self, name: Union[str, bytes]) -> str:
+    def _check_utf8(self, name: Union[str, bytes]) -> str:
         if isinstance(name, str):
             return name
         try:
