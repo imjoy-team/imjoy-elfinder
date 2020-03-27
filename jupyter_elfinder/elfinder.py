@@ -129,7 +129,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "debug": bool,
         "defaults": Dict[str, bool],
         "dir_mode": Literal[493],
-        "dirSize": bool,
+        "dir_size": bool,
         "disabled": List[str],
         "dotFiles": bool,
         "expose_real_path": bool,
@@ -175,7 +175,7 @@ class Connector:
         "debug": False,
         "defaults": {"read": True, "write": True, "rm": True},
         "dir_mode": 0o755,
-        "dirSize": False,
+        "dir_size": False,
         "disabled": ["netmount", "zipdl"],
         "dotFiles": False,
         "expose_real_path": False,
@@ -1723,7 +1723,7 @@ class Connector:
 
     def __dir_size(self, path: str) -> int:
         total_size = 0
-        if self._options["dirSize"]:
+        if self._options["dir_size"]:
             for dirpath, _, filenames in os.walk(path):
                 for fil in filenames:
                     file_path = os.path.join(dirpath, fil)
