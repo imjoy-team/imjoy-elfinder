@@ -75,6 +75,7 @@ from .api_const import (
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
     R_OPTIONS_SYNC_CHK_AS_TS,
+    R_OPTIONS_SYNC_MIN_MS,
     R_OPTIONS_TMB_URL,
     R_OPTIONS_UPLOAD_MAX_CONN,
     R_OPTIONS_UPLOAD_MAX_SIZE,
@@ -513,7 +514,7 @@ class Connector:
             + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
             R_OPTIONS_JPG_QUALITY: 100,
             R_OPTIONS_SYNC_CHK_AS_TS: 1,
-            "syncMinMs": 30000,
+            R_OPTIONS_SYNC_MIN_MS: 30000,
             "uiCmdMap": {},
         }
 
