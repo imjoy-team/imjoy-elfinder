@@ -135,7 +135,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "expose_real_path": bool,
         "file_mode": Literal[420],
         "files_url": str,
-        "fileURL": bool,
+        "file_url": bool,
         "imgLib": Optional[str],
         "maxFolderDepth": int,
         "perms": Dict[str, Dict[str, bool]],
@@ -181,7 +181,7 @@ class Connector:
         "expose_real_path": False,
         "file_mode": 0o644,
         "files_url": "",
-        "fileURL": True,
+        "file_url": True,
         "imgLib": "auto",
         "maxFolderDepth": 256,
         "perms": {},
@@ -478,7 +478,7 @@ class Connector:
             self._response[R_FILES].append(self.__info(path))
 
         self.__check_archivers()
-        if not self._options["fileURL"]:
+        if not self._options["file_url"]:
             url = ""
         else:
             url = self._options["files_url"]
@@ -1121,7 +1121,7 @@ class Connector:
             info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
-            if self._options["fileURL"] and info["read"]:
+            if self._options["file_url"] and info["read"]:
                 if lpath:
                     info["url"] = self.__path2url(lpath)
                 else:
