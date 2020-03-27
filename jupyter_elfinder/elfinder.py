@@ -2139,25 +2139,23 @@ def _check_name(name: str) -> bool:
 def _mimetype(path: str) -> str:
     """Detect mimetype of file."""
     mime = mimetypes.guess_type(path)[0] or "unknown"
-    ext = path[path.rfind(".") + 1 :]
+    _, ext = os.path.splitext(path)
 
-    if mime == "unknown" and ("." + ext) in mimetypes.types_map:
-        mime = mimetypes.types_map["." + ext]
+    if mime == "unknown" and ext in mimetypes.types_map:
+        mime = mimetypes.types_map[ext]
 
-    if mime == "text/plain" and ext == "pl":
-        mime = MIME_TYPES[ext]
+    if mime == "text/plain" and ext.lstrip(".") == "pl":
+        mime = MIME_TYPES[ext.lstrip(".")]
 
-    if mime == "application/vnd.ms-office" and ext == "doc":
-        mime = MIME_TYPES[ext]
+    if mime == "application/vnd.ms-office" and ext.lstrip(".") == "doc":
+        mime = MIME_TYPES[ext.lstrip(".")]
 
     if mime == "unknown":
         if os.path.basename(path) in ["README", "ChangeLog", "LICENSE", "Makefile"]:
             mime = "text/plain"
         else:
-            if ext in MIME_TYPES:
-                mime = MIME_TYPES[ext]
+            mime = MIME_TYPES.get(ext.lstrip("."), mime)
 
-    # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
     return mime
 
 
