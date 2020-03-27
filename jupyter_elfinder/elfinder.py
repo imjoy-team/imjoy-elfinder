@@ -979,7 +979,7 @@ class Connector:
         if not targets:
             return
 
-        if not self.__init_img_lib() or not self.__can_create_tmb():
+        if not self.__init_img_lib() or not self._can_create_tmb():
             return
         assert thumbs_dir  # typing
         if self._options["tmb_at_once"] > 0:
@@ -994,7 +994,7 @@ class Connector:
                 continue
             if os.path.dirname(path) == thumbs_dir:
                 continue
-            if self.__can_create_tmb(path) and self.__is_allowed(path, "read"):
+            if self._can_create_tmb(path) and self.__is_allowed(path, "read"):
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
                 if not os.path.exists(tmb):
                     if self._tmb(path, tmb):
@@ -1513,7 +1513,7 @@ class Connector:
                     info["url"] = self.__path2url(path)
             if info["mime"][0:5] == "image":
                 thumbs_dir = self._options["tmb_dir"]
-                if self.__can_create_tmb():
+                if self._can_create_tmb():
                     assert thumbs_dir  # typing
                     dim = self.__get_img_size(path)
                     if dim:
@@ -1715,7 +1715,7 @@ class Connector:
                 break
             yield chunk
 
-    def __can_create_tmb(self, path: Optional[str] = None) -> bool:
+    def _can_create_tmb(self, path: Optional[str] = None) -> bool:
         if self._options["img_lib"] and self._options["tmb_dir"]:
             if path is not None:
                 mime = _mimetype(path)
@@ -1839,7 +1839,7 @@ class Connector:
     def __get_img_size(self, path: str) -> Optional[str]:
         if not self.__init_img_lib():
             return None
-        if self.__can_create_tmb():
+        if self._can_create_tmb():
             try:
                 img = self._img.open(path)  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
