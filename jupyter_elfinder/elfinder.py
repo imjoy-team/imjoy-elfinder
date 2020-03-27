@@ -476,10 +476,12 @@ class Connector:
             return
 
         files = []
-        for fil in sorted(items):
-            file_path = os.path.join(path, fil)
-            info = self.__info(file_path)
-            files.append(info)
+        for item in sorted(items):
+            file_path = os.path.join(path, item)
+            if self.__is_accepted(item):
+                info = self.__info(file_path)
+                files.append(info)
+
         self._response[R_FILES] = files
 
         if self._request.get(API_TREE):
@@ -507,7 +509,6 @@ class Connector:
             R_OPTIONS_URL: url,
             R_OPTIONS_DISABLED: self._options["disabled"],
             R_OPTIONS_TMB_URL: thumbs_url,
-            R_OPTIONS_DOT_FILES: self._options["dot_files"],
             R_OPTIONS_ARCHIVERS: {
                 R_OPTIONS_CREATE: list(self._options["archivers"]["create"].keys()),
                 R_OPTIONS_EXTRACT: list(self._options["archivers"]["extract"].keys()),
