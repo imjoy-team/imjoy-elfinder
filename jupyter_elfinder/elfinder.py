@@ -118,7 +118,7 @@ COMMANDS = {
     "paste": "__paste",
     "ping": "__ping",
     "put": "__put",
-    "reload": "__reload",
+    "reload": "__reload",  # not implemented
     "rename": "__rename",
     "resize": "__resize",
     "rm": "__rm",
@@ -1003,152 +1003,6 @@ class Connector:
             if i >= tmb_max:
                 break
 
-    def __cwd(self, path: str) -> None:
-        """Get Current Working Directory."""
-        name = os.path.basename(path)
-        if path == self._options["root"]:
-            name = self._options["root_alias"]
-            root = True
-        else:
-            root = False
-
-        if self._options["root_alias"]:
-            basename = self._options["root_alias"]
-        else:
-            basename = os.path.basename(self._options["root"])
-
-        rel = os.path.join(basename, path[len(self._options["root"]) :])
-
-        info = {
-            "hash": self.__hash(path),
-            "name": self.__check_utf8(name),
-            "mime": "directory",
-            "rel": self.__check_utf8(rel),
-            "size": 0,
-            "date": datetime.fromtimestamp(os.stat(path).st_mtime).strftime(
-                "%d %b %Y %H:%M"
-            ),
-            "read": 1,
-            "write": 1 if self.__is_allowed(path, "write") else 0,
-            "locked": 0,
-            "rm": not root and self.__is_allowed(path, "rm"),
-            "volumeid": self.volumeid,
-        }
-
-        try:
-            info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
-        except StopIteration:
-            info["dirs"] = 0
-
-        self._response[R_CWD] = info
-
-    def __info(self, path: str) -> Info:
-        # mime = ''
-        filetype = "file"
-        if os.path.isfile(path):
-            filetype = "file"
-        elif os.path.isdir(path):
-            filetype = "dir"
-        elif os.path.islink(path):
-            filetype = "link"
-
-        stat = os.lstat(path)
-        readable = self.__is_allowed(path, "read")
-        writable = self.__is_allowed(path, "write")
-        deletable = self.__is_allowed(path, "rm")
-
-        info = {
-            "name": self.__check_utf8(os.path.basename(path)),
-            "hash": self.__hash(path),
-            "mime": "directory" if filetype == "dir" else _mimetype(path),
-            "read": 1 if readable else 0,
-            "write": 1 if writable else 0,
-            "locked": 1 if not readable and not writable and not deletable else 0,
-            "ts": stat.st_mtime,
-        }  # type: Info
-
-        if self._options["expose_real_path"]:
-            info["path"] = os.path.abspath(path)
-
-        if filetype == "dir":
-            info["volumeid"] = self.volumeid
-            try:
-                info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
-            except StopIteration:
-                info["dirs"] = 0
-
-        if path != self._options["root"]:
-            info["phash"] = self.__hash(os.path.dirname(path))
-
-        if filetype == "link":
-            lpath = self.__read_link(path)
-            if not lpath:
-                info["mime"] = "symlink-broken"
-                return info
-
-            if os.path.isdir(lpath):
-                info["mime"] = "directory"
-            else:
-                info["mime"] = _mimetype(lpath)
-
-            if self._options["root_alias"]:
-                basename = self._options["root_alias"]
-            else:
-                basename = os.path.basename(self._options["root"])
-
-            info["link"] = self.__hash(lpath)
-            info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
-            info["read"] = 1 if info["read"] and self.__is_allowed(lpath, "read") else 0
-            info["write"] = (
-                1 if info["write"] and self.__is_allowed(lpath, "write") else 0
-            )
-            info["locked"] = (
-                1
-                if (
-                    not info["write"]
-                    and not info["read"]
-                    and not self.__is_allowed(lpath, "rm")
-                )
-                else 0
-            )
-            info["size"] = 0
-        else:
-            lpath = None
-            info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
-
-        if not info["mime"] == "directory":
-            if self._options["file_url"] and info["read"]:
-                if lpath:
-                    info["url"] = self.__path2url(lpath)
-                else:
-                    info["url"] = self.__path2url(path)
-            if info["mime"][0:5] == "image":
-                thumbs_dir = self._options["tmb_dir"]
-                if self.__can_create_tmb():
-                    assert thumbs_dir  # typing
-                    dim = self.__get_img_size(path)
-                    if dim:
-                        info["dim"] = dim
-
-                    # if we are in tmb dir, files are thumbs itself
-                    if os.path.dirname(path) == thumbs_dir:
-                        info["tmb"] = self.__path2url(path)
-                        return info
-
-                    tmb = os.path.join(thumbs_dir, info["hash"] + ".png")
-
-                    if os.path.exists(tmb):
-                        tmb_url = self.__path2url(tmb)
-                        info["tmb"] = tmb_url
-                    else:
-                        if info["mime"].startswith("image/"):
-                            info["tmb"] = "1"
-
-        if info["mime"] == "application/x-empty" or info["mime"] == "inode/x-empty":
-            info["mime"] = "text/plain"
-
-        return info
-
     def __size(self) -> None:
         if API_TARGETS not in self._request:
             self._response[R_ERROR] = "Invalid parameters"
@@ -1276,125 +1130,6 @@ class Connector:
             ):
                 tree.append(self.__info(dir_path))
         self._response[R_TREE] = tree
-
-    def __remove(self, target: str) -> bool:
-        """Provide internal remove procedure."""
-        if not self.__is_allowed(target, "rm"):
-            self.__set_error_data(target, "Access denied")
-
-        if not os.path.isdir(target):
-            try:
-                os.unlink(target)
-                self.__rm_tmb(target)
-                return True
-            except OSError:
-                self.__set_error_data(target, "Remove failed")
-                return False
-        else:
-            try:
-                targets = os.listdir(target)
-            except PermissionError:
-                self.__set_error_data(target, "Access denied")
-                return False
-
-            for fil in targets:
-                if self.__is_accepted(fil):
-                    self.__remove(os.path.join(target, fil))
-            try:
-                os.rmdir(target)
-                return True
-            except OSError:
-                self.__set_error_data(target, "Remove failed")
-                return False
-
-    def __copy(self, src: str, dst: str) -> bool:
-        """Provide internal copy procedure."""
-        dst_dir = os.path.dirname(dst)
-        if not (self.__is_allowed(src, "read") and self.__is_allowed(dst_dir, "write")):
-            self.__set_error_data(src, "Access denied")
-            return False
-        if os.path.exists(dst):
-            self.__set_error_data(
-                dst, "File or folder with the same name already exists"
-            )
-            return False
-
-        if not os.path.isdir(src):
-            try:
-                shutil.copyfile(src, dst)
-                shutil.copymode(src, dst)
-                return True
-            except (shutil.SameFileError, OSError):
-                self.__set_error_data(src, "Unable to copy files")
-                return False
-        else:
-            try:
-                os.mkdir(dst, int(self._options["dir_mode"]))
-                shutil.copymode(src, dst)
-            except (shutil.SameFileError, OSError):
-                self.__set_error_data(src, "Unable to copy files")
-                return False
-
-            try:
-                srcs = os.listdir(src)
-            except PermissionError:
-                self.__set_error_data(src, "Access denied")
-                return False
-
-            for i in srcs:
-                new_src = os.path.join(src, i)
-                new_dst = os.path.join(dst, i)
-                if not self.__copy(new_src, new_dst):
-                    self.__set_error_data(new_src, "Unable to copy files")
-                    return False
-
-        return True
-
-    def __find_dir(self, fhash: str, path: Optional[str] = None) -> Optional[str]:
-        """Find directory by hash."""
-        fhash = str(fhash)
-        # try to get find it in the cache
-        cached_path = self._cached_path.get(fhash)
-        if cached_path:
-            return cached_path
-
-        if not path:
-            path = self._options["root"]
-            if fhash == self.__hash(path):
-                return path
-
-        if not os.path.isdir(path):
-            return None
-
-        for root, dirs, _ in os.walk(path, topdown=True):
-            for folder in dirs:
-                folder_path = os.path.join(root, folder)
-                if not os.path.islink(folder_path) and fhash == self.__hash(
-                    folder_path
-                ):
-                    return folder_path
-        return None
-
-    def __find(self, fhash: str, parent: Optional[str] = None) -> Optional[str]:
-        """Find file/dir by hash."""
-        fhash = str(fhash)
-        cached_path = self._cached_path.get(fhash)
-        if cached_path:
-            return cached_path
-        if not parent:
-            parent = self._options["root"]
-        if os.path.isdir(parent):
-            for root, dirs, files in os.walk(parent, topdown=True):
-                for folder in dirs:
-                    folder_path = os.path.join(root, folder)
-                    if fhash == self.__hash(folder_path):
-                        return folder_path
-                for fil in files:
-                    file_path = os.path.join(root, fil)
-                    if fhash == self.__hash(file_path):
-                        return file_path
-
-        return None
 
     def __get(self) -> None:
         target = self._request.get(API_TARGET)
@@ -1656,6 +1391,271 @@ class Connector:
                     if query.lower() in folder.lower():
                         result.append(self.__info(file_path))
         self._response[R_FILES] = result
+
+    def __cwd(self, path: str) -> None:
+        """Get Current Working Directory."""
+        name = os.path.basename(path)
+        if path == self._options["root"]:
+            name = self._options["root_alias"]
+            root = True
+        else:
+            root = False
+
+        if self._options["root_alias"]:
+            basename = self._options["root_alias"]
+        else:
+            basename = os.path.basename(self._options["root"])
+
+        rel = os.path.join(basename, path[len(self._options["root"]) :])
+
+        info = {
+            "hash": self.__hash(path),
+            "name": self.__check_utf8(name),
+            "mime": "directory",
+            "rel": self.__check_utf8(rel),
+            "size": 0,
+            "date": datetime.fromtimestamp(os.stat(path).st_mtime).strftime(
+                "%d %b %Y %H:%M"
+            ),
+            "read": 1,
+            "write": 1 if self.__is_allowed(path, "write") else 0,
+            "locked": 0,
+            "rm": not root and self.__is_allowed(path, "rm"),
+            "volumeid": self.volumeid,
+        }
+
+        try:
+            info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
+        except StopIteration:
+            info["dirs"] = 0
+
+        self._response[R_CWD] = info
+
+    def __info(self, path: str) -> Info:
+        # mime = ''
+        filetype = "file"
+        if os.path.isfile(path):
+            filetype = "file"
+        elif os.path.isdir(path):
+            filetype = "dir"
+        elif os.path.islink(path):
+            filetype = "link"
+
+        stat = os.lstat(path)
+        readable = self.__is_allowed(path, "read")
+        writable = self.__is_allowed(path, "write")
+        deletable = self.__is_allowed(path, "rm")
+
+        info = {
+            "name": self.__check_utf8(os.path.basename(path)),
+            "hash": self.__hash(path),
+            "mime": "directory" if filetype == "dir" else _mimetype(path),
+            "read": 1 if readable else 0,
+            "write": 1 if writable else 0,
+            "locked": 1 if not readable and not writable and not deletable else 0,
+            "ts": stat.st_mtime,
+        }  # type: Info
+
+        if self._options["expose_real_path"]:
+            info["path"] = os.path.abspath(path)
+
+        if filetype == "dir":
+            info["volumeid"] = self.volumeid
+            try:
+                info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
+            except StopIteration:
+                info["dirs"] = 0
+
+        if path != self._options["root"]:
+            info["phash"] = self.__hash(os.path.dirname(path))
+
+        if filetype == "link":
+            lpath = self.__read_link(path)
+            if not lpath:
+                info["mime"] = "symlink-broken"
+                return info
+
+            if os.path.isdir(lpath):
+                info["mime"] = "directory"
+            else:
+                info["mime"] = _mimetype(lpath)
+
+            if self._options["root_alias"]:
+                basename = self._options["root_alias"]
+            else:
+                basename = os.path.basename(self._options["root"])
+
+            info["link"] = self.__hash(lpath)
+            info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
+            info["read"] = 1 if info["read"] and self.__is_allowed(lpath, "read") else 0
+            info["write"] = (
+                1 if info["write"] and self.__is_allowed(lpath, "write") else 0
+            )
+            info["locked"] = (
+                1
+                if (
+                    not info["write"]
+                    and not info["read"]
+                    and not self.__is_allowed(lpath, "rm")
+                )
+                else 0
+            )
+            info["size"] = 0
+        else:
+            lpath = None
+            info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
+
+        if not info["mime"] == "directory":
+            if self._options["file_url"] and info["read"]:
+                if lpath:
+                    info["url"] = self.__path2url(lpath)
+                else:
+                    info["url"] = self.__path2url(path)
+            if info["mime"][0:5] == "image":
+                thumbs_dir = self._options["tmb_dir"]
+                if self.__can_create_tmb():
+                    assert thumbs_dir  # typing
+                    dim = self.__get_img_size(path)
+                    if dim:
+                        info["dim"] = dim
+
+                    # if we are in tmb dir, files are thumbs itself
+                    if os.path.dirname(path) == thumbs_dir:
+                        info["tmb"] = self.__path2url(path)
+                        return info
+
+                    tmb = os.path.join(thumbs_dir, info["hash"] + ".png")
+
+                    if os.path.exists(tmb):
+                        tmb_url = self.__path2url(tmb)
+                        info["tmb"] = tmb_url
+                    else:
+                        if info["mime"].startswith("image/"):
+                            info["tmb"] = "1"
+
+        if info["mime"] == "application/x-empty" or info["mime"] == "inode/x-empty":
+            info["mime"] = "text/plain"
+
+        return info
+
+    def __remove(self, target: str) -> bool:
+        """Provide internal remove procedure."""
+        if not self.__is_allowed(target, "rm"):
+            self.__set_error_data(target, "Access denied")
+
+        if not os.path.isdir(target):
+            try:
+                os.unlink(target)
+                self.__rm_tmb(target)
+                return True
+            except OSError:
+                self.__set_error_data(target, "Remove failed")
+                return False
+        else:
+            try:
+                targets = os.listdir(target)
+            except PermissionError:
+                self.__set_error_data(target, "Access denied")
+                return False
+
+            for fil in targets:
+                if self.__is_accepted(fil):
+                    self.__remove(os.path.join(target, fil))
+            try:
+                os.rmdir(target)
+                return True
+            except OSError:
+                self.__set_error_data(target, "Remove failed")
+                return False
+
+    def __copy(self, src: str, dst: str) -> bool:
+        """Provide internal copy procedure."""
+        dst_dir = os.path.dirname(dst)
+        if not (self.__is_allowed(src, "read") and self.__is_allowed(dst_dir, "write")):
+            self.__set_error_data(src, "Access denied")
+            return False
+        if os.path.exists(dst):
+            self.__set_error_data(
+                dst, "File or folder with the same name already exists"
+            )
+            return False
+
+        if not os.path.isdir(src):
+            try:
+                shutil.copyfile(src, dst)
+                shutil.copymode(src, dst)
+                return True
+            except (shutil.SameFileError, OSError):
+                self.__set_error_data(src, "Unable to copy files")
+                return False
+        else:
+            try:
+                os.mkdir(dst, int(self._options["dir_mode"]))
+                shutil.copymode(src, dst)
+            except (shutil.SameFileError, OSError):
+                self.__set_error_data(src, "Unable to copy files")
+                return False
+
+            try:
+                srcs = os.listdir(src)
+            except PermissionError:
+                self.__set_error_data(src, "Access denied")
+                return False
+
+            for i in srcs:
+                new_src = os.path.join(src, i)
+                new_dst = os.path.join(dst, i)
+                if not self.__copy(new_src, new_dst):
+                    self.__set_error_data(new_src, "Unable to copy files")
+                    return False
+
+        return True
+
+    def __find_dir(self, fhash: str, path: Optional[str] = None) -> Optional[str]:
+        """Find directory by hash."""
+        fhash = str(fhash)
+        # try to get find it in the cache
+        cached_path = self._cached_path.get(fhash)
+        if cached_path:
+            return cached_path
+
+        if not path:
+            path = self._options["root"]
+            if fhash == self.__hash(path):
+                return path
+
+        if not os.path.isdir(path):
+            return None
+
+        for root, dirs, _ in os.walk(path, topdown=True):
+            for folder in dirs:
+                folder_path = os.path.join(root, folder)
+                if not os.path.islink(folder_path) and fhash == self.__hash(
+                    folder_path
+                ):
+                    return folder_path
+        return None
+
+    def __find(self, fhash: str, parent: Optional[str] = None) -> Optional[str]:
+        """Find file/dir by hash."""
+        fhash = str(fhash)
+        cached_path = self._cached_path.get(fhash)
+        if cached_path:
+            return cached_path
+        if not parent:
+            parent = self._options["root"]
+        if os.path.isdir(parent):
+            for root, dirs, files in os.walk(parent, topdown=True):
+                for folder in dirs:
+                    folder_path = os.path.join(root, folder)
+                    if fhash == self.__hash(folder_path):
+                        return folder_path
+                for fil in files:
+                    file_path = os.path.join(root, fil)
+                    if fhash == self.__hash(file_path):
+                        return file_path
+
+        return None
 
     def __tmb(self, path: str, tmb_path: str) -> bool:
         """Provide internal thumbnail create procedure."""
