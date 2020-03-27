@@ -307,14 +307,14 @@ class Connector:
         self.volumeid = str(uuid.uuid4())
 
         # internal
-        self._time = 0.0
         self._request = {}  # type: Dict[str, Any]
         self._response = {}  # type: Dict[str, Any]
+        self._response[R_DEBUG] = {}
         self._error_data = {}  # type: Dict[str, str]
         self._img = None  # type: Optional[ModuleType]
+        self._time = 0.0
         self._today = 0.0
         self._yesterday = 0.0
-        self._response[R_DEBUG] = {}
 
         # options
         self._options["root"] = self.__check_utf8(root)
