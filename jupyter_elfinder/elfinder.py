@@ -474,7 +474,7 @@ class Connector:
         if self._request.get(API_TREE):
             self._response[R_FILES].append(self._info(path))
 
-        self.__check_archivers()
+        self._check_archivers()
         if not self._options["file_url"]:
             url = ""
         else:
@@ -1296,7 +1296,7 @@ class Connector:
             return
 
         mime = _mimetype(cur_file)
-        self.__check_archivers()
+        self._check_archivers()
         if mime not in self._options["archivers"]["extract"]:
             self._response[R_ERROR] = "Unable to extract files from archive"
             return
@@ -1852,7 +1852,7 @@ class Connector:
         if self._options["debug"]:
             self._response[R_DEBUG].update({key: val})
 
-    def __check_archivers(self) -> None:
+    def _check_archivers(self) -> None:
         # import subprocess
         # proc = subprocess.Popen(['tar', '--version'], shell = False,
         # stdout = subprocess.PIPE, stderr=subprocess.PIPE)
