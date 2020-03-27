@@ -136,7 +136,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "file_mode": Literal[420],
         "files_url": str,
         "file_url": bool,
-        "imgLib": Optional[str],
+        "img_lib": Optional[str],
         "maxFolderDepth": int,
         "perms": Dict[str, Dict[str, bool]],
         "root": str,
@@ -182,7 +182,7 @@ class Connector:
         "file_mode": 0o644,
         "files_url": "",
         "file_url": True,
-        "imgLib": "auto",
+        "img_lib": "auto",
         "maxFolderDepth": 256,
         "perms": {},
         "root": "",
@@ -1744,7 +1744,7 @@ class Connector:
             yield chunk
 
     def __can_create_tmb(self, path: Optional[str] = None) -> bool:
-        if self._options["imgLib"] and self._options["tmbDir"]:
+        if self._options["img_lib"] and self._options["tmbDir"]:
             if path is not None:
                 mime = self.__mimetype(path)
                 if mime[0:5] != "image":
@@ -1847,22 +1847,22 @@ class Connector:
         self._error_data[path] = msg
 
     def __init_img_lib(self) -> Optional[str]:
-        if not self._options["imgLib"] or self._options["imgLib"] == "auto":
-            self._options["imgLib"] = "PIL"
+        if not self._options["img_lib"] or self._options["img_lib"] == "auto":
+            self._options["img_lib"] = "PIL"
 
-        if self._options["imgLib"] == "PIL":
+        if self._options["img_lib"] == "PIL":
             try:
                 from PIL import Image  # pylint: disable=import-outside-toplevel
 
                 self._img = Image
             except ImportError:
                 self._img = None
-                self._options["imgLib"] = None
+                self._options["img_lib"] = None
         else:
             raise NotImplementedError
 
-        self.__debug("imgLib", self._options["imgLib"])
-        return self._options["imgLib"]
+        self.__debug("img_lib", self._options["img_lib"])
+        return self._options["img_lib"]
 
     def __get_img_size(self, path: str) -> Optional[str]:
         if not self.__init_img_lib():
