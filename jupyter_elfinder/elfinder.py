@@ -465,7 +465,7 @@ class Connector:
         files = []
         for item in sorted(items):
             file_path = os.path.join(path, item)
-            if self.__is_accepted(item):
+            if self._is_accepted(item):
                 info = self._info(file_path)
                 files.append(info)
 
@@ -1126,7 +1126,7 @@ class Connector:
             if (
                 os.path.isdir(dir_path)
                 and not os.path.islink(dir_path)
-                and self.__is_accepted(directory)
+                and self._is_accepted(directory)
             ):
                 tree.append(self._info(dir_path))
         self._response[R_TREE] = tree
@@ -1559,7 +1559,7 @@ class Connector:
                 return False
 
             for fil in targets:
-                if self.__is_accepted(fil):
+                if self._is_accepted(fil):
                     self._remove(os.path.join(target, fil))
             try:
                 os.rmdir(target)
@@ -1762,7 +1762,7 @@ class Connector:
             return False
         return True
 
-    def __is_accepted(self, target: str) -> bool:
+    def _is_accepted(self, target: str) -> bool:
         if target in (".", ".."):
             return False
         if target[0:1] == "." and not self._options["dot_files"]:
