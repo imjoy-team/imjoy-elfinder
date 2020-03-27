@@ -74,6 +74,7 @@ from .api_const import (
     R_OPTIONS_JPG_QUALITY,
     R_OPTIONS_MIME_ALLOW,
     R_OPTIONS_MIME_DENY,
+    R_OPTIONS_MIME_FIRST_ORDER,
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
     R_OPTIONS_SYNC_CHK_AS_TS,
@@ -514,7 +515,7 @@ class Connector:
             R_OPTIONS_UPLOAD_MIME: {
                 R_OPTIONS_MIME_ALLOW: ["all"],
                 R_OPTIONS_MIME_DENY: [],
-                "firstOrder": R_OPTIONS_MIME_DENY,
+                R_OPTIONS_MIME_FIRST_ORDER: R_OPTIONS_MIME_DENY,
             },
             R_OPTIONS_I18N_FOLDER_NAME: True,
             R_OPTIONS_DISP_INLINE_REGEX: "^(?:(?:image|video|audio)|application/"
