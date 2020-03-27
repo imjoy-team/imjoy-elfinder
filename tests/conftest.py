@@ -34,6 +34,7 @@ def settings_fixture(tmp_path):
         "files_url": "/files",
         "base_url": "",
         "expose_real_path": True,
+        "dot_files": False,
         "thumbnail_dir": thumbs_dir,
     }
     thumbs_dir = tmp_path / thumbs_dir

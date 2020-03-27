@@ -307,6 +307,7 @@ class Connector:
         upload_max_size: int,
         tmb_dir: Optional[str],
         expose_real_path: bool = False,
+        dot_files: bool = False,
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
@@ -318,6 +319,7 @@ class Connector:
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
         self._options["expose_real_path"] = expose_real_path
+        self._options["dot_files"] = dot_files
         self._response[R_DEBUG] = {}
         self._options["files_url"] = self.__check_utf8(url).rstrip("/")
         self.volumeid = str(uuid.uuid4())
