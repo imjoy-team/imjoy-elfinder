@@ -60,6 +60,7 @@ from .api_const import (
     R_DEBUG,
     R_DIM,
     R_ERROR,
+    R_FILE_CNT,
     R_FILES,
     R_HASHES,
     R_IMAGES,
@@ -1197,14 +1198,14 @@ class Connector:
                 total_size += size
                 file_count += 1
             sizes.append(
-                {"dirCnt": dir_count, "fileCnt": file_count, R_SIZE: total_size}
+                {"dirCnt": dir_count, R_FILE_CNT: file_count, R_SIZE: total_size}
             )
             all_total_size += total_size
             all_file_count += file_count
             all_dir_count += dir_count
 
         self._response[R_SIZE] = all_total_size
-        self._response["fileCnt"] = all_file_count
+        self._response[R_FILE_CNT] = all_file_count
         self._response["dirCnt"] = all_dir_count
         self._response["sizes"] = sizes
 
