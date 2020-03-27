@@ -1172,7 +1172,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        dim = self.__get_img_size(cur_file)
+        dim = self._get_img_size(cur_file)
         if dim:
             self._response[R_DIM] = str(dim)
         else:
@@ -1515,7 +1515,7 @@ class Connector:
                 thumbs_dir = self._options["tmb_dir"]
                 if self._can_create_tmb():
                     assert thumbs_dir  # typing
-                    dim = self.__get_img_size(path)
+                    dim = self._get_img_size(path)
                     if dim:
                         info["dim"] = dim
 
@@ -1836,7 +1836,7 @@ class Connector:
         self.__debug("img_lib", self._options["img_lib"])
         return self._options["img_lib"]
 
-    def __get_img_size(self, path: str) -> Optional[str]:
+    def _get_img_size(self, path: str) -> Optional[str]:
         if not self.__init_img_lib():
             return None
         if self._can_create_tmb():
