@@ -439,7 +439,7 @@ class Connector:
             return
 
         if target:
-            path = self.__find_dir(target)
+            path = self._find_dir(target)
 
         if init:
             self._response[R_API] = 2.1
@@ -650,7 +650,7 @@ class Connector:
             return
 
         name = self.__check_utf8(name)
-        path = self.__find_dir(target)
+        path = self._find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
             return
@@ -693,7 +693,7 @@ class Connector:
             return
 
         name = self.__check_utf8(name)
-        cur_dir = self.__find_dir(target)
+        cur_dir = self._find_dir(target)
         if not cur_dir:
             self._response[R_ERROR] = "Invalid parameters"
             return
@@ -756,7 +756,7 @@ class Connector:
 
         if API_TARGET in self._request:
             dir_hash = self._request[API_TARGET]
-            cur_dir = self.__find_dir(dir_hash)
+            cur_dir = self._find_dir(dir_hash)
             if not cur_dir:
                 self._response[R_ERROR] = "Invalid parameters"
                 return
@@ -832,8 +832,8 @@ class Connector:
     def __paste(self) -> None:
         """Copy or cut files/directories."""
         if API_SRC in self._request and API_DST in self._request:
-            src = self.__find_dir(self._request[API_SRC])
-            dst = self.__find_dir(self._request[API_DST])
+            src = self._find_dir(self._request[API_SRC])
+            dst = self._find_dir(self._request[API_DST])
             cur_dir = dst
             if not cur_dir or not src or not dst or API_TARGETS not in self._request:
                 self._response[R_ERROR] = "Invalid parameters"
@@ -1098,7 +1098,7 @@ class Connector:
         if not target:
             self._response[R_ERROR] = "Invalid parameters"
             return
-        path = self.__find_dir(target)
+        path = self._find_dir(target)
 
         if path is None or not os.path.isdir(path):
             self._response[R_ERROR] = "Directory not found"
@@ -1225,7 +1225,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_dir = self.__find_dir(target)
+        cur_dir = self._find_dir(target)
         if not cur_dir:
             self._response[R_ERROR] = "File not found"
             return
@@ -1364,7 +1364,7 @@ class Connector:
             if not target:
                 self._response[R_ERROR] = "Invalid parameters"
                 return
-            search_path = self.__find_dir(target)
+            search_path = self._find_dir(target)
         else:
             search_path = self._options["root"]
 
@@ -1611,7 +1611,7 @@ class Connector:
 
         return True
 
-    def __find_dir(self, fhash: str, path: Optional[str] = None) -> Optional[str]:
+    def _find_dir(self, fhash: str, path: Optional[str] = None) -> Optional[str]:
         """Find directory by hash."""
         fhash = str(fhash)
         # try to get find it in the cache
