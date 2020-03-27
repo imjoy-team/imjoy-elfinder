@@ -64,6 +64,7 @@ from .api_const import (
     R_OPTIONS,
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
+    R_OPTIONS_URL,
     R_REMOVED,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
@@ -474,7 +475,7 @@ class Connector:
         self._response[R_OPTIONS] = {
             R_OPTIONS_PATH: path,
             R_OPTIONS_SEPARATOR: os.path.sep,
-            "url": url,
+            R_OPTIONS_URL: url,
             "disabled": self._options["disabled"],
             "tmbURL": thumbs_url,
             "dotFiles": self._options["dotFiles"],
