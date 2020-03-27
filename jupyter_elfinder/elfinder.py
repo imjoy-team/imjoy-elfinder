@@ -74,6 +74,7 @@ from .api_const import (
     R_OPTIONS_TMB_URL,
     R_OPTIONS_UPLOAD_MAX_CONN,
     R_OPTIONS_UPLOAD_MAX_SIZE,
+    R_OPTIONS_UPLOAD_MIME,
     R_OPTIONS_UPLOAD_OVERWRITE,
     R_OPTIONS_URL,
     R_REMOVED,
@@ -502,7 +503,7 @@ class Connector:
             R_OPTIONS_UPLOAD_MAX_SIZE: self._options["uploadMaxSize"],
             R_OPTIONS_UPLOAD_OVERWRITE: True,
             R_OPTIONS_UPLOAD_MAX_CONN: 3,
-            "uploadMime": {"allow": ["all"], "deny": [], "firstOrder": "deny"},
+            R_OPTIONS_UPLOAD_MIME: {"allow": ["all"], "deny": [], "firstOrder": "deny"},
             "i18nFolderName": True,
             "dispInlineRegex": "^(?:(?:image|video|audio)|application/"
             + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
