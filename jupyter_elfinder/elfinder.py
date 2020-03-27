@@ -680,7 +680,7 @@ class Connector:
                         return
                     new_subdir = os.path.join(new_dir, subdir)
                     os.mkdir(new_subdir, int(self._options["dir_mode"]))
-                    self._response[R_HASHES].append(self.__hash(new_subdir))
+                    self._response[R_HASHES].append(self._hash(new_subdir))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder"
 
@@ -1084,7 +1084,7 @@ class Connector:
 
         items = {}
         for fname in file_names:
-            fhash = self.__hash(os.path.join(path, fname))
+            fhash = self._hash(os.path.join(path, fname))
             if intersect:
                 if fhash in intersect:
                     items[fhash] = fname
@@ -1409,7 +1409,7 @@ class Connector:
         rel = os.path.join(basename, path[len(self._options["root"]) :])
 
         info = {
-            "hash": self.__hash(path),
+            "hash": self._hash(path),
             "name": self.__check_utf8(name),
             "mime": "directory",
             "rel": self.__check_utf8(rel),
@@ -1448,7 +1448,7 @@ class Connector:
 
         info = {
             "name": self.__check_utf8(os.path.basename(path)),
-            "hash": self.__hash(path),
+            "hash": self._hash(path),
             "mime": "directory" if filetype == "dir" else _mimetype(path),
             "read": 1 if readable else 0,
             "write": 1 if writable else 0,
@@ -1467,7 +1467,7 @@ class Connector:
                 info["dirs"] = 0
 
         if path != self._options["root"]:
-            info["phash"] = self.__hash(os.path.dirname(path))
+            info["phash"] = self._hash(os.path.dirname(path))
 
         if filetype == "link":
             lpath = self._read_link(path)
@@ -1485,7 +1485,7 @@ class Connector:
             else:
                 basename = os.path.basename(self._options["root"])
 
-            info["link"] = self.__hash(lpath)
+            info["link"] = self._hash(lpath)
             info["alias"] = os.path.join(basename, lpath[len(self._options["root"]) :])
             info["read"] = 1 if info["read"] and self._is_allowed(lpath, "read") else 0
             info["write"] = (
@@ -1621,7 +1621,7 @@ class Connector:
 
         if not path:
             path = self._options["root"]
-            if fhash == self.__hash(path):
+            if fhash == self._hash(path):
                 return path
 
         if not os.path.isdir(path):
@@ -1630,7 +1630,7 @@ class Connector:
         for root, dirs, _ in os.walk(path, topdown=True):
             for folder in dirs:
                 folder_path = os.path.join(root, folder)
-                if not os.path.islink(folder_path) and fhash == self.__hash(
+                if not os.path.islink(folder_path) and fhash == self._hash(
                     folder_path
                 ):
                     return folder_path
@@ -1648,11 +1648,11 @@ class Connector:
             for root, dirs, files in os.walk(parent, topdown=True):
                 for folder in dirs:
                     folder_path = os.path.join(root, folder)
-                    if fhash == self.__hash(folder_path):
+                    if fhash == self._hash(folder_path):
                         return folder_path
                 for fil in files:
                     file_path = os.path.join(root, fil)
-                    if fhash == self.__hash(file_path):
+                    if fhash == self._hash(file_path):
                         return file_path
 
         return None
@@ -1729,7 +1729,7 @@ class Connector:
         thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
             if not os.path.dirname(path) == thumbs_dir:
-                tmb = os.path.join(thumbs_dir, self.__hash(path) + ".png")
+                tmb = os.path.join(thumbs_dir, self._hash(path) + ".png")
         return tmb
 
     def _is_upload_allow(self, name: str) -> bool:
@@ -1796,7 +1796,7 @@ class Connector:
 
         return self._options["defaults"][access]
 
-    def __hash(self, path: str) -> str:
+    def _hash(self, path: str) -> str:
         """Hash of the path."""
         hash_code = make_hash(path)
 
