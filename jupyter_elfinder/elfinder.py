@@ -733,7 +733,7 @@ class Connector:
             rm_file = self.__find(rm_hash)
             if not rm_file:
                 continue
-            if self.__remove(rm_file):
+            if self._remove(rm_file):
                 removed.append(rm_hash)
             else:
                 self._response[R_ERROR] = "Failed to remove: " + rm_file
@@ -1538,7 +1538,7 @@ class Connector:
 
         return info
 
-    def __remove(self, target: str) -> bool:
+    def _remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
         if not self.__is_allowed(target, "rm"):
             self.__set_error_data(target, "Access denied")
@@ -1560,7 +1560,7 @@ class Connector:
 
             for fil in targets:
                 if self.__is_accepted(fil):
-                    self.__remove(os.path.join(target, fil))
+                    self._remove(os.path.join(target, fil))
             try:
                 os.rmdir(target)
                 return True
