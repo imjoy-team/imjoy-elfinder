@@ -327,8 +327,8 @@ class Connector:
         self._options["dot_files"] = dot_files
         self._options["files_url"] = self.__check_utf8(url).rstrip("/")
 
-        self.__debug("files_url", self._options["files_url"])
-        self.__debug("root", self._options["root"])
+        self._debug("files_url", self._options["files_url"])
+        self._debug("root", self._options["root"])
 
         for cmd in self._options["disabled"]:
             if cmd in self._commands:
@@ -343,7 +343,7 @@ class Connector:
                 self._options["tmb_dir"] = thumbs_dir
             except PermissionError:
                 self._options["tmb_dir"] = None
-                self.__debug("thumbnail", " Permission denied: " + thumbs_dir)
+                self._debug("thumbnail", " Permission denied: " + thumbs_dir)
                 print(
                     "WARNING: failed to create thumbnail folder "
                     "due to permission denied, it will be disabled."
@@ -384,17 +384,17 @@ class Connector:
                                 "Command Failed: " + cmd + ", Error: \n" + str(exc)
                             )
                             traceback.print_exc()
-                            self.__debug("exception", exception_to_string(exc))
+                            self._debug("exception", exception_to_string(exc))
                 else:
                     self._response[R_ERROR] = (
                         "Unknown command: " + self._request[API_CMD]
                     )
 
         if self._error_data:
-            self.__debug("errorData", self._error_data)
+            self._debug("errorData", self._error_data)
 
         if self._options["debug"]:
-            self.__debug("time", (time.time() - start_time))
+            self._debug("time", (time.time() - start_time))
         else:
             if R_DEBUG in self._response:
                 del self._response[R_DEBUG]
@@ -953,7 +953,7 @@ class Connector:
             self._response[R_ERROR] = "File is not an image"
             return
 
-        self.__debug("resize " + cur_file, str(width) + ":" + str(height))
+        self._debug("resize " + cur_file, str(width) + ":" + str(height))
         if not self.__init_img_lib():
             return
 
@@ -965,8 +965,8 @@ class Connector:
             img_resized.save(cur_file)
             self._rm_tmb(cur_file)
         except OSError as exc:  # UnidentifiedImageError requires Pillow 7.0.0
-            # self.__debug('resizeFailed_' + path, str(exc))
-            self.__debug("resizeFailed_" + self._options["root"], str(exc))
+            # self._debug('resizeFailed_' + path, str(exc))
+            self._debug("resizeFailed_" + self._options["root"], str(exc))
             self._response[R_ERROR] = "Unable to resize image"
             return
 
@@ -1669,7 +1669,7 @@ class Connector:
             img.save(tmb_path, "PNG")
         # UnidentifiedImageError requires Pillow 7.0.0
         except (OSError, ValueError) as exc:
-            self.__debug("tmbFailed_" + path, str(exc))
+            self._debug("tmbFailed_" + path, str(exc))
             return False
         return True
 
@@ -1833,7 +1833,7 @@ class Connector:
         else:
             raise NotImplementedError
 
-        self.__debug("img_lib", self._options["img_lib"])
+        self._debug("img_lib", self._options["img_lib"])
         return self._options["img_lib"]
 
     def _get_img_size(self, path: str) -> Optional[str]:
@@ -1848,7 +1848,7 @@ class Connector:
 
         return None
 
-    def __debug(self, key: str, val: Any) -> None:
+    def _debug(self, key: str, val: Any) -> None:
         if self._options["debug"]:
             self._response[R_DEBUG].update({key: val})
 
@@ -2125,7 +2125,7 @@ class Connector:
             str_name = name.decode("utf-8")
         except UnicodeDecodeError:
             str_name = str(name, "utf-8", "replace")
-            self.__debug("invalid encoding", str_name)
+            self._debug("invalid encoding", str_name)
         return str_name
 
 
