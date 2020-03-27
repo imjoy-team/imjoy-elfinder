@@ -63,3 +63,6 @@ R_UPLMAXFILE = "uplMaxFile"
 R_UPLMAXSIZE = "uplMaxSize"
 R_WARNING = "warning"
 R_TREE = "tree"
+
+# Response options constants
+R_OPTIONS_PATH = "path"

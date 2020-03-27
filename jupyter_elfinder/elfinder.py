@@ -62,6 +62,7 @@ from .api_const import (
     R_LIST,
     R_NETDRIVERS,
     R_OPTIONS,
+    R_OPTIONS_PATH,
     R_REMOVED,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
@@ -470,7 +471,7 @@ class Connector:
         else:
             thumbs_url = ""
         self._response[R_OPTIONS] = {
-            "path": path,
+            R_OPTIONS_PATH: path,
             "separator": os.path.sep,
             "url": url,
             "disabled": self._options["disabled"],
