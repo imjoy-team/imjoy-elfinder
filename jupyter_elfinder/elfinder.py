@@ -59,6 +59,7 @@ from .api_const import (
     R_CWD,
     R_DEBUG,
     R_DIM,
+    R_DIR_CNT,
     R_ERROR,
     R_FILE_CNT,
     R_FILES,
@@ -1198,7 +1199,7 @@ class Connector:
                 total_size += size
                 file_count += 1
             sizes.append(
-                {"dirCnt": dir_count, R_FILE_CNT: file_count, R_SIZE: total_size}
+                {R_DIR_CNT: dir_count, R_FILE_CNT: file_count, R_SIZE: total_size}
             )
             all_total_size += total_size
             all_file_count += file_count
@@ -1206,7 +1207,7 @@ class Connector:
 
         self._response[R_SIZE] = all_total_size
         self._response[R_FILE_CNT] = all_file_count
-        self._response["dirCnt"] = all_dir_count
+        self._response[R_DIR_CNT] = all_dir_count
         self._response["sizes"] = sizes
 
     def __ls(self) -> None:
