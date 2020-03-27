@@ -279,8 +279,7 @@ class Connector:
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
-        self._options["root"] = root
-        self._options["files_url"] = url
+        self._options["root"] = self.__check_utf8(root)
         self._options["uploadMaxSize"] = upload_max_size
         self._options["debug"] = debug
         self._options["tmbDir"] = tmb_dir
@@ -288,27 +287,19 @@ class Connector:
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
         self._options["expose_real_path"] = expose_real_path
-
         self._response[R_DEBUG] = {}
-        self._options["files_url"] = self.__check_utf8(self._options["files_url"])
-        self._options["files_url"] = self._options["files_url"].rstrip("/")
-        self._options["root"] = self.__check_utf8(self._options["root"])
-        # only strip / if it's not root
-        if os.path.dirname(self._options["root"]) != self._options["root"]:
-            self._options["root"] = self._options["root"].rstrip(os.sep)
+        self._options["files_url"] = self.__check_utf8(url).rstrip("/")
+        self.volumeid = str(uuid.uuid4())
+
         self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
-        self.volumeid = str(uuid.uuid4())
 
         for cmd in self._options["disabled"]:
             if cmd in self._commands:
                 del self._commands[cmd]
 
-        thumbs_dir = self._options["tmbDir"]
-
-        if thumbs_dir:
-            assert thumbs_dir  # typing
-            thumbs_dir = os.path.join(self._options["root"], thumbs_dir)
+        if tmb_dir:
+            thumbs_dir = os.path.join(self._options["root"], tmb_dir)
             try:
                 if not os.path.exists(thumbs_dir):
                     os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
