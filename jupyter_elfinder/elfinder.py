@@ -578,7 +578,7 @@ class Connector:
                 self.http_response = "Access denied"
                 return
 
-        mime = self.__mimetype(cur_file)
+        mime = _mimetype(cur_file)
         parts = mime.split("/", 2)
 
         if download:
@@ -949,7 +949,7 @@ class Connector:
         if not self.__is_allowed(cur_file, "write"):
             self._response[R_ERROR] = "Access denied"
             return
-        if self.__mimetype(cur_file).find("image") != 0:
+        if _mimetype(cur_file).find("image") != 0:
             self._response[R_ERROR] = "File is not an image"
             return
 
@@ -1060,7 +1060,7 @@ class Connector:
         info = {
             "name": self.__check_utf8(os.path.basename(path)),
             "hash": self.__hash(path),
-            "mime": "directory" if filetype == "dir" else self.__mimetype(path),
+            "mime": "directory" if filetype == "dir" else _mimetype(path),
             "read": 1 if readable else 0,
             "write": 1 if writable else 0,
             "locked": 1 if not readable and not writable and not deletable else 0,
@@ -1089,7 +1089,7 @@ class Connector:
             if os.path.isdir(lpath):
                 info["mime"] = "directory"
             else:
-                info["mime"] = self.__mimetype(lpath)
+                info["mime"] = _mimetype(lpath)
 
             if self._options["root_alias"]:
                 basename = self._options["root_alias"]
@@ -1560,7 +1560,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        mime = self.__mimetype(cur_file)
+        mime = _mimetype(cur_file)
         self.__check_archivers()
         if mime not in self._options["archivers"]["extract"]:
             self._response[R_ERROR] = "Unable to extract files from archive"
@@ -1648,7 +1648,7 @@ class Connector:
                     if mimes is None:
                         result.append(self.__info(file_path))
                     else:
-                        if self.__mimetype(file_path) in mimes:
+                        if _mimetype(file_path) in mimes:
                             result.append(self.__info(file_path))
             if mimes is None:
                 for folder in dirs:
@@ -1656,30 +1656,6 @@ class Connector:
                     if query.lower() in folder.lower():
                         result.append(self.__info(file_path))
         self._response[R_FILES] = result
-
-    def __mimetype(self, path: str) -> str:
-        """Detect mimetype of file."""
-        mime = mimetypes.guess_type(path)[0] or "unknown"
-        ext = path[path.rfind(".") + 1 :]
-
-        if mime == "unknown" and ("." + ext) in mimetypes.types_map:
-            mime = mimetypes.types_map["." + ext]
-
-        if mime == "text/plain" and ext == "pl":
-            mime = MIME_TYPES[ext]
-
-        if mime == "application/vnd.ms-office" and ext == "doc":
-            mime = MIME_TYPES[ext]
-
-        if mime == "unknown":
-            if os.path.basename(path) in ["README", "ChangeLog", "LICENSE", "Makefile"]:
-                mime = "text/plain"
-            else:
-                if ext in MIME_TYPES:
-                    mime = MIME_TYPES[ext]
-
-        # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
-        return mime
 
     def __tmb(self, path: str, tmb_path: str) -> bool:
         """Provide internal thumbnail create procedure."""
@@ -1742,7 +1718,7 @@ class Connector:
     def __can_create_tmb(self, path: Optional[str] = None) -> bool:
         if self._options["img_lib"] and self._options["tmb_dir"]:
             if path is not None:
-                mime = self.__mimetype(path)
+                mime = _mimetype(path)
                 if mime[0:5] != "image":
                     return False
             return True
@@ -1759,7 +1735,7 @@ class Connector:
     def __is_upload_allow(self, name: str) -> bool:
         allow = False
         deny = False
-        mime = self.__mimetype(name)
+        mime = _mimetype(name)
 
         if "all" in self._options["upload_allow"]:
             allow = True
@@ -2158,6 +2134,31 @@ def _check_name(name: str) -> bool:
     if secure_filename(name) != name:  # type: ignore
         return False
     return True
+
+
+def _mimetype(path: str) -> str:
+    """Detect mimetype of file."""
+    mime = mimetypes.guess_type(path)[0] or "unknown"
+    ext = path[path.rfind(".") + 1 :]
+
+    if mime == "unknown" and ("." + ext) in mimetypes.types_map:
+        mime = mimetypes.types_map["." + ext]
+
+    if mime == "text/plain" and ext == "pl":
+        mime = MIME_TYPES[ext]
+
+    if mime == "application/vnd.ms-office" and ext == "doc":
+        mime = MIME_TYPES[ext]
+
+    if mime == "unknown":
+        if os.path.basename(path) in ["README", "ChangeLog", "LICENSE", "Makefile"]:
+            mime = "text/plain"
+        else:
+            if ext in MIME_TYPES:
+                mime = MIME_TYPES[ext]
+
+    # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
+    return mime
 
 
 def _unique_name(path: str, copy: str = " copy") -> str:
