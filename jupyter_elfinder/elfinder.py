@@ -118,7 +118,7 @@ COMMANDS = {
     "paste": "__paste",
     "ping": "__ping",
     "put": "__put",
-    "reload": "__reload",
+    "reload": "__reload",  # not implemented
     "rename": "__rename",
     "resize": "__resize",
     "rm": "__rm",
