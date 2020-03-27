@@ -91,6 +91,7 @@ from .api_const import (
     R_OPTIONS_UPLOAD_OVERWRITE,
     R_OPTIONS_URL,
     R_REMOVED,
+    R_SIZE,
     R_TREE,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
@@ -1196,13 +1197,13 @@ class Connector:
                 total_size += size
                 file_count += 1
             sizes.append(
-                {"dirCnt": dir_count, "fileCnt": file_count, "size": total_size}
+                {"dirCnt": dir_count, "fileCnt": file_count, R_SIZE: total_size}
             )
             all_total_size += total_size
             all_file_count += file_count
             all_dir_count += dir_count
 
-        self._response["size"] = all_total_size
+        self._response[R_SIZE] = all_total_size
         self._response["fileCnt"] = all_file_count
         self._response["dirCnt"] = all_dir_count
         self._response["sizes"] = sizes
