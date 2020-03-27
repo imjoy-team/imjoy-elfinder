@@ -93,6 +93,9 @@ def main(args: Optional[List[str]] = None) -> None:
         "--thumbnail", action="store_true", help="enable thumbnail for files"
     )
     parser.add_argument(
+        "--dot-files", action="store_true", help="show dotfiles or folders"
+    )
+    parser.add_argument(
         "--expose-real-path",
         action="store_true",
         help="send file path to the frontend (disabled for security reason)",
@@ -115,6 +118,7 @@ def main(args: Optional[List[str]] = None) -> None:
         "base_url": opt.base_url,
         "expose_real_path": opt.expose_real_path,
         "thumbnail_dir": ".tmb" if opt.thumbnail else None,
+        "dot_files": opt.dot_files,
     }  # type: Dict[str, Optional[str]]
 
     app = build_app(opt, settings)
