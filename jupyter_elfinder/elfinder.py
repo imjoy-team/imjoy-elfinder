@@ -140,7 +140,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "max_folder_depth": int,
         "perms": Dict[str, Dict[str, bool]],
         "root": str,
-        "rootAlias": str,
+        "root_alias": str,
         "tmbAtOnce": int,
         "tmbDir": Optional[str],
         "tmbSize": int,
@@ -186,7 +186,7 @@ class Connector:
         "max_folder_depth": 256,
         "perms": {},
         "root": "",
-        "rootAlias": "HOME",
+        "root_alias": "HOME",
         "tmbAtOnce": 5,
         "tmbDir": ".tmb",
         "tmbSize": 48,
@@ -1011,13 +1011,13 @@ class Connector:
         """Get Current Working Directory."""
         name = os.path.basename(path)
         if path == self._options["root"]:
-            name = self._options["rootAlias"]
+            name = self._options["root_alias"]
             root = True
         else:
             root = False
 
-        if self._options["rootAlias"]:
-            basename = self._options["rootAlias"]
+        if self._options["root_alias"]:
+            basename = self._options["root_alias"]
         else:
             basename = os.path.basename(self._options["root"])
 
@@ -1095,8 +1095,8 @@ class Connector:
             else:
                 info["mime"] = self.__mimetype(lpath)
 
-            if self._options["rootAlias"]:
-                basename = self._options["rootAlias"]
+            if self._options["root_alias"]:
+                basename = self._options["root_alias"]
             else:
                 basename = os.path.basename(self._options["root"])
 
