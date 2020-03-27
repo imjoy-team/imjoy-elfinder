@@ -149,7 +149,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "upload_max_conn": int,
         "upload_max_size": int,
         "upload_order": List[Literal["deny", "allow"]],
-        "uploadWriteChunk": int,
+        "upload_write_chunk": int,
     },
 )
 
@@ -195,7 +195,7 @@ class Connector:
         "upload_max_conn": -1,
         "upload_max_size": 256 * 1024 * 1024,
         "upload_order": ["deny", "allow"],
-        "uploadWriteChunk": 8192,
+        "upload_write_chunk": 8192,
     }  # type: Options
 
     _commands = {
@@ -794,7 +794,7 @@ class Connector:
                         name = os.path.join(cur_dir, name)
                         replace = os.path.exists(name)
                         try:
-                            fil = open(name, "wb", self._options["uploadWriteChunk"])
+                            fil = open(name, "wb", self._options["upload_write_chunk"])
                             for chunk in self.__fbuffer(data):
                                 fil.write(chunk)
                             fil.close()
@@ -1734,7 +1734,7 @@ class Connector:
         return total_size
 
     def __fbuffer(
-        self, fil: BinaryIO, chunk_size: int = _options["uploadWriteChunk"]
+        self, fil: BinaryIO, chunk_size: int = _options["upload_write_chunk"]
     ) -> Generator[bytes, None, None]:
         # pylint: disable=no-self-use
         while True:
