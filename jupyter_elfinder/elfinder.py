@@ -33,6 +33,7 @@ from .api_const import (
     API_CONTENT,
     API_CURRENT,
     API_CUT,
+    API_DIRS,
     API_DST,
     API_HEIGHT,
     API_INIT,
@@ -665,7 +666,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid name"
             return
 
-        dirs = self._request.get("dirs[]") or []
+        dirs = self._request.get(API_DIRS) or []
 
         new_dir = os.path.join(path, name)
 
