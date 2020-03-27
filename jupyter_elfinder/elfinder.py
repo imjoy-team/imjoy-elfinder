@@ -422,7 +422,7 @@ class Connector:
         targets = self._request[API_TARGETS]
         files = []
         for target in targets:
-            path = self.__find(target)
+            path = self._find(target)
             if path is None:
                 self.__set_error_data(target, "File not found")
             else:
@@ -549,7 +549,7 @@ class Connector:
             return
 
         download = self._request.get(API_DOWNLOAD)
-        cur_file = self.__find(target)
+        cur_file = self._find(target)
 
         if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
             self.http_status_code = 404
@@ -603,7 +603,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_name = self.__find(target)
+        cur_name = self._find(target)
 
         if not cur_name:
             self._response[R_ERROR] = "File not found"
@@ -730,7 +730,7 @@ class Connector:
 
         removed = []
         for rm_hash in rm_list:
-            rm_file = self.__find(rm_hash)
+            rm_file = self._find(rm_hash)
             if not rm_file:
                 continue
             if self._remove(rm_file):
@@ -856,7 +856,7 @@ class Connector:
             added = []
             removed = []
             for fhash in files:
-                fil = self.__find(fhash, src)
+                fil = self._find(fhash, src)
                 if not fil:
                     self._response[R_ERROR] = "File not found"
                     return
@@ -907,7 +907,7 @@ class Connector:
 
         added = []
         for target in targets:
-            target = self.__find(target)
+            target = self._find(target)
             if not target:
                 self._response[R_ERROR] = "File not found"
                 return
@@ -940,7 +940,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_file = self.__find(target)
+        cur_file = self._find(target)
 
         if not cur_file:
             self._response[R_ERROR] = "File not found"
@@ -989,7 +989,7 @@ class Connector:
         self._response[R_IMAGES] = {}
         i = 0
         for fhash in targets:
-            path = self.__find(fhash)
+            path = self._find(fhash)
             if path is None:
                 continue
             if os.path.dirname(path) == thumbs_dir:
@@ -1016,7 +1016,7 @@ class Connector:
         sizes = []  # type: List[Dict[str, int]]
 
         for target in targets:
-            path = self.__find(target)
+            path = self._find(target)
             if path is None:
                 self.__set_error_data(target, "Target not found")
                 continue
@@ -1061,7 +1061,7 @@ class Connector:
 
         intersect = self._request.get(API_INTERSECT)
 
-        path = self.__find(target)
+        path = self._find(target)
         if path is None or not os.path.isdir(path):
             self._response[R_ERROR] = "Target directory not found"
             return
@@ -1137,7 +1137,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_file = self.__find(target)
+        cur_file = self._find(target)
 
         if not cur_file:
             self._response[R_ERROR] = "File not found"
@@ -1162,7 +1162,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_file = self.__find(target)
+        cur_file = self._find(target)
 
         if not cur_file:
             self._response[R_ERROR] = "File not found"
@@ -1187,7 +1187,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        cur_file = self.__find(target)
+        cur_file = self._find(target)
 
         if not cur_file:
             self._response[R_ERROR] = "File not found"
@@ -1243,7 +1243,7 @@ class Connector:
 
         real_files = []
         for fhash in files:
-            cur_file = self.__find(fhash, cur_dir)
+            cur_file = self._find(fhash, cur_dir)
             if not cur_file:
                 self._response[R_ERROR] = "File not found"
                 return
@@ -1284,7 +1284,7 @@ class Connector:
             return
 
         makedir = self._request.get(API_MAKEDIR)
-        cur_file = self.__find(target)
+        cur_file = self._find(target)
         if cur_file is None or os.path.isdir(cur_file):
             self._response[R_ERROR] = "File not found"
             return
@@ -1636,7 +1636,7 @@ class Connector:
                     return folder_path
         return None
 
-    def __find(self, fhash: str, parent: Optional[str] = None) -> Optional[str]:
+    def _find(self, fhash: str, parent: Optional[str] = None) -> Optional[str]:
         """Find file/dir by hash."""
         fhash = str(fhash)
         cached_path = self._cached_path.get(fhash)
