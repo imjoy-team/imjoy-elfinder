@@ -264,14 +264,6 @@ class Connector:
         "ogm": "application/ogm",
     }
 
-    _time = 0.0
-    _request = {}  # type: Dict[str, Any]
-    _response = {}  # type: Dict[str, Any]
-    _error_data = {}  # type: Dict[str, str]
-    _img = None  # type: Optional[ModuleType]
-    _today = 0.0
-    _yesterday = 0.0
-
     _cached_path = {}  # type: Dict[str, str]
 
     # public variables
@@ -294,10 +286,6 @@ class Connector:
         API_UPLOAD,
         API_WIDTH,
     )
-    # return variables
-    http_status_code = 0
-    http_header = {}  # type: Dict[str, str]
-    http_response = None  # type: Optional[Union[str, Dict[str, str]]]
 
     def __init__(
         self,
@@ -311,22 +299,38 @@ class Connector:
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
+        # return variables
+        self.http_status_code = 0
+        self.http_header = {}  # type: Dict[str, str]
+        self.http_response = None  # type: Optional[Union[str, Dict[str, str]]]
+
+        self.volumeid = str(uuid.uuid4())
+
+        # internal
+        self._time = 0.0
+        self._request = {}  # type: Dict[str, Any]
+        self._response = {}  # type: Dict[str, Any]
+        self._error_data = {}  # type: Dict[str, str]
+        self._img = None  # type: Optional[ModuleType]
+        self._today = 0.0
+        self._yesterday = 0.0
+        self._response[R_DEBUG] = {}
+
+        # options
         self._options["root"] = self.__check_utf8(root)
         self._options["upload_max_size"] = upload_max_size
         self._options["debug"] = debug
-        self._options["tmb_dir"] = tmb_dir
         self._options["base_url"] = (
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
         self._options["expose_real_path"] = expose_real_path
         self._options["dot_files"] = dot_files
-        self._response[R_DEBUG] = {}
         self._options["files_url"] = self.__check_utf8(url).rstrip("/")
-        self.volumeid = str(uuid.uuid4())
 
         self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
 
+        # TODO: Move side effects out of init.
         for cmd in self._options["disabled"]:
             if cmd in self._commands:
                 del self._commands[cmd]
@@ -345,31 +349,18 @@ class Connector:
                     "due to permission denied, it will be disabled."
                 )
 
-    def __reset(self) -> None:
-        """Flush per request variables."""
-        self.http_status_code = 0
-        self.http_header = {}
-        self.http_response = None
-        self._request = {}
-        self._response = {}
-        self._error_data = {}
-
-        self._time = time.time()
-        dt_time = datetime.fromtimestamp(self._time)
-        self._today = time.mktime(
-            datetime(dt_time.year, dt_time.month, dt_time.day).timetuple()
-        )
-        self._yesterday = self._today - 86400
-
-        self._response[R_DEBUG] = {}
-
     def run(
         self, http_request: Optional[Dict[str, Any]] = None
     ) -> Tuple[int, Dict[str, str], Dict[str, Any]]:
         """Run main function."""
         if http_request is None:
             http_request = {}
-        self.__reset()
+        self._time = time.time()
+        dt_time = datetime.fromtimestamp(self._time)
+        self._today = time.mktime(
+            datetime(dt_time.year, dt_time.month, dt_time.day).timetuple()
+        )
+        self._yesterday = self._today - 86400
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
             root_ok = False
