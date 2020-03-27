@@ -62,6 +62,7 @@ from .api_const import (
     R_LIST,
     R_NETDRIVERS,
     R_OPTIONS,
+    R_OPTIONS_DISABLED,
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
     R_OPTIONS_URL,
@@ -476,7 +477,7 @@ class Connector:
             R_OPTIONS_PATH: path,
             R_OPTIONS_SEPARATOR: os.path.sep,
             R_OPTIONS_URL: url,
-            "disabled": self._options["disabled"],
+            R_OPTIONS_DISABLED: self._options["disabled"],
             "tmbURL": thumbs_url,
             "dotFiles": self._options["dotFiles"],
             "archivers": {
