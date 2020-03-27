@@ -611,9 +611,7 @@ class Connector:
 
         cur_dir = os.path.dirname(cur_name)
 
-        if not self._is_allowed(cur_dir, "write") and self._is_allowed(
-            cur_name, "rm"
-        ):
+        if not self._is_allowed(cur_dir, "write") and self._is_allowed(cur_name, "rm"):
             self._response[R_ERROR] = "Access denied"
             return
 
@@ -847,9 +845,7 @@ class Connector:
                 if self._request[API_CUT] == "1":
                     cut = True
 
-            if not self._is_allowed(src, "read") or not self._is_allowed(
-                dst, "write"
-            ):
+            if not self._is_allowed(src, "read") or not self._is_allowed(dst, "write"):
                 self._response[R_ERROR] = "Access denied"
                 return
 
@@ -1630,9 +1626,7 @@ class Connector:
         for root, dirs, _ in os.walk(path, topdown=True):
             for folder in dirs:
                 folder_path = os.path.join(root, folder)
-                if not os.path.islink(folder_path) and fhash == self._hash(
-                    folder_path
-                ):
+                if not os.path.islink(folder_path) and fhash == self._hash(folder_path):
                     return folder_path
         return None
 
