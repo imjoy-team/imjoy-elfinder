@@ -13,9 +13,9 @@ import hashlib
 import mimetypes
 import os
 import re
+import shlex
 import shutil
 import subprocess
-import shlex
 import time
 import traceback
 import uuid
@@ -25,8 +25,8 @@ from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
 
-from werkzeug.utils import secure_filename
 from typing_extensions import Literal, TypedDict
+from werkzeug.utils import secure_filename
 
 from .api_const import (
     API_CMD,
@@ -72,14 +72,15 @@ from .api_const import (
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
     R_OPTIONS_TMB_URL,
+    R_OPTIONS_UPLOAD_MAX_CONN,
     R_OPTIONS_UPLOAD_MAX_SIZE,
     R_OPTIONS_UPLOAD_OVERWRITE,
     R_OPTIONS_URL,
     R_REMOVED,
+    R_TREE,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
     R_WARNING,
-    R_TREE,
 )
 
 Archivers = TypedDict(  # pylint: disable=invalid-name
@@ -500,7 +501,7 @@ class Connector:
             R_OPTIONS_COPY_OVERWRITE: True,
             R_OPTIONS_UPLOAD_MAX_SIZE: self._options["uploadMaxSize"],
             R_OPTIONS_UPLOAD_OVERWRITE: True,
-            "uploadMaxConn": 3,
+            R_OPTIONS_UPLOAD_MAX_CONN: 3,
             "uploadMime": {"allow": ["all"], "deny": [], "firstOrder": "deny"},
             "i18nFolderName": True,
             "dispInlineRegex": "^(?:(?:image|video|audio)|application/"
