@@ -74,7 +74,6 @@ from .api_const import (
     R_OPTIONS_CREATE_EXT,
     R_OPTIONS_DISABLED,
     R_OPTIONS_DISP_INLINE_REGEX,
-    R_OPTIONS_DOT_FILES,
     R_OPTIONS_EXTRACT,
     R_OPTIONS_I18N_FOLDER_NAME,
     R_OPTIONS_JPG_QUALITY,
@@ -308,6 +307,7 @@ class Connector:
         upload_max_size: int,
         tmb_dir: Optional[str],
         expose_real_path: bool = False,
+        dot_files: bool = False,
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
@@ -319,6 +319,7 @@ class Connector:
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
         self._options["expose_real_path"] = expose_real_path
+        self._options["dot_files"] = dot_files
         self._response[R_DEBUG] = {}
         self._options["files_url"] = self.__check_utf8(url).rstrip("/")
         self.volumeid = str(uuid.uuid4())
@@ -476,10 +477,12 @@ class Connector:
             return
 
         files = []
-        for fil in sorted(items):
-            file_path = os.path.join(path, fil)
-            info = self.__info(file_path)
-            files.append(info)
+        for item in sorted(items):
+            file_path = os.path.join(path, item)
+            if self.__is_accepted(item):
+                info = self.__info(file_path)
+                files.append(info)
+
         self._response[R_FILES] = files
 
         if self._request.get(API_TREE):
@@ -507,7 +510,6 @@ class Connector:
             R_OPTIONS_URL: url,
             R_OPTIONS_DISABLED: self._options["disabled"],
             R_OPTIONS_TMB_URL: thumbs_url,
-            R_OPTIONS_DOT_FILES: self._options["dot_files"],
             R_OPTIONS_ARCHIVERS: {
                 R_OPTIONS_CREATE: list(self._options["archivers"]["create"].keys()),
                 R_OPTIONS_EXTRACT: list(self._options["archivers"]["extract"].keys()),

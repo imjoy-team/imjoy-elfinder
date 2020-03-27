@@ -82,7 +82,7 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--base-url",
         type=str,
-        default=None,
+        default="",
         help="The base url for accessing the file browser",
     )
     parser.add_argument(
@@ -93,6 +93,9 @@ def main(args: Optional[List[str]] = None) -> None:
         "--thumbnail", action="store_true", help="enable thumbnail for files"
     )
     parser.add_argument(
+        "--dot-files", action="store_true", help="show dotfiles or folders"
+    )
+    parser.add_argument(
         "--expose-real-path",
         action="store_true",
         help="send file path to the frontend (disabled for security reason)",
@@ -100,12 +103,22 @@ def main(args: Optional[List[str]] = None) -> None:
 
     opt = parser.parse_args(args=args)
 
+    # normalize base url, this is needed to fix
+    # duplicated slash from jupyter server proxy
+    if opt.base_url.startswith("http"):
+        tmp = opt.base_url.split("://")
+        tmp[1] = tmp[1].replace("//", "/")
+        opt.base_url = "://".join(tmp)
+    else:
+        opt.base_url = opt.base_url.replace("//", "/")
+
     settings = {
         "root_dir": opt.root_dir or os.getcwd(),
         "files_url": "/files",
-        "base_url": opt.base_url or "",
+        "base_url": opt.base_url,
         "expose_real_path": opt.expose_real_path,
         "thumbnail_dir": ".tmb" if opt.thumbnail else None,
+        "dot_files": opt.dot_files,
     }  # type: Dict[str, Optional[str]]
 
     app = build_app(opt, settings)
