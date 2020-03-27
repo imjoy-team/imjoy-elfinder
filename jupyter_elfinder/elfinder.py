@@ -100,6 +100,36 @@ from .api_const import (
     R_WARNING,
 )
 
+COMMANDS = {
+    "archive": "__archive",
+    "chmod": "__chmod",
+    "dim": "__dim",
+    "duplicate": "__duplicate",
+    "extract": "__extract",
+    "file": "__file",
+    "get": "__get",
+    "info": "__places",
+    "ls": "__ls",
+    "mkdir": "__mkdir",
+    "mkfile": "__mkfile",
+    "netmount": "__netmount",
+    "open": "__open",
+    "parents": "__parents",
+    "paste": "__paste",
+    "ping": "__ping",
+    "put": "__put",
+    "reload": "__reload",
+    "rename": "__rename",
+    "resize": "__resize",
+    "rm": "__rm",
+    "search": "__search",
+    "size": "__size",
+    "tmb": "__thumbnails",
+    "tree": "__tree",
+    "upload": "__upload",
+    "zipdl": "__zipdl",
+}
+
 MIME_TYPES = {
     # text
     "cfg": "text/plain",
@@ -235,36 +265,6 @@ class Connector:
         "upload_write_chunk": 8192,
     }  # type: Options
 
-    _commands = {
-        "archive": "__archive",
-        "chmod": "__chmod",
-        "dim": "__dim",
-        "duplicate": "__duplicate",
-        "extract": "__extract",
-        "file": "__file",
-        "get": "__get",
-        "info": "__places",
-        "ls": "__ls",
-        "mkdir": "__mkdir",
-        "mkfile": "__mkfile",
-        "netmount": "__netmount",
-        "open": "__open",
-        "parents": "__parents",
-        "paste": "__paste",
-        "ping": "__ping",
-        "put": "__put",
-        "reload": "__reload",
-        "rename": "__rename",
-        "resize": "__resize",
-        "rm": "__rm",
-        "search": "__search",
-        "size": "__size",
-        "tmb": "__thumbnails",
-        "tree": "__tree",
-        "upload": "__upload",
-        "zipdl": "__zipdl",
-    }
-
     # The cache needs to be persistent between connector instances.
     _cached_path = {}  # type: Dict[str, str]
 
@@ -309,6 +309,7 @@ class Connector:
         self.volumeid = str(uuid.uuid4())
 
         # internal
+        self._commands = dict(COMMANDS)
         self._request = {}  # type: Dict[str, Any]
         self._response = {}  # type: Dict[str, Any]
         self._response[R_DEBUG] = {}
@@ -329,11 +330,11 @@ class Connector:
         self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
 
-        # TODO: Move side effects out of init.
         for cmd in self._options["disabled"]:
             if cmd in self._commands:
                 del self._commands[cmd]
 
+        # TODO: Move side effects out of init.
         if tmb_dir:
             thumbs_dir = os.path.join(self._options["root"], tmb_dir)
             try:
