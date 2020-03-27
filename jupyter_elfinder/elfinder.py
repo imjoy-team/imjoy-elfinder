@@ -74,6 +74,7 @@ from .api_const import (
     R_OPTIONS_JPG_QUALITY,
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
+    R_OPTIONS_SYNC_CHK_AS_TS,
     R_OPTIONS_TMB_URL,
     R_OPTIONS_UPLOAD_MAX_CONN,
     R_OPTIONS_UPLOAD_MAX_SIZE,
@@ -511,7 +512,7 @@ class Connector:
             R_OPTIONS_DISP_INLINE_REGEX: "^(?:(?:image|video|audio)|application/"
             + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
             R_OPTIONS_JPG_QUALITY: 100,
-            "syncChkAsTs": 1,
+            R_OPTIONS_SYNC_CHK_AS_TS: 1,
             "syncMinMs": 30000,
             "uiCmdMap": {},
         }
