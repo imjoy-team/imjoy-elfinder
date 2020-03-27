@@ -100,6 +100,65 @@ from .api_const import (
     R_WARNING,
 )
 
+COMMANDS = {
+    "archive": "__archive",
+    "chmod": "__chmod",
+    "dim": "__dim",
+    "duplicate": "__duplicate",
+    "extract": "__extract",
+    "file": "__file",
+    "get": "__get",
+    "info": "__places",
+    "ls": "__ls",
+    "mkdir": "__mkdir",
+    "mkfile": "__mkfile",
+    "netmount": "__netmount",
+    "open": "__open",
+    "parents": "__parents",
+    "paste": "__paste",
+    "ping": "__ping",
+    "put": "__put",
+    "reload": "__reload",
+    "rename": "__rename",
+    "resize": "__resize",
+    "rm": "__rm",
+    "search": "__search",
+    "size": "__size",
+    "tmb": "__thumbnails",
+    "tree": "__tree",
+    "upload": "__upload",
+    "zipdl": "__zipdl",
+}
+
+MIME_TYPES = {
+    # text
+    ".cfg": "text/plain",
+    ".conf": "text/plain",
+    ".css": "text/css",
+    ".htm": "text/html",
+    ".html": "text/html",
+    ".ini": "text/plain",
+    ".java": "text/x-java-source",
+    ".js": "text/javascript",
+    ".md": "text/markdown",
+    ".php": "text/x-php",
+    ".pl": "text/x-perl",
+    ".py": "text/x-python",
+    ".rb": "text/x-ruby",
+    ".rtf": "text/rtf",
+    ".rtfd": "text/rtfd",
+    ".sh": "text/x-shellscript",
+    ".sql": "text/x-sql",
+    ".txt": "text/plain",
+    # apps
+    ".7z": "application/x-7z-compressed",
+    ".doc": "application/msword",
+    ".ogg": "application/ogg",
+    # video
+    ".mkv": "video/x-matroska",
+    ".ogm": "application/ogm",
+}
+
 Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
     {"create": Dict[str, Dict[str, str]], "extract": Dict[str, Dict[str, str]]},
@@ -175,6 +234,7 @@ class Connector:
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
 
+    # The options need to be persistent between connector instances.
     _options = {
         "archive_mimes": [],
         "archivers": {"create": {}, "extract": {}},
@@ -205,73 +265,7 @@ class Connector:
         "upload_write_chunk": 8192,
     }  # type: Options
 
-    _commands = {
-        "archive": "__archive",
-        "chmod": "__chmod",
-        "dim": "__dim",
-        "duplicate": "__duplicate",
-        "extract": "__extract",
-        "file": "__file",
-        "get": "__get",
-        "info": "__places",
-        "ls": "__ls",
-        "mkdir": "__mkdir",
-        "mkfile": "__mkfile",
-        "netmount": "__netmount",
-        "open": "__open",
-        "parents": "__parents",
-        "paste": "__paste",
-        "ping": "__ping",
-        "put": "__put",
-        "reload": "__reload",
-        "rename": "__rename",
-        "resize": "__resize",
-        "rm": "__rm",
-        "search": "__search",
-        "size": "__size",
-        "tmb": "__thumbnails",
-        "tree": "__tree",
-        "upload": "__upload",
-        "zipdl": "__zipdl",
-    }
-
-    _mimeType = {
-        # text
-        "cfg": "text/plain",
-        "conf": "text/plain",
-        "css": "text/css",
-        "htm": "text/html",
-        "html": "text/html",
-        "ini": "text/plain",
-        "java": "text/x-java-source",
-        "js": "text/javascript",
-        "md": "text/markdown",
-        "php": "text/x-php",
-        "pl": "text/x-perl",
-        "py": "text/x-python",
-        "rb": "text/x-ruby",
-        "rtf": "text/rtf",
-        "rtfd": "text/rtfd",
-        "sh": "text/x-shellscript",
-        "sql": "text/x-sql",
-        "txt": "text/plain",
-        # apps
-        "7z": "application/x-7z-compressed",
-        "doc": "application/msword",
-        "ogg": "application/ogg",
-        # video
-        "mkv": "video/x-matroska",
-        "ogm": "application/ogm",
-    }
-
-    _time = 0.0
-    _request = {}  # type: Dict[str, Any]
-    _response = {}  # type: Dict[str, Any]
-    _error_data = {}  # type: Dict[str, str]
-    _img = None  # type: Optional[ModuleType]
-    _today = 0.0
-    _yesterday = 0.0
-
+    # The cache needs to be persistent between connector instances.
     _cached_path = {}  # type: Dict[str, str]
 
     # public variables
@@ -294,10 +288,6 @@ class Connector:
         API_UPLOAD,
         API_WIDTH,
     )
-    # return variables
-    http_status_code = 0
-    http_header = {}  # type: Dict[str, str]
-    http_response = None  # type: Optional[Union[str, Dict[str, str]]]
 
     def __init__(
         self,
@@ -311,18 +301,31 @@ class Connector:
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
+        # return variables
+        self.http_status_code = 0
+        self.http_header = {}  # type: Dict[str, str]
+        self.http_response = None  # type: Optional[Union[str, Dict[str, str]]]
+
+        self.volumeid = str(uuid.uuid4())
+
+        # internal
+        self._commands = dict(COMMANDS)
+        self._request = {}  # type: Dict[str, Any]
+        self._response = {}  # type: Dict[str, Any]
+        self._response[R_DEBUG] = {}
+        self._error_data = {}  # type: Dict[str, str]
+        self._img = None  # type: Optional[ModuleType]
+
+        # options
         self._options["root"] = self.__check_utf8(root)
         self._options["upload_max_size"] = upload_max_size
         self._options["debug"] = debug
-        self._options["tmb_dir"] = tmb_dir
         self._options["base_url"] = (
             base_url.lstrip("/") if base_url.startswith("//") else base_url
         )
         self._options["expose_real_path"] = expose_real_path
         self._options["dot_files"] = dot_files
-        self._response[R_DEBUG] = {}
         self._options["files_url"] = self.__check_utf8(url).rstrip("/")
-        self.volumeid = str(uuid.uuid4())
 
         self.__debug("files_url", self._options["files_url"])
         self.__debug("root", self._options["root"])
@@ -331,6 +334,7 @@ class Connector:
             if cmd in self._commands:
                 del self._commands[cmd]
 
+        # TODO: Move side effects out of init.
         if tmb_dir:
             thumbs_dir = os.path.join(self._options["root"], tmb_dir)
             try:
@@ -345,31 +349,13 @@ class Connector:
                     "due to permission denied, it will be disabled."
                 )
 
-    def __reset(self) -> None:
-        """Flush per request variables."""
-        self.http_status_code = 0
-        self.http_header = {}
-        self.http_response = None
-        self._request = {}
-        self._response = {}
-        self._error_data = {}
-
-        self._time = time.time()
-        dt_time = datetime.fromtimestamp(self._time)
-        self._today = time.mktime(
-            datetime(dt_time.year, dt_time.month, dt_time.day).timetuple()
-        )
-        self._yesterday = self._today - 86400
-
-        self._response[R_DEBUG] = {}
-
     def run(
         self, http_request: Optional[Dict[str, Any]] = None
     ) -> Tuple[int, Dict[str, str], Dict[str, Any]]:
         """Run main function."""
         if http_request is None:
             http_request = {}
-        self.__reset()
+        start_time = time.time()
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
             root_ok = False
@@ -408,7 +394,7 @@ class Connector:
             self.__debug("errorData", self._error_data)
 
         if self._options["debug"]:
-            self.__debug("time", (time.time() - self._time))
+            self.__debug("time", (time.time() - start_time))
         else:
             if R_DEBUG in self._response:
                 del self._response[R_DEBUG]
@@ -592,7 +578,7 @@ class Connector:
                 self.http_response = "Access denied"
                 return
 
-        mime = self.__mimetype(cur_file)
+        mime = _mimetype(cur_file)
         parts = mime.split("/", 2)
 
         if download:
@@ -963,7 +949,7 @@ class Connector:
         if not self.__is_allowed(cur_file, "write"):
             self._response[R_ERROR] = "Access denied"
             return
-        if self.__mimetype(cur_file).find("image") != 0:
+        if _mimetype(cur_file).find("image") != 0:
             self._response[R_ERROR] = "File is not an image"
             return
 
@@ -1074,7 +1060,7 @@ class Connector:
         info = {
             "name": self.__check_utf8(os.path.basename(path)),
             "hash": self.__hash(path),
-            "mime": "directory" if filetype == "dir" else self.__mimetype(path),
+            "mime": "directory" if filetype == "dir" else _mimetype(path),
             "read": 1 if readable else 0,
             "write": 1 if writable else 0,
             "locked": 1 if not readable and not writable and not deletable else 0,
@@ -1103,7 +1089,7 @@ class Connector:
             if os.path.isdir(lpath):
                 info["mime"] = "directory"
             else:
-                info["mime"] = self.__mimetype(lpath)
+                info["mime"] = _mimetype(lpath)
 
             if self._options["root_alias"]:
                 basename = self._options["root_alias"]
@@ -1574,7 +1560,7 @@ class Connector:
             self._response[R_ERROR] = "Access denied"
             return
 
-        mime = self.__mimetype(cur_file)
+        mime = _mimetype(cur_file)
         self.__check_archivers()
         if mime not in self._options["archivers"]["extract"]:
             self._response[R_ERROR] = "Unable to extract files from archive"
@@ -1662,7 +1648,7 @@ class Connector:
                     if mimes is None:
                         result.append(self.__info(file_path))
                     else:
-                        if self.__mimetype(file_path) in mimes:
+                        if _mimetype(file_path) in mimes:
                             result.append(self.__info(file_path))
             if mimes is None:
                 for folder in dirs:
@@ -1670,30 +1656,6 @@ class Connector:
                     if query.lower() in folder.lower():
                         result.append(self.__info(file_path))
         self._response[R_FILES] = result
-
-    def __mimetype(self, path: str) -> str:
-        """Detect mimetype of file."""
-        mime = mimetypes.guess_type(path)[0] or "unknown"
-        ext = path[path.rfind(".") + 1 :]
-
-        if mime == "unknown" and ("." + ext) in mimetypes.types_map:
-            mime = mimetypes.types_map["." + ext]
-
-        if mime == "text/plain" and ext == "pl":
-            mime = self._mimeType[ext]
-
-        if mime == "application/vnd.ms-office" and ext == "doc":
-            mime = self._mimeType[ext]
-
-        if mime == "unknown":
-            if os.path.basename(path) in ["README", "ChangeLog", "LICENSE", "Makefile"]:
-                mime = "text/plain"
-            else:
-                if ext in self._mimeType:
-                    mime = self._mimeType[ext]
-
-        # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
-        return mime
 
     def __tmb(self, path: str, tmb_path: str) -> bool:
         """Provide internal thumbnail create procedure."""
@@ -1756,7 +1718,7 @@ class Connector:
     def __can_create_tmb(self, path: Optional[str] = None) -> bool:
         if self._options["img_lib"] and self._options["tmb_dir"]:
             if path is not None:
-                mime = self.__mimetype(path)
+                mime = _mimetype(path)
                 if mime[0:5] != "image":
                     return False
             return True
@@ -1773,7 +1735,7 @@ class Connector:
     def __is_upload_allow(self, name: str) -> bool:
         allow = False
         deny = False
-        mime = self.__mimetype(name)
+        mime = _mimetype(name)
 
         if "all" in self._options["upload_allow"]:
             allow = True
@@ -2172,6 +2134,29 @@ def _check_name(name: str) -> bool:
     if secure_filename(name) != name:  # type: ignore
         return False
     return True
+
+
+def _mimetype(path: str) -> str:
+    """Detect mimetype of file."""
+    mime = mimetypes.guess_type(path)[0] or "unknown"
+    _, ext = os.path.splitext(path)
+
+    if mime == "unknown" and ext in mimetypes.types_map:
+        mime = mimetypes.types_map[ext]
+
+    if mime == "text/plain" and ext == ".pl":
+        mime = MIME_TYPES[ext]
+
+    if mime == "application/vnd.ms-office" and ext == ".doc":
+        mime = MIME_TYPES[ext]
+
+    if mime == "unknown":
+        if os.path.basename(path) in ["README", "ChangeLog", "LICENSE", "Makefile"]:
+            mime = "text/plain"
+        else:
+            mime = MIME_TYPES.get(ext, mime)
+
+    return mime
 
 
 def _unique_name(path: str, copy: str = " copy") -> str:
