@@ -100,7 +100,7 @@ def main(args: Optional[List[str]] = None) -> None:
 
     opt = parser.parse_args(args=args)
 
-    # normalize base url, this is to fix duplicated slash from jupyter server proxy
+    # normalize base url, this is needed to fix duplicated slash from jupyter server proxy
     if opt.base_url.startswith("http"):
         tmp = opt.base_url.split("://")
         tmp[1] = tmp[1].replace("//", "/")
