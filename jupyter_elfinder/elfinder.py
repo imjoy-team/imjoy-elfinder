@@ -133,7 +133,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "disabled": List[str],
         "dot_files": bool,
         "expose_real_path": bool,
-        "fileMode": Literal[420],
+        "file_mode": Literal[420],
         "files_url": str,
         "fileURL": bool,
         "imgLib": Optional[str],
@@ -179,7 +179,7 @@ class Connector:
         "disabled": ["netmount", "zipdl"],
         "dot_files": False,
         "expose_real_path": False,
-        "fileMode": 0o644,
+        "file_mode": 0o644,
         "files_url": "",
         "fileURL": True,
         "imgLib": "auto",
@@ -800,7 +800,7 @@ class Connector:
                             fil.close()
                             up_size += os.lstat(name).st_size
                             if self.__is_upload_allow(name):
-                                os.chmod(name, self._options["fileMode"])
+                                os.chmod(name, self._options["file_mode"])
                                 if replace:  # update thumbnail
                                     self.__rm_tmb(name)
                                 self._response[R_ADDED].append(self.__info(name))
