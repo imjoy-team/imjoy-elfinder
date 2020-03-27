@@ -100,6 +100,35 @@ from .api_const import (
     R_WARNING,
 )
 
+MIME_TYPES = {
+    # text
+    "cfg": "text/plain",
+    "conf": "text/plain",
+    "css": "text/css",
+    "htm": "text/html",
+    "html": "text/html",
+    "ini": "text/plain",
+    "java": "text/x-java-source",
+    "js": "text/javascript",
+    "md": "text/markdown",
+    "php": "text/x-php",
+    "pl": "text/x-perl",
+    "py": "text/x-python",
+    "rb": "text/x-ruby",
+    "rtf": "text/rtf",
+    "rtfd": "text/rtfd",
+    "sh": "text/x-shellscript",
+    "sql": "text/x-sql",
+    "txt": "text/plain",
+    # apps
+    "7z": "application/x-7z-compressed",
+    "doc": "application/msword",
+    "ogg": "application/ogg",
+    # video
+    "mkv": "video/x-matroska",
+    "ogm": "application/ogm",
+}
+
 Archivers = TypedDict(  # pylint: disable=invalid-name
     "Archivers",
     {"create": Dict[str, Dict[str, str]], "extract": Dict[str, Dict[str, str]]},
@@ -234,35 +263,6 @@ class Connector:
         "tree": "__tree",
         "upload": "__upload",
         "zipdl": "__zipdl",
-    }
-
-    _mimeType = {
-        # text
-        "cfg": "text/plain",
-        "conf": "text/plain",
-        "css": "text/css",
-        "htm": "text/html",
-        "html": "text/html",
-        "ini": "text/plain",
-        "java": "text/x-java-source",
-        "js": "text/javascript",
-        "md": "text/markdown",
-        "php": "text/x-php",
-        "pl": "text/x-perl",
-        "py": "text/x-python",
-        "rb": "text/x-ruby",
-        "rtf": "text/rtf",
-        "rtfd": "text/rtfd",
-        "sh": "text/x-shellscript",
-        "sql": "text/x-sql",
-        "txt": "text/plain",
-        # apps
-        "7z": "application/x-7z-compressed",
-        "doc": "application/msword",
-        "ogg": "application/ogg",
-        # video
-        "mkv": "video/x-matroska",
-        "ogm": "application/ogm",
     }
 
     # The cache needs to be persistent between connector instances.
@@ -1665,17 +1665,17 @@ class Connector:
             mime = mimetypes.types_map["." + ext]
 
         if mime == "text/plain" and ext == "pl":
-            mime = self._mimeType[ext]
+            mime = MIME_TYPES[ext]
 
         if mime == "application/vnd.ms-office" and ext == "doc":
-            mime = self._mimeType[ext]
+            mime = MIME_TYPES[ext]
 
         if mime == "unknown":
             if os.path.basename(path) in ["README", "ChangeLog", "LICENSE", "Makefile"]:
                 mime = "text/plain"
             else:
-                if ext in self._mimeType:
-                    mime = self._mimeType[ext]
+                if ext in MIME_TYPES:
+                    mime = MIME_TYPES[ext]
 
         # self.__debug('mime ' + os.path.basename(path), ext + ' ' + mime)
         return mime
