@@ -426,7 +426,7 @@ class Connector:
             if path is None:
                 self.__set_error_data(target, "File not found")
             else:
-                files.append(self.__info(path))
+                files.append(self._info(path))
         self._response[R_FILES] = files
 
     def __open(self) -> None:
@@ -466,13 +466,13 @@ class Connector:
         for item in sorted(items):
             file_path = os.path.join(path, item)
             if self.__is_accepted(item):
-                info = self.__info(file_path)
+                info = self._info(file_path)
                 files.append(info)
 
         self._response[R_FILES] = files
 
         if self._request.get(API_TREE):
-            self._response[R_FILES].append(self.__info(path))
+            self._response[R_FILES].append(self._info(path))
 
         self.__check_archivers()
         if not self._options["file_url"]:
@@ -634,7 +634,7 @@ class Connector:
         self.__rm_tmb(cur_name)
         try:
             os.rename(cur_name, new_name)
-            self._response[R_ADDED] = [self.__info(new_name)]
+            self._response[R_ADDED] = [self._info(new_name)]
             self._response[R_REMOVED] = [target]
         except OSError:
             self._response[R_ERROR] = "Unable to rename file"
@@ -672,7 +672,7 @@ class Connector:
         else:
             try:
                 os.mkdir(new_dir, int(self._options["dir_mode"]))
-                self._response[R_ADDED] = [self.__info(new_dir)]
+                self._response[R_ADDED] = [self._info(new_dir)]
                 self._response[R_HASHES] = []
                 for subdir in dirs:
                     if not _check_name(subdir):
@@ -711,7 +711,7 @@ class Connector:
         else:
             try:
                 open(new_file, "w").close()
-                self._response[R_ADDED] = [self.__info(new_file)]
+                self._response[R_ADDED] = [self._info(new_file)]
             except OSError:
                 self._response[R_ERROR] = "Unable to create file"
 
@@ -799,7 +799,7 @@ class Connector:
                                 os.chmod(name, self._options["file_mode"])
                                 if replace:  # update thumbnail
                                     self.__rm_tmb(name)
-                                self._response[R_ADDED].append(self.__info(name))
+                                self._response[R_ADDED].append(self._info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
                                 try:
@@ -880,7 +880,7 @@ class Connector:
                     try:
                         os.rename(fil, new_dst)
                         self.__rm_tmb(fil)
-                        added.append(self.__info(new_dst))
+                        added.append(self._info(new_dst))
                         removed.append(fhash)
                         continue
                     except OSError:
@@ -891,7 +891,7 @@ class Connector:
                     if not self.__copy(fil, new_dst):
                         self._response[R_ERROR] = "Unable to copy files"
                         return
-                    added.append(self.__info(new_dst))
+                    added.append(self._info(new_dst))
                     continue
             self._response[R_ADDED] = added
             self._response[R_REMOVED] = removed
@@ -921,7 +921,7 @@ class Connector:
             if not self.__copy(target, new_name):
                 self._response[R_ERROR] = "Unable to create file copy"
                 return
-            added.append(self.__info(new_name))
+            added.append(self._info(new_name))
         self._response[R_ADDED] = added
 
     def __resize(self) -> None:
@@ -970,7 +970,7 @@ class Connector:
             self._response[R_ERROR] = "Unable to resize image"
             return
 
-        self._response[R_CHANGED] = [self.__info(cur_file)]
+        self._response[R_CHANGED] = [self._info(cur_file)]
 
     def __thumbnails(self) -> None:
         """Create previews for images."""
@@ -1128,7 +1128,7 @@ class Connector:
                 and not os.path.islink(dir_path)
                 and self.__is_accepted(directory)
             ):
-                tree.append(self.__info(dir_path))
+                tree.append(self._info(dir_path))
         self._response[R_TREE] = tree
 
     def __get(self) -> None:
@@ -1210,7 +1210,7 @@ class Connector:
                 with open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
             self.__rm_tmb(cur_file)
-            self._response[R_CHANGED] = self.__info(cur_file)
+            self._response[R_CHANGED] = self._info(cur_file)
         except OSError:
             self._response[R_ERROR] = "Unable to write to file"
 
@@ -1274,7 +1274,7 @@ class Connector:
             self._response[R_ERROR] = "Unable to create archive"
             return
 
-        self._response[R_ADDED] = [self.__info(archive_path)]
+        self._response[R_ADDED] = [self._info(archive_path)]
 
     def __extract(self) -> None:
         """Uncompress archive."""
@@ -1320,7 +1320,7 @@ class Connector:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
             cmd += shlex.split(arc["argd"].format(shlex.quote(target_dir)))
-            added = [self.__info(target_dir)]
+            added = [self._info(target_dir)]
 
         if added is None:
             try:
@@ -1342,7 +1342,7 @@ class Connector:
 
         if added is None:
             added = [
-                self.__info(os.path.join(cur_dir, dname))
+                self._info(os.path.join(cur_dir, dname))
                 for dname in os.listdir(cur_dir)
                 if dname not in existing_files
             ]
@@ -1381,15 +1381,15 @@ class Connector:
                 if query.lower() in fil.lower():
                     file_path = os.path.join(root, fil)
                     if mimes is None:
-                        result.append(self.__info(file_path))
+                        result.append(self._info(file_path))
                     else:
                         if _mimetype(file_path) in mimes:
-                            result.append(self.__info(file_path))
+                            result.append(self._info(file_path))
             if mimes is None:
                 for folder in dirs:
                     file_path = os.path.join(root, folder)
                     if query.lower() in folder.lower():
-                        result.append(self.__info(file_path))
+                        result.append(self._info(file_path))
         self._response[R_FILES] = result
 
     def _cwd(self, path: str) -> None:
@@ -1431,7 +1431,7 @@ class Connector:
 
         self._response[R_CWD] = info
 
-    def __info(self, path: str) -> Info:
+    def _info(self, path: str) -> Info:
         # mime = ''
         filetype = "file"
         if os.path.isfile(path):
