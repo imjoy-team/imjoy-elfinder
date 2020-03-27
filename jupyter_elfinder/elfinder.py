@@ -1674,7 +1674,7 @@ class Connector:
         return True
 
     def _rm_tmb(self, path: str) -> None:
-        tmb = self.__tmb_path(path)
+        tmb = self._tmb_path(path)
         if tmb:
             if os.path.exists(tmb):
                 try:
@@ -1724,7 +1724,7 @@ class Connector:
             return True
         return False
 
-    def __tmb_path(self, path: str) -> Optional[str]:
+    def _tmb_path(self, path: str) -> Optional[str]:
         tmb = None
         thumbs_dir = self._options["tmb_dir"]
         if thumbs_dir:
