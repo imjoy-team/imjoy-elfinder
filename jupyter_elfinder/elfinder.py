@@ -62,6 +62,7 @@ from .api_const import (
     R_LIST,
     R_NETDRIVERS,
     R_OPTIONS,
+    R_OPTIONS_ARCHIVERS,
     R_OPTIONS_DISABLED,
     R_OPTIONS_DOT_FILES,
     R_OPTIONS_PATH,
@@ -482,7 +483,7 @@ class Connector:
             R_OPTIONS_DISABLED: self._options["disabled"],
             R_OPTIONS_TMB_URL: thumbs_url,
             R_OPTIONS_DOT_FILES: self._options["dotFiles"],
-            "archivers": {
+            R_OPTIONS_ARCHIVERS: {
                 "create": list(self._options["archivers"]["create"].keys()),
                 "extract": list(self._options["archivers"]["extract"].keys()),
                 "createext": {
