@@ -40,6 +40,7 @@ from .api_const import (
     API_INIT,
     API_INTERSECT,
     API_MAKEDIR,
+    API_MIMES,
     API_NAME,
     API_Q,
     API_SRC,
@@ -1644,7 +1645,7 @@ class Connector:
             self._response[R_ERROR] = "File not found"
             return
 
-        mimes = self._request.get("mimes")
+        mimes = self._request.get(API_MIMES)
 
         result = []
         query = self._request[API_Q]
