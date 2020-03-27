@@ -38,6 +38,7 @@ from .api_const import (
     API_DST,
     API_HEIGHT,
     API_INIT,
+    API_INTERSECT,
     API_MAKEDIR,
     API_NAME,
     API_Q,
@@ -1211,7 +1212,7 @@ class Connector:
             self._response[R_ERROR] = "Invalid parameters"
             return
 
-        intersect = self._request.get("intersect[]")
+        intersect = self._request.get(API_INTERSECT)
 
         path = self.__find(target)
         if path is None or not os.path.isdir(path):
