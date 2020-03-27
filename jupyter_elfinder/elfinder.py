@@ -71,6 +71,7 @@ from .api_const import (
     R_OPTIONS_DOT_FILES,
     R_OPTIONS_EXTRACT,
     R_OPTIONS_I18N_FOLDER_NAME,
+    R_OPTIONS_JPG_QUALITY,
     R_OPTIONS_PATH,
     R_OPTIONS_SEPARATOR,
     R_OPTIONS_TMB_URL,
@@ -509,7 +510,7 @@ class Connector:
             R_OPTIONS_I18N_FOLDER_NAME: True,
             R_OPTIONS_DISP_INLINE_REGEX: "^(?:(?:image|video|audio)|application/"
             + "(?:x-mpegURL|dash\\+xml)|(?:text/plain|application/pdf)$)",
-            "jpgQuality": 100,
+            R_OPTIONS_JPG_QUALITY: 100,
             "syncChkAsTs": 1,
             "syncMinMs": 30000,
             "uiCmdMap": {},
