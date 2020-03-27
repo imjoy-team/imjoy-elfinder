@@ -1027,7 +1027,7 @@ class Connector:
                 for root, dirs, files in os.walk(path, topdown=True):
                     for folder in dirs:
                         folder_path = os.path.join(root, folder)
-                        size = self.__dir_size(folder_path)
+                        size = self._dir_size(folder_path)
                         sizes.append({})
                         dir_count += 1
                         total_size += size
@@ -1503,7 +1503,7 @@ class Connector:
             info["size"] = 0
         else:
             lpath = None
-            info["size"] = self.__dir_size(path) if filetype == "dir" else stat.st_size
+            info["size"] = self._dir_size(path) if filetype == "dir" else stat.st_size
 
         if not info["mime"] == "directory":
             if self._options["file_url"] and info["read"]:
@@ -1693,7 +1693,7 @@ class Connector:
                 return target
         return None
 
-    def __dir_size(self, path: str) -> int:
+    def _dir_size(self, path: str) -> int:
         total_size = 0
         if self._options["dir_size"]:
             for dirpath, _, filenames in os.walk(path):
