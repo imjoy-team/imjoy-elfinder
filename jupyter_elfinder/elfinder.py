@@ -131,7 +131,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "dir_mode": Literal[493],
         "dir_size": bool,
         "disabled": List[str],
-        "dotFiles": bool,
+        "dot_files": bool,
         "expose_real_path": bool,
         "fileMode": Literal[420],
         "files_url": str,
@@ -177,7 +177,7 @@ class Connector:
         "dir_mode": 0o755,
         "dir_size": False,
         "disabled": ["netmount", "zipdl"],
-        "dotFiles": False,
+        "dot_files": False,
         "expose_real_path": False,
         "fileMode": 0o644,
         "files_url": "",
@@ -499,7 +499,7 @@ class Connector:
             R_OPTIONS_URL: url,
             R_OPTIONS_DISABLED: self._options["disabled"],
             R_OPTIONS_TMB_URL: thumbs_url,
-            R_OPTIONS_DOT_FILES: self._options["dotFiles"],
+            R_OPTIONS_DOT_FILES: self._options["dot_files"],
             R_OPTIONS_ARCHIVERS: {
                 R_OPTIONS_CREATE: list(self._options["archivers"]["create"].keys()),
                 R_OPTIONS_EXTRACT: list(self._options["archivers"]["extract"].keys()),
@@ -1793,7 +1793,7 @@ class Connector:
     def __is_accepted(self, target: str) -> bool:
         if target in (".", ".."):
             return False
-        if target[0:1] == "." and not self._options["dotFiles"]:
+        if target[0:1] == "." and not self._options["dot_files"]:
             return False
         return True
 
