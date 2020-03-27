@@ -64,6 +64,7 @@ from .api_const import (
     R_OPTIONS,
     R_OPTIONS_ARCHIVERS,
     R_OPTIONS_CREATE,
+    R_OPTIONS_CREATE_EXT,
     R_OPTIONS_DISABLED,
     R_OPTIONS_DOT_FILES,
     R_OPTIONS_EXTRACT,
@@ -488,7 +489,7 @@ class Connector:
             R_OPTIONS_ARCHIVERS: {
                 R_OPTIONS_CREATE: list(self._options["archivers"]["create"].keys()),
                 R_OPTIONS_EXTRACT: list(self._options["archivers"]["extract"].keys()),
-                "createext": {
+                R_OPTIONS_CREATE_EXT: {
                     k: self._options["archivers"]["create"][k][ARCHIVE_EXT]
                     for k in self._options["archivers"]["create"]
                 },
