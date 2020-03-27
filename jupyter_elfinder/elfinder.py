@@ -795,7 +795,7 @@ class Connector:
                                 fil.write(chunk)
                             fil.close()
                             up_size += os.lstat(name).st_size
-                            if self.__is_upload_allow(name):
+                            if self._is_upload_allow(name):
                                 os.chmod(name, self._options["file_mode"])
                                 if replace:  # update thumbnail
                                     self._rm_tmb(name)
@@ -1732,7 +1732,7 @@ class Connector:
                 tmb = os.path.join(thumbs_dir, self.__hash(path) + ".png")
         return tmb
 
-    def __is_upload_allow(self, name: str) -> bool:
+    def _is_upload_allow(self, name: str) -> bool:
         allow = False
         deny = False
         mime = _mimetype(name)
