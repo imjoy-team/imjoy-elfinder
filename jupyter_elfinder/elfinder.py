@@ -564,7 +564,7 @@ class Connector:
             return
 
         if os.path.islink(cur_file):
-            cur_file = self.__read_link(cur_file)
+            cur_file = self._read_link(cur_file)
             if not cur_file or os.path.isdir(cur_file):
                 self.http_status_code = 404
                 self.http_header["Content-type"] = "text/html"
@@ -1067,7 +1067,7 @@ class Connector:
             return
 
         if os.path.islink(path):
-            path = self.__read_link(path)
+            path = self._read_link(path)
             if path is None:
                 self._response[R_ERROR] = "Directory (link) not found"
                 return
@@ -1105,7 +1105,7 @@ class Connector:
             return
 
         if os.path.islink(path):
-            path = self.__read_link(path)
+            path = self._read_link(path)
             if path is None:
                 self._response[R_ERROR] = "Directory (link) not found"
                 return
@@ -1470,7 +1470,7 @@ class Connector:
             info["phash"] = self.__hash(os.path.dirname(path))
 
         if filetype == "link":
-            lpath = self.__read_link(path)
+            lpath = self._read_link(path)
             if not lpath:
                 info["mime"] = "symlink-broken"
                 return info
@@ -1682,7 +1682,7 @@ class Connector:
                 except OSError:
                     pass
 
-    def __read_link(self, path: str) -> Optional[str]:
+    def _read_link(self, path: str) -> Optional[str]:
         """Read link and return real path if not broken."""
         target = os.readlink(path)
         if not target[0] == "/":
