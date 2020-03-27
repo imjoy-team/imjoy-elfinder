@@ -148,7 +148,7 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "upload_deny": List[str],
         "upload_max_conn": int,
         "upload_max_size": int,
-        "uploadOrder": List[Literal["deny", "allow"]],
+        "upload_order": List[Literal["deny", "allow"]],
         "uploadWriteChunk": int,
     },
 )
@@ -194,7 +194,7 @@ class Connector:
         "upload_deny": [],
         "upload_max_conn": -1,
         "upload_max_size": 256 * 1024 * 1024,
-        "uploadOrder": ["deny", "allow"],
+        "upload_order": ["deny", "allow"],
         "uploadWriteChunk": 8192,
     }  # type: Options
 
@@ -1779,7 +1779,7 @@ class Connector:
                 if mime.find(opt) == 0:
                     deny = True
 
-        if self._options["uploadOrder"][0] == "allow":  # ,deny
+        if self._options["upload_order"][0] == "allow":  # ,deny
             if deny is True:
                 return False
             return bool(allow)
