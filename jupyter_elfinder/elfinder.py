@@ -631,7 +631,7 @@ class Connector:
             )
             return
 
-        self.__rm_tmb(cur_name)
+        self._rm_tmb(cur_name)
         try:
             os.rename(cur_name, new_name)
             self._response[R_ADDED] = [self._info(new_name)]
@@ -798,7 +798,7 @@ class Connector:
                             if self.__is_upload_allow(name):
                                 os.chmod(name, self._options["file_mode"])
                                 if replace:  # update thumbnail
-                                    self.__rm_tmb(name)
+                                    self._rm_tmb(name)
                                 self._response[R_ADDED].append(self._info(name))
                             else:
                                 self.__set_error_data(name, "Not allowed file type")
@@ -879,7 +879,7 @@ class Connector:
                         return
                     try:
                         os.rename(fil, new_dst)
-                        self.__rm_tmb(fil)
+                        self._rm_tmb(fil)
                         added.append(self._info(new_dst))
                         removed.append(fhash)
                         continue
@@ -963,7 +963,7 @@ class Connector:
                 (width, height), self._img.ANTIALIAS  # type: ignore
             )
             img_resized.save(cur_file)
-            self.__rm_tmb(cur_file)
+            self._rm_tmb(cur_file)
         except OSError as exc:  # UnidentifiedImageError requires Pillow 7.0.0
             # self.__debug('resizeFailed_' + path, str(exc))
             self.__debug("resizeFailed_" + self._options["root"], str(exc))
@@ -1209,7 +1209,7 @@ class Connector:
             else:
                 with open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
-            self.__rm_tmb(cur_file)
+            self._rm_tmb(cur_file)
             self._response[R_CHANGED] = self._info(cur_file)
         except OSError:
             self._response[R_ERROR] = "Unable to write to file"
@@ -1546,7 +1546,7 @@ class Connector:
         if not os.path.isdir(target):
             try:
                 os.unlink(target)
-                self.__rm_tmb(target)
+                self._rm_tmb(target)
                 return True
             except OSError:
                 self.__set_error_data(target, "Remove failed")
@@ -1673,7 +1673,7 @@ class Connector:
             return False
         return True
 
-    def __rm_tmb(self, path: str) -> None:
+    def _rm_tmb(self, path: str) -> None:
         tmb = self.__tmb_path(path)
         if tmb:
             if os.path.exists(tmb):
