@@ -94,6 +94,7 @@ from .api_const import (
     R_OPTIONS_URL,
     R_REMOVED,
     R_SIZE,
+    R_SIZES,
     R_TREE,
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
@@ -1208,7 +1209,7 @@ class Connector:
         self._response[R_SIZE] = all_total_size
         self._response[R_FILE_CNT] = all_file_count
         self._response[R_DIR_CNT] = all_dir_count
-        self._response["sizes"] = sizes
+        self._response[R_SIZES] = sizes
 
     def __ls(self) -> None:
         target = self._request.get(API_TARGET)
