@@ -286,8 +286,8 @@ def test_archive(
     error, added, type_, target, targets, access, context, p_request, hashed_files
 ):
     """Test the archive command."""
-    params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
     p_request.params[API_CMD] = "archive"
+    params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
     p_request = update_params(p_request, params, hashed_files)
 
     with context:
