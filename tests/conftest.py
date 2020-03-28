@@ -59,7 +59,9 @@ def link_txt_file_fixture(tmp_path):
     tmp_dir.mkdir(exist_ok=True)
     fil = tmp_dir / "test.txt"
     fil.write_text(TEST_CONTENT)
-    link = tmp_dir / "link_text"
+    link_tmp_dir = tmp_path / "link_sub"
+    link_tmp_dir.mkdir(exist_ok=True)
+    link = link_tmp_dir / "link_text"
     link.symlink_to(fil)
     yield link
 

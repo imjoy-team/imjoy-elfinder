@@ -667,8 +667,8 @@ def test_extract(
             default_context(),
         ),  # Access denied for parent directory
         (
-            "File not found",
-            404,
+            "Access denied",
+            403,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
             "link_txt_file",
