@@ -549,6 +549,16 @@ def test_extract(
             default_context(),  # context
         ),  # file success with download
         (
+            None,  # text
+            200,  # status
+            "image/jpeg",  # content_type
+            "image;",  # content_disp
+            "jpeg_file",  # target
+            None,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # image file success
+        (
             "Invalid parameters",
             200,
             "text/html; charset=utf8",  # content_type
@@ -624,4 +634,5 @@ def test_file(
     assert response.status_code == status
     assert response.headers["Content-type"] == content_type
     assert response.headers.get("Content-Disposition") == content_disp
-    assert response.text == text
+    if text is not None:
+        assert response.text == text
