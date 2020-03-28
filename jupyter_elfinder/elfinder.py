@@ -274,6 +274,7 @@ class Connector:
         API_CONTENT,
         API_CURRENT,
         API_CUT,
+        API_DOWNLOAD,
         API_DST,
         API_HEIGHT,
         API_INIT,
