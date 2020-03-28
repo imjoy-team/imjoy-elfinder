@@ -539,6 +539,16 @@ def test_extract(
             default_context(),  # context
         ),  # file success
         (
+            "test content",  # text
+            200,  # status
+            "text/plain",  # content_type
+            "attachments;",  # content_disp
+            "txt_file",  # target
+            True,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # file success with download
+        (
             "Invalid parameters",
             200,
             "text/html; charset=utf8",  # content_type
@@ -604,8 +614,8 @@ def test_file(
     hashed_files,
 ):
     """Test the file command."""
-    params = {API_TARGET: target, API_DOWNLOAD: download}
     p_request.params[API_CMD] = "file"
+    params = {API_TARGET: target, API_DOWNLOAD: download}
     p_request = update_params(p_request, params, hashed_files)
 
     with context:
