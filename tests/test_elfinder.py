@@ -656,6 +656,26 @@ def test_extract(
             {"file": "txt_file", "mode": 0o300},
             default_context(),
         ),  # Link and access denied
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "txt_file",
+            None,
+            {"file": "txt_file_parent", "mode": 0o300},
+            default_context(),
+        ),  # Access denied for parent directory
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "link_txt_file",
+            None,
+            {"file": "txt_file_parent", "mode": 0o300},
+            default_context(),
+        ),  # Link and access denied for target parent directory
     ],
     indirect=["access"],
 )
