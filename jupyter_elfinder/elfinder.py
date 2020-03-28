@@ -558,13 +558,11 @@ class Connector:
 
         if os.path.islink(cur_file):
             cur_file = self._read_link(cur_file)
-            if not cur_file or os.path.isdir(cur_file):
-                self._http_status_code = 404
-                self._response["__text"] = "File not found"
-                return
-            if not self._is_allowed(
-                os.path.dirname(cur_file), "read"
-            ) or not self._is_allowed(cur_file, "read"):
+            if (
+                not cur_file
+                or not self._is_allowed(os.path.dirname(cur_file), "read")
+                or not self._is_allowed(cur_file, "read")
+            ):
                 self._http_status_code = 403
                 self._response["__text"] = "Access denied"
                 return
