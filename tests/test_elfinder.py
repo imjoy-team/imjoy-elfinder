@@ -8,6 +8,7 @@ import pytest
 
 from jupyter_elfinder.api_const import (
     API_CMD,
+    API_DOWNLOAD,
     API_INIT,
     API_MAKEDIR,
     API_TARGET,
@@ -522,3 +523,95 @@ def test_extract(
     body = response.json
     assert body.get(R_ERROR) == error
     assert (R_ADDED in body) is added
+
+
+@pytest.mark.parametrize(
+    "text, status, content_type, content_disp, target, download, access, context",
+    [
+        (
+            "test content",  # text
+            200,  # status
+            "text/plain",  # content_type
+            "inline;",  # content_disp
+            "txt_file",  # target
+            None,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # file success
+        (
+            "Invalid parameters",
+            200,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            None,
+            None,
+            None,
+            default_context(),
+        ),  # Missing all parameters
+        (
+            "Invalid parameters",
+            200,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            None,
+            True,
+            None,
+            default_context(),
+        ),  # Missing parameter target
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "missing",
+            None,
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "txt_file_parent",
+            None,
+            None,
+            default_context(),
+        ),  # Target is directory
+        (
+            "Access denied",
+            403,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "txt_file",
+            None,
+            {"file": "txt_file", "mode": 0o300},
+            default_context(),
+        ),  # Access denied
+    ],
+    indirect=["access"],
+)
+def test_file(
+    text,
+    status,
+    content_type,
+    content_disp,
+    target,
+    download,
+    access,
+    context,
+    p_request,
+    hashed_files,
+):
+    """Test the file command."""
+    params = {API_TARGET: target, API_DOWNLOAD: download}
+    p_request.params[API_CMD] = "file"
+    p_request = update_params(p_request, params, hashed_files)
+
+    with context:
+        response = connector(p_request)
+
+    assert response.status_code == status
+    assert response.headers["Content-type"] == content_type
+    assert response.headers.get("Content-Disposition") == content_disp
+    assert response.text == text
