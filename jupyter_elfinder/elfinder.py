@@ -301,15 +301,12 @@ class Connector:
         debug: bool = False,
     ) -> None:
         """Set up connector instance."""
-        # return variables
-        self.http_status_code = 0
-        self.http_header = {}  # type: Dict[str, str]
-        self.http_response = None  # type: Optional[Union[str, Dict[str, str]]]
-
         self.volumeid = str(uuid.uuid4())
 
         # internal
         self._commands = dict(COMMANDS)
+        self._http_header = {}  # type: Dict[str, str]
+        self._http_status_code = 0
         self._request = {}  # type: Dict[str, Any]
         self._response = {}  # type: Dict[str, Any]
         self._response[R_DEBUG] = {}
@@ -399,20 +396,16 @@ class Connector:
             if R_DEBUG in self._response:
                 del self._response[R_DEBUG]
 
-        if self.http_status_code < 100:
-            self.http_status_code = 200
+        if self._http_status_code < 100:
+            self._http_status_code = 200
 
-        if "Content-type" not in self.http_header:
-            if (
-                API_CMD in self._request and self._request[API_CMD] == "upload"
-            ) or self._options["debug"]:
-                self.http_header["Content-type"] = "text/html"
+        if "Content-type" not in self._http_header:
+            if API_CMD in self._request and self._request[API_CMD] == "upload":
+                self._http_header["Content-type"] = "text/html"
             else:
-                self.http_header["Content-type"] = "application/json"
+                self._http_header["Content-type"] = "application/json"
 
-        self.http_response = self._response
-
-        return self.http_status_code, self.http_header, self.http_response
+        return self._http_status_code, self._http_header, self._response
 
     def __places(self) -> None:
         if API_TARGETS not in self._request:
@@ -543,39 +536,36 @@ class Connector:
         pass
 
     def __file(self) -> None:
+        self._http_header["Content-type"] = "text/html"
         target = self._request.get(API_TARGET)
         if not target:
-            self._response[R_ERROR] = "Invalid parameters"
+            self._response["__text"] = "Invalid parameters"
             return
 
         download = self._request.get(API_DOWNLOAD)
         cur_file = self._find(target)
 
         if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
-            self.http_status_code = 404
-            self.http_header["Content-type"] = "text/html"
-            self.http_response = "File not found"
+            self._http_status_code = 404
+            self._response["__text"] = "File not found"
             return
 
         if not self._is_allowed(cur_file, "read"):
-            self.http_status_code = 403
-            self.http_header["Content-type"] = "text/html"
-            self.http_response = "Access denied"
+            self._http_status_code = 403
+            self._response["__text"] = "Access denied"
             return
 
         if os.path.islink(cur_file):
             cur_file = self._read_link(cur_file)
             if not cur_file or os.path.isdir(cur_file):
-                self.http_status_code = 404
-                self.http_header["Content-type"] = "text/html"
-                self.http_response = "File not found"
+                self._http_status_code = 404
+                self._response["__text"] = "File not found"
                 return
             if not self._is_allowed(
                 os.path.dirname(cur_file), "read"
             ) or not self._is_allowed(cur_file, "read"):
-                self.http_status_code = 403
-                self.http_header["Content-type"] = "text/html"
-                self.http_response = "Access denied"
+                self._http_status_code = 403
+                self._response["__text"] = "Access denied"
                 return
 
         mime = _mimetype(cur_file)
@@ -588,10 +578,10 @@ class Connector:
         else:
             disp = "inline"
 
-        self.http_status_code = 200
-        self.http_header["Content-type"] = mime
-        self.http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
-        self.http_header["Content-Disposition"] = disp + ";"
+        self._http_status_code = 200
+        self._http_header["Content-type"] = mime
+        self._http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
+        self._http_header["Content-Disposition"] = disp + ";"
         self._response["__send_file"] = cur_file
 
     def __rename(self) -> None:
@@ -1347,8 +1337,8 @@ class Connector:
 
     def __ping(self) -> None:
         """Workaround for Safari."""
-        self.http_status_code = 200
-        self.http_header["Connection"] = "close"
+        self._http_status_code = 200
+        self._http_header["Connection"] = "close"
 
     def __search(self) -> None:
         if API_Q not in self._request:
