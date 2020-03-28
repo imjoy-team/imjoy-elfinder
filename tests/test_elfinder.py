@@ -534,13 +534,15 @@ def test_extract(
 
 
 @pytest.mark.parametrize(
-    "text, status, content_type, content_disp, target, download, access, context",
+    "text, status, content_type, content_disp, content_length, "
+    "target, download, access, context",
     [
         (
             "test content",  # text
             200,  # status
             "text/plain",  # content_type
             "inline;",  # content_disp
+            "12",  # content_length
             "txt_file",  # target
             None,  # download
             None,  # access
@@ -551,6 +553,7 @@ def test_extract(
             200,  # status
             "text/plain",  # content_type
             "attachments;",  # content_disp
+            "12",  # content_length
             "txt_file",  # target
             True,  # download
             None,  # access
@@ -561,6 +564,7 @@ def test_extract(
             200,  # status
             "image/jpeg",  # content_type
             "image;",  # content_disp
+            "22405",  # content_length
             "jpeg_file",  # target
             None,  # download
             None,  # access
@@ -571,6 +575,7 @@ def test_extract(
             200,  # status
             "text/plain",  # content_type
             "inline;",  # content_disp
+            "12",  # content_length
             "link_txt_file",  # target
             None,  # download
             None,  # access
@@ -581,6 +586,7 @@ def test_extract(
             200,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "18",
             None,
             None,
             None,
@@ -591,6 +597,7 @@ def test_extract(
             200,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "18",
             None,
             True,
             None,
@@ -601,6 +608,7 @@ def test_extract(
             404,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "14",
             "missing",
             None,
             None,
@@ -611,6 +619,7 @@ def test_extract(
             404,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "14",
             "bad_link",
             None,
             None,
@@ -621,6 +630,7 @@ def test_extract(
             404,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "14",
             "txt_file_parent",
             None,
             None,
@@ -631,6 +641,7 @@ def test_extract(
             404,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "14",
             "link_dir",
             None,
             None,
@@ -641,6 +652,7 @@ def test_extract(
             403,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "13",
             "txt_file",
             None,
             {"file": "txt_file", "mode": 0o300},
@@ -651,6 +663,7 @@ def test_extract(
             403,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "13",
             "link_txt_file",
             None,
             {"file": "txt_file", "mode": 0o300},
@@ -661,6 +674,7 @@ def test_extract(
             404,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "14",
             "txt_file",
             None,
             {"file": "txt_file_parent", "mode": 0o300},
@@ -671,6 +685,7 @@ def test_extract(
             403,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "13",
             "link_txt_file",
             None,
             {"file": "txt_file_parent", "mode": 0o300},
@@ -684,6 +699,7 @@ def test_file(
     status,
     content_type,
     content_disp,
+    content_length,
     target,
     download,
     access,
@@ -702,5 +718,6 @@ def test_file(
     assert response.status_code == status
     assert response.headers["Content-type"] == content_type
     assert response.headers.get("Content-Disposition") == content_disp
+    assert response.headers.get("Content-Length") == content_length
     if text is not None:
         assert response.text == text
