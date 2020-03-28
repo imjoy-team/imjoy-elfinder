@@ -35,9 +35,12 @@ from . import ZIP_FILE
 
 
 @pytest.fixture(name="all_files")
-def all_files_fixture(txt_file, jpeg_file, zip_file):
+def all_files_fixture(bad_link, link_dir, link_txt_file, txt_file, jpeg_file, zip_file):
     """Return a dict of different fixture file cases."""
     return {
+        "bad_link": bad_link,
+        "link_dir": link_dir,
+        "link_txt_file": link_txt_file,
         "txt_file": txt_file,
         "txt_file_parent": txt_file.parent,
         "jpeg_file": jpeg_file,
@@ -64,9 +67,14 @@ def access_fixture(all_files, request):
 
 
 @pytest.fixture(name="hashed_files")
-def hashed_files_fixture(txt_file, jpeg_file, zip_file):
+def hashed_files_fixture(
+    bad_link, link_dir, link_txt_file, txt_file, jpeg_file, zip_file
+):
     """Return a dict of different hashed files."""
     return {
+        "bad_link": make_hash(str(bad_link)),
+        "link_dir": make_hash(str(link_dir)),
+        "link_txt_file": make_hash(str(link_txt_file)),
         "txt_file": make_hash(str(txt_file)),
         "txt_file_parent": make_hash(str(txt_file.parent)),
         "jpeg_file": make_hash(str(jpeg_file)),
@@ -559,6 +567,16 @@ def test_extract(
             default_context(),  # context
         ),  # image file success
         (
+            "test content",  # text
+            200,  # status
+            "text/plain",  # content_type
+            "inline;",  # content_disp
+            "link_txt_file",  # target
+            None,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # link file success
+        (
             "Invalid parameters",
             200,
             "text/html; charset=utf8",  # content_type
@@ -593,11 +611,31 @@ def test_extract(
             404,
             "text/html; charset=utf8",  # content_type
             None,  # content_disp
+            "bad_link",
+            None,
+            None,
+            default_context(),
+        ),  # Link and bad target file
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
             "txt_file_parent",
             None,
             None,
             default_context(),
         ),  # Target is directory
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "link_dir",
+            None,
+            None,
+            default_context(),
+        ),  # Link and target is directory
         (
             "Access denied",
             403,
@@ -608,6 +646,16 @@ def test_extract(
             {"file": "txt_file", "mode": 0o300},
             default_context(),
         ),  # Access denied
+        (
+            "Access denied",
+            403,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "link_txt_file",
+            None,
+            {"file": "txt_file", "mode": 0o300},
+            default_context(),
+        ),  # Link and access denied
     ],
     indirect=["access"],
 )
