@@ -35,12 +35,15 @@ from . import ZIP_FILE
 
 
 @pytest.fixture(name="all_files")
-def all_files_fixture(bad_link, link_dir, link_txt_file, txt_file, jpeg_file, zip_file):
+def all_files_fixture(
+    bad_link, link_dir, link_txt_file, tmp_path, txt_file, jpeg_file, zip_file
+):
     """Return a dict of different fixture file cases."""
     return {
         "bad_link": bad_link,
         "link_dir": link_dir,
         "link_txt_file": link_txt_file,
+        "tmp_path": tmp_path,
         "txt_file": txt_file,
         "txt_file_parent": txt_file.parent,
         "jpeg_file": jpeg_file,
@@ -68,13 +71,14 @@ def access_fixture(all_files, request):
 
 @pytest.fixture(name="hashed_files")
 def hashed_files_fixture(
-    bad_link, link_dir, link_txt_file, txt_file, jpeg_file, zip_file
+    bad_link, link_dir, link_txt_file, tmp_path, txt_file, jpeg_file, zip_file
 ):
     """Return a dict of different hashed files."""
     return {
         "bad_link": make_hash(str(bad_link)),
         "link_dir": make_hash(str(link_dir)),
         "link_txt_file": make_hash(str(link_txt_file)),
+        "tmp_path": make_hash(str(tmp_path)),
         "txt_file": make_hash(str(txt_file)),
         "txt_file_parent": make_hash(str(txt_file.parent)),
         "jpeg_file": make_hash(str(jpeg_file)),
@@ -88,6 +92,13 @@ def update_params(p_request, params, hashed_files):
     params = {key: hashed_files.get(val, val) for key, val in params.items() if val}
     p_request.params.update(params)
     return p_request
+
+
+def update_settings(settings, updates, files):
+    """Return updated settings."""
+    updates = {key: str(files.get(val, val)) for key, val in updates.items()}
+    settings.update(updates)
+    return settings
 
 
 def raise_subprocess_after_check_archivers():
@@ -106,6 +117,60 @@ def raise_subprocess_after_check_archivers():
         )
 
     return mock_subprocess_run
+
+
+@pytest.mark.parametrize(
+    "error, root, command, access, context",
+    [
+        (
+            "Invalid backend configuration",  # error
+            "missing",  # root
+            "ping",  # command
+            None,  # access
+            default_context(),  # context
+        ),  # Root dir does not exist
+        (
+            "Access denied",
+            "tmp_path",
+            "ping",
+            {"file": "tmp_path", "mode": 0o100},
+            default_context(),
+        ),  # Access denied
+        (
+            "Command Failed: ping, Error: \nBoom",
+            "tmp_path",
+            "ping",
+            None,
+            patch(
+                "jupyter_elfinder.elfinder.Connector._Connector__ping",
+                side_effect=RuntimeError("Boom"),
+            ),
+        ),  # Action raises uncaught exception
+        (
+            "Unknown command: missing",
+            "tmp_path",
+            "missing",
+            None,
+            default_context(),
+        ),  # Unknown command
+    ],
+    indirect=["access"],
+)
+def test_run(
+    error, root, command, access, context, p_request, p_config, all_files, settings
+):
+    """Test the run method."""
+    p_request.params[API_CMD] = command
+    updates = {"root_dir": root, "thumbnail_dir": ""}
+    settings = update_settings(settings, updates, all_files)
+    p_config.add_settings(settings)
+
+    with context:
+        response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body.get(R_ERROR) == error
 
 
 @pytest.mark.parametrize(

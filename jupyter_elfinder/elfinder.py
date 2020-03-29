@@ -19,7 +19,6 @@ import subprocess
 import time
 import traceback
 import uuid
-from collections.abc import Callable
 from datetime import datetime
 from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
@@ -348,14 +347,12 @@ class Connector:
                 )
 
     def run(
-        self, http_request: Optional[Dict[str, Any]] = None
+        self, http_request: Dict[str, Any]
     ) -> Tuple[int, Dict[str, str], Dict[str, Any]]:
         """Run main function."""
-        if http_request is None:
-            http_request = {}
         start_time = time.time()
         root_ok = True
-        if not os.path.exists(self._options["root"]) or self._options["root"] == "":
+        if not os.path.exists(self._options["root"]):
             root_ok = False
             self._response[R_ERROR] = "Invalid backend configuration"
         elif not self._is_allowed(self._options["root"], "read"):
@@ -366,27 +363,24 @@ class Connector:
             if field in http_request:
                 self._request[field] = http_request[field]
 
-        if root_ok is True:
-            if API_CMD in self._request:
-                if self._request[API_CMD] in self._commands:
-                    cmd = self._commands[self._request[API_CMD]]
-                    func = getattr(self, "_" + self.__class__.__name__ + cmd, None)
-                    # https://github.com/python/mypy/issues/6864
-                    is_callable = isinstance(func, Callable)  # type: ignore
+        if root_ok and API_CMD in self._request:
+            if self._request[API_CMD] in self._commands:
+                cmd = self._commands[self._request[API_CMD]]
+                # A missing command method should blow up here.
+                func = getattr(self, "_" + self.__class__.__name__ + cmd)
 
-                    if is_callable:
-                        try:
-                            func()
-                        except Exception as exc:  # pylint: disable=broad-except
-                            self._response[R_ERROR] = (
-                                "Command Failed: " + cmd + ", Error: \n" + str(exc)
-                            )
-                            traceback.print_exc()
-                            self._debug("exception", exception_to_string(exc))
-                else:
-                    self._response[R_ERROR] = (
-                        "Unknown command: " + self._request[API_CMD]
+                try:
+                    func()
+                except Exception as exc:  # pylint: disable=broad-except
+                    self._response[R_ERROR] = "Command Failed: {}, Error: \n{}".format(
+                        self._request[API_CMD], exc
                     )
+                    traceback.print_exc()
+                    self._debug("exception", exception_to_string(exc))
+            else:
+                self._response[R_ERROR] = "Unknown command: {}".format(
+                    self._request[API_CMD]
+                )
 
         if self._error_data:
             self._debug("errorData", self._error_data)
@@ -394,8 +388,7 @@ class Connector:
         if self._options["debug"]:
             self._debug("time", (time.time() - start_time))
         else:
-            if R_DEBUG in self._response:
-                del self._response[R_DEBUG]
+            self._response.pop(R_DEBUG, None)
 
         if self._http_status_code < 100:
             self._http_status_code = 200
