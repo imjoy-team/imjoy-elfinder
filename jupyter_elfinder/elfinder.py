@@ -363,7 +363,7 @@ class Connector:
             if field in http_request:
                 self._request[field] = http_request[field]
 
-        if root_ok is True and API_CMD in self._request:
+        if root_ok and API_CMD in self._request:
             if self._request[API_CMD] in self._commands:
                 cmd = self._commands[self._request[API_CMD]]
                 # A missing command method should blow up here.
