@@ -376,14 +376,16 @@ class Connector:
                         try:
                             func()
                         except Exception as exc:  # pylint: disable=broad-except
-                            self._response[R_ERROR] = (
-                                "Command Failed: " + cmd + ", Error: \n" + str(exc)
+                            self._response[
+                                R_ERROR
+                            ] = "Command Failed: {}, Error: \n{}".format(
+                                self._request[API_CMD], exc
                             )
                             traceback.print_exc()
                             self._debug("exception", exception_to_string(exc))
                 else:
-                    self._response[R_ERROR] = (
-                        "Unknown command: " + self._request[API_CMD]
+                    self._response[R_ERROR] = "Unknown command: {}".format(
+                        self._request[API_CMD]
                     )
 
         if self._error_data:
@@ -392,8 +394,7 @@ class Connector:
         if self._options["debug"]:
             self._debug("time", (time.time() - start_time))
         else:
-            if R_DEBUG in self._response:
-                del self._response[R_DEBUG]
+            self._response.pop(R_DEBUG, None)
 
         if self._http_status_code < 100:
             self._http_status_code = 200
