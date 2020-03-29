@@ -23,8 +23,8 @@ from datetime import datetime
 from types import ModuleType
 from typing import (
     Any,
-    Callable,
     BinaryIO,
+    Callable,
     Dict,
     Generator,
     List,
@@ -256,7 +256,7 @@ def params(schema: dict) -> Callable:
             try:
                 connector._request = vol_schema(connector._request)
             except vol.Invalid as exc:
-                connector._response[R_ERROR] = exc.msg
+                connector._response[R_ERROR] = "Invalid parameters"
                 return
             try:
                 func(connector)
