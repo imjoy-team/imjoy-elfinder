@@ -348,11 +348,9 @@ class Connector:
                 )
 
     def run(
-        self, http_request: Optional[Dict[str, Any]] = None
+        self, http_request: Dict[str, Any]
     ) -> Tuple[int, Dict[str, str], Dict[str, Any]]:
         """Run main function."""
-        if http_request is None:
-            http_request = {}
         start_time = time.time()
         root_ok = True
         if not os.path.exists(self._options["root"]) or self._options["root"] == "":
