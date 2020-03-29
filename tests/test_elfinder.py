@@ -96,7 +96,7 @@ def update_params(p_request, params, hashed_files):
 
 def update_settings(settings, updates, files):
     """Return updated settings."""
-    updates = {key: files.get(val, val) for key, val in updates.items()}
+    updates = {key: str(files.get(val, val)) for key, val in updates.items()}
     settings.update(updates)
     return settings
 
@@ -123,11 +123,11 @@ def raise_subprocess_after_check_archivers():
     "error, root, command, access, context",
     [
         (
-            "Invalid backend configuration",
-            "missing",
-            "ping",
-            None,
-            default_context(),
+            "Invalid backend configuration",  # error
+            "missing",  # root
+            "ping",  # command
+            None,  # access
+            default_context(),  # context
         ),  # Root dir does not exist
         (
             "Access denied",
@@ -161,7 +161,7 @@ def test_run(
 ):
     """Test the run method."""
     p_request.params[API_CMD] = command
-    updates = {"root_dir": root, "thumbnail_dir": None}
+    updates = {"root_dir": root, "thumbnail_dir": ""}
     settings = update_settings(settings, updates, all_files)
     p_config.add_settings(settings)
 
