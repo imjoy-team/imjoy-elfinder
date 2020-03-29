@@ -21,12 +21,24 @@ import traceback
 import uuid
 from datetime import datetime
 from types import ModuleType
-from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    BinaryIO,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 from urllib.parse import quote, urljoin
 
+import voluptuous as vol
 from typing_extensions import Literal, TypedDict
 from werkzeug.utils import secure_filename
 
+from . import validators as valid
 from .api_const import (
     API_CMD,
     API_CONTENT,
@@ -226,6 +238,39 @@ def exception_to_string(excp: Exception) -> str:
     )  # add limit=??
     pretty = traceback.format_list(stack)
     return "".join(pretty) + "\n  {} {}".format(excp.__class__, excp)
+
+
+def params(schema: dict) -> Callable:
+    """Return command validator."""
+
+    vol_schema = vol.Schema(
+        {vol.Required(key, "Invalid parameters"): val for key, val in schema.items()}
+    )
+
+    def decorator(func: Callable) -> Callable:
+        """Validate command parameters."""
+        # pylint: disable=protected-access
+
+        def wrapper(connector: "Connector") -> Any:
+            """Run func."""
+            try:
+                connector._request = vol_schema(connector._request)
+            except vol.Invalid as exc:
+                connector._response[R_ERROR] = exc.msg
+                return
+            try:
+                func(connector)
+            except FileNotFoundError:
+                connector._response[R_ERROR] = "File not found"
+            except PermissionError:
+                connector._response[R_ERROR] = "Access denied"
+            except OSError:
+                # FIXME: This should also be an error.
+                pass
+
+        return wrapper
+
+    return decorator
 
 
 class Connector:
@@ -1134,22 +1179,10 @@ class Connector:
                     "ascii"
                 )
 
+    @params({API_CMD: "dim", API_TARGET: valid.string})
     def __dim(self) -> None:
-        target = self._request.get(API_TARGET)
-        if not target:
-            self._response[R_ERROR] = "Invalid parameters"
-            return
-
-        cur_file = self._find(target)
-
-        if not cur_file:
-            self._response[R_ERROR] = "File not found"
-            return
-
-        if not self._is_allowed(cur_file, "read"):
-            self._response[R_ERROR] = "Access denied"
-            return
-
+        target = self._request[API_TARGET]
+        cur_file = find(target, self._options["root"], self._cached_path)
         dim = self._get_img_size(cur_file)
         if dim:
             self._response[R_DIM] = str(dim)
@@ -1821,6 +1854,7 @@ class Connector:
                 return str(img.size[0]) + "x" + str(img.size[1])
             except OSError:  # UnidentifiedImageError requires Pillow 7.0.0
                 print("WARNING: unidentified image or file not found: " + path)
+                raise
 
         return None
 
@@ -2218,6 +2252,35 @@ def _crop_tuple(size: Tuple[int, int]) -> Optional[Tuple[int, int, int, int]]:
 
     # cube
     return None
+
+
+def find(fhash: str, parent: str, cache: Dict[str, str]) -> str:
+    """Find file/dir by hash."""
+    fhash = str(fhash)
+    cached_path = cache.get(fhash)
+    if cached_path:
+        return cached_path
+    if os.path.isdir(parent):
+        for root, dirs, files in os.walk(parent, topdown=True):
+            for folder in dirs:
+                folder_path = os.path.join(root, folder)
+                if fhash == get_hash(folder_path, cache):
+                    return folder_path
+            for fil in files:
+                file_path = os.path.join(root, fil)
+                if fhash == get_hash(file_path, cache):
+                    return file_path
+
+    raise FileNotFoundError
+
+
+def get_hash(path: str, cache: Dict[str, str]) -> str:
+    """Return hash of the path."""
+    hash_code = make_hash(path)
+
+    # TODO: what if the cache getting to big?
+    cache[hash_code] = path
+    return hash_code
 
 
 def make_hash(to_hash: str) -> str:
