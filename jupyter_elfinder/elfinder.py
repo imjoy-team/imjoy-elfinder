@@ -253,19 +253,20 @@ def params(schema: dict) -> Callable:
 
         def wrapper(connector: "Connector") -> Any:
             """Run func."""
+            request = connector._request
             try:
-                connector._request = vol_schema(connector._request)
+                request = vol_schema(request)
             except vol.Invalid:
                 connector._response[R_ERROR] = "Invalid parameters"
                 return
             try:
-                func(connector)
+                func(connector, **request)
             except FileNotFoundError:
                 connector._response[R_ERROR] = "File not found"
             except PermissionError:
                 connector._response[R_ERROR] = "Access denied"
             except OSError:
-                cmd = connector._request[API_CMD]
+                cmd = request[API_CMD]
                 connector._response[R_ERROR] = "Unable to complete command {}".format(
                     cmd
                 )
@@ -1182,8 +1183,7 @@ class Connector:
                 )
 
     @params({API_CMD: "dim", API_TARGET: valid.string})
-    def __dim(self) -> None:
-        target = self._request[API_TARGET]
+    def __dim(self, cmd: str, target: str) -> None:
         cur_file = find(target, self._options["root"], self._cached_path)
         dim = self._get_img_size(cur_file)
         if dim:
