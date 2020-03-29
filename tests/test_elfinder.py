@@ -8,6 +8,7 @@ import pytest
 
 from jupyter_elfinder.api_const import (
     API_CMD,
+    API_DOWNLOAD,
     API_INIT,
     API_MAKEDIR,
     API_TARGET,
@@ -34,9 +35,12 @@ from . import ZIP_FILE
 
 
 @pytest.fixture(name="all_files")
-def all_files_fixture(txt_file, jpeg_file, zip_file):
+def all_files_fixture(bad_link, link_dir, link_txt_file, txt_file, jpeg_file, zip_file):
     """Return a dict of different fixture file cases."""
     return {
+        "bad_link": bad_link,
+        "link_dir": link_dir,
+        "link_txt_file": link_txt_file,
         "txt_file": txt_file,
         "txt_file_parent": txt_file.parent,
         "jpeg_file": jpeg_file,
@@ -63,9 +67,14 @@ def access_fixture(all_files, request):
 
 
 @pytest.fixture(name="hashed_files")
-def hashed_files_fixture(txt_file, jpeg_file, zip_file):
+def hashed_files_fixture(
+    bad_link, link_dir, link_txt_file, txt_file, jpeg_file, zip_file
+):
     """Return a dict of different hashed files."""
     return {
+        "bad_link": make_hash(str(bad_link)),
+        "link_dir": make_hash(str(link_dir)),
+        "link_txt_file": make_hash(str(link_txt_file)),
         "txt_file": make_hash(str(txt_file)),
         "txt_file_parent": make_hash(str(txt_file.parent)),
         "jpeg_file": make_hash(str(jpeg_file)),
@@ -285,8 +294,8 @@ def test_archive(
     error, added, type_, target, targets, access, context, p_request, hashed_files
 ):
     """Test the archive command."""
-    params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
     p_request.params[API_CMD] = "archive"
+    params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
     p_request = update_params(p_request, params, hashed_files)
 
     with context:
@@ -522,3 +531,193 @@ def test_extract(
     body = response.json
     assert body.get(R_ERROR) == error
     assert (R_ADDED in body) is added
+
+
+@pytest.mark.parametrize(
+    "text, status, content_type, content_disp, content_length, "
+    "target, download, access, context",
+    [
+        (
+            "test content",  # text
+            200,  # status
+            "text/plain",  # content_type
+            "inline;",  # content_disp
+            "12",  # content_length
+            "txt_file",  # target
+            None,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # file success
+        (
+            "test content",  # text
+            200,  # status
+            "text/plain",  # content_type
+            "attachments;",  # content_disp
+            "12",  # content_length
+            "txt_file",  # target
+            True,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # file success with download
+        (
+            None,  # text
+            200,  # status
+            "image/jpeg",  # content_type
+            "image;",  # content_disp
+            "22405",  # content_length
+            "jpeg_file",  # target
+            None,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # image file success
+        (
+            "test content",  # text
+            200,  # status
+            "text/plain",  # content_type
+            "inline;",  # content_disp
+            "12",  # content_length
+            "link_txt_file",  # target
+            None,  # download
+            None,  # access
+            default_context(),  # context
+        ),  # link file success
+        (
+            "Invalid parameters",
+            200,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "18",
+            None,
+            None,
+            None,
+            default_context(),
+        ),  # Missing all parameters
+        (
+            "Invalid parameters",
+            200,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "18",
+            None,
+            True,
+            None,
+            default_context(),
+        ),  # Missing parameter target
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "14",
+            "missing",
+            None,
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "14",
+            "bad_link",
+            None,
+            None,
+            default_context(),
+        ),  # Link and bad target file
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "14",
+            "txt_file_parent",
+            None,
+            None,
+            default_context(),
+        ),  # Target is directory
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "14",
+            "link_dir",
+            None,
+            None,
+            default_context(),
+        ),  # Link and target is directory
+        (
+            "Access denied",
+            403,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "13",
+            "txt_file",
+            None,
+            {"file": "txt_file", "mode": 0o300},
+            default_context(),
+        ),  # Access denied
+        (
+            "Access denied",
+            403,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "13",
+            "link_txt_file",
+            None,
+            {"file": "txt_file", "mode": 0o300},
+            default_context(),
+        ),  # Link and access denied
+        (
+            "File not found",
+            404,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "14",
+            "txt_file",
+            None,
+            {"file": "txt_file_parent", "mode": 0o300},
+            default_context(),
+        ),  # Access denied for parent directory
+        (
+            "Access denied",
+            403,
+            "text/html; charset=utf8",  # content_type
+            None,  # content_disp
+            "13",
+            "link_txt_file",
+            None,
+            {"file": "txt_file_parent", "mode": 0o300},
+            default_context(),
+        ),  # Link and access denied for target parent directory
+    ],
+    indirect=["access"],
+)
+def test_file(
+    text,
+    status,
+    content_type,
+    content_disp,
+    content_length,
+    target,
+    download,
+    access,
+    context,
+    p_request,
+    hashed_files,
+):
+    """Test the file command."""
+    p_request.params[API_CMD] = "file"
+    params = {API_TARGET: target, API_DOWNLOAD: download}
+    p_request = update_params(p_request, params, hashed_files)
+
+    with context:
+        response = connector(p_request)
+
+    assert response.status_code == status
+    assert response.headers["Content-type"] == content_type
+    assert response.headers.get("Content-Disposition") == content_disp
+    assert response.headers.get("Content-Length") == content_length
+    if text is not None:
+        assert response.text == text

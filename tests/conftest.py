@@ -52,6 +52,43 @@ def txt_file_fixture(tmp_path):
     yield fil
 
 
+@pytest.fixture(name="link_txt_file")
+def link_txt_file_fixture(tmp_path):
+    """Provide a link to a temporary text file."""
+    tmp_dir = tmp_path / "sub"
+    tmp_dir.mkdir(exist_ok=True)
+    fil = tmp_dir / "test.txt"
+    fil.write_text(TEST_CONTENT)
+    link_tmp_dir = tmp_path / "link_sub"
+    link_tmp_dir.mkdir(exist_ok=True)
+    link = link_tmp_dir / "link_text"
+    link.symlink_to(fil)
+    yield link
+
+
+@pytest.fixture(name="link_dir")
+def link_dir_fixture(tmp_path):
+    """Provide a link to a temporary directory."""
+    tmp_dir = tmp_path / "sub"
+    tmp_dir.mkdir(exist_ok=True)
+    link = tmp_path / "link_dir"
+    link.symlink_to(tmp_dir)
+    yield link
+
+
+@pytest.fixture(name="bad_link")
+def bad_link_fixture(tmp_path):
+    """Provide a link to a missing target file."""
+    tmp_dir = tmp_path / "sub"
+    tmp_dir.mkdir(exist_ok=True)
+    fil = tmp_dir / "bad_target.txt"
+    fil.write_text(TEST_CONTENT)
+    link = tmp_dir / "bad_link"
+    link.symlink_to(fil)
+    fil.unlink()
+    yield link
+
+
 @pytest.fixture(name="jpeg_file")
 def jpeg_file_fixture(tmp_path):
     """Provide a temporary jpeg file."""

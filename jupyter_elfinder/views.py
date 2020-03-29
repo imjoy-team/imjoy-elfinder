@@ -125,7 +125,6 @@ def connector(request: Request) -> Response:
             return result
 
         result = Response("Unable to find: {}".format(request.path_info))
-    # output json
     else:
         # get connector output and print it out
         result = Response(status=status)
@@ -135,7 +134,12 @@ def connector(request: Request) -> Response:
             pass
         result.headers = header
         result.charset = "utf8"
-        result.text = json.dumps(response)
+        if "__text" in response:
+            # output text
+            result.text = response["__text"]
+        else:
+            # output json
+            result.text = json.dumps(response)
     return result
 
 
