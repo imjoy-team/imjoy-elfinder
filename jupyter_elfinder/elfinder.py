@@ -353,7 +353,7 @@ class Connector:
         """Run main function."""
         start_time = time.time()
         root_ok = True
-        if not os.path.exists(self._options["root"]) or self._options["root"] == "":
+        if not os.path.exists(self._options["root"]):
             root_ok = False
             self._response[R_ERROR] = "Invalid backend configuration"
         elif not self._is_allowed(self._options["root"], "read"):
