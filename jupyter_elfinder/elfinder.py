@@ -255,7 +255,7 @@ def params(schema: dict) -> Callable:
             """Run func."""
             try:
                 connector._request = vol_schema(connector._request)
-            except vol.Invalid as exc:
+            except vol.Invalid:
                 connector._response[R_ERROR] = "Invalid parameters"
                 return
             try:
@@ -265,8 +265,10 @@ def params(schema: dict) -> Callable:
             except PermissionError:
                 connector._response[R_ERROR] = "Access denied"
             except OSError:
-                # FIXME: This should also be an error.
-                pass
+                cmd = connector._request[API_CMD]
+                connector._response[R_ERROR] = "Unable to complete command {}".format(
+                    cmd
+                )
 
         return wrapper
 
