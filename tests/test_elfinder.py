@@ -8,6 +8,7 @@ import pytest
 
 from jupyter_elfinder.api_const import (
     API_CMD,
+    API_CONTENT,
     API_DOWNLOAD,
     API_INIT,
     API_MAKEDIR,
@@ -29,7 +30,7 @@ from jupyter_elfinder.api_const import (
 from jupyter_elfinder.elfinder import make_hash
 from jupyter_elfinder.views import connector
 
-from . import ZIP_FILE
+from . import ZIP_FILE, ZIP_FILE_ASCII_CONTENT
 
 # pylint: disable=too-many-arguments
 
@@ -786,3 +787,66 @@ def test_file(
     assert response.headers.get("Content-Length") == content_length
     if text is not None:
         assert response.text == text
+
+
+@pytest.mark.parametrize(
+    "error, content, target, access, context",
+    [
+        (
+            None,  # error
+            "test content",  # content
+            "txt_file",  # target
+            None,  # access
+            default_context(),  # context
+        ),  # Get success
+        (
+            None,  # error
+            ZIP_FILE_ASCII_CONTENT,  # content
+            "zip_file",  # target
+            None,  # access
+            default_context(),  # context
+        ),  # Get success with binary file
+        (
+            "Invalid parameters",
+            None,
+            None,
+            None,
+            default_context(),
+        ),  # Missing parameter target
+        (
+            "File not found",
+            None,
+            "missing",
+            None,
+            default_context(),
+        ),  # Bad target file
+        (
+            "Access denied",
+            None,
+            "txt_file",
+            {"file": "txt_file", "mode": 0o100},
+            default_context(),
+        ),  # Access denied
+        (
+            "File not found",
+            None,
+            "txt_file",
+            {"file": "txt_file_parent", "mode": 0o100},
+            default_context(),
+        ),  # Access denied to parent diretory
+    ],
+    indirect=["access"],
+)
+def test_get(error, content, target, access, context, p_request, hashed_files):
+    """Test the get command."""
+    p_request.params[API_CMD] = "get"
+    params = {API_TARGET: target}
+    p_request = update_params(p_request, params, hashed_files)
+
+    with context:
+        response = connector(p_request)
+
+    assert response.status_code == 200
+    body = response.json
+    assert body.get(R_ERROR) == error
+    assert body.get(API_CONTENT) == content
