@@ -12,7 +12,7 @@ import os
 from cgi import FieldStorage
 
 from pyramid.request import Request
-from pyramid.response import Response
+from pyramid.response import Response, FileIter
 from pyramid.view import view_config
 
 from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
@@ -20,44 +20,10 @@ from .api_const import API_NAME, API_TARGETS, API_UPLOAD
 from .util import get_all, get_one
 
 
-class FileIterator:
-    """Represent a file iterator."""
-
-    chunk_size = 32768
-
-    def __init__(self, filename: str) -> None:
-        """Set up the file iterator instance."""
-        self.filename = filename
-        self.fileobj = open(self.filename, "rb")
-
-    def __iter__(self) -> "FileIterator":
-        """Return the file iterator."""
-        return self
-
-    def __next__(self) -> bytes:
-        """Return the next item."""
-        chunk = self.fileobj.read(self.chunk_size)
-        if not chunk:
-            raise StopIteration
-        return chunk
-
-
-class FileIterable:
-    """Represent a file iterable."""
-
-    def __init__(self, filename: str) -> None:
-        """Set up file iterable instance."""
-        self.filename = filename
-
-    def __iter__(self) -> FileIterator:
-        """Return the file iterator."""
-        return FileIterator(self.filename)
-
-
 def make_response(filename: str) -> Response:
     """Return a response."""
     res = Response(conditional_response=True)
-    res.app_iter = FileIterable(filename)
+    res.app_iter = FileIter(open(filename, "rb"), block_size=32768)
     res.content_length = os.path.getsize(filename)
     res.last_modified = os.path.getmtime(filename)
     res.etag = "%s-%s-%s" % (
