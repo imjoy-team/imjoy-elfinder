@@ -1,1 +1,1 @@
-jupyter-elfinder[jupyter]
+imjoy-elfinder[jupyter]

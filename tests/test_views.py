@@ -1,5 +1,5 @@
 """Test views."""
-from jupyter_elfinder.views import connector, index
+from imjoy_elfinder.views import connector, index
 
 
 def test_index_view(p_config, p_request):

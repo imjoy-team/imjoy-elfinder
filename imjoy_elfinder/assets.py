@@ -13,5 +13,5 @@ from pyramid.config import Configurator
 def includeme(config: Configurator) -> None:
     """Include templates and static assets in frontend."""
     config.include("pyramid_jinja2")
-    config.add_jinja2_search_path("jupyter_elfinder:templates")
-    config.add_static_view("static", "jupyter_elfinder:static")
+    config.add_jinja2_search_path("imjoy_elfinder:templates")
+    config.add_static_view("static", "imjoy_elfinder:static")

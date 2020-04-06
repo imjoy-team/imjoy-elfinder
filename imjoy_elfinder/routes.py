@@ -9,9 +9,9 @@
 """Provide routes of elfinder."""
 from pyramid.config import Configurator
 
-from . import JUPYTER_ELFINDER_CONNECTOR
+from . import IMJOY_ELFINDER_CONNECTOR
 
 
 def includeme(config: Configurator) -> None:
     """Include routes in frontend."""
-    config.add_route(JUPYTER_ELFINDER_CONNECTOR, "/connector/")
+    config.add_route(IMJOY_ELFINDER_CONNECTOR, "/connector/")
