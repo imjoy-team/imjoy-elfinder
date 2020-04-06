@@ -811,11 +811,10 @@ class Connector:
 
     def __paste(self) -> None:
         """Copy or cut files/directories."""
-        if API_SRC in self._request and API_DST in self._request:
-            src = self._find_dir(self._request[API_SRC])
+        if API_TARGETS in self._request and API_DST in self._request:
             dst = self._find_dir(self._request[API_DST])
             cur_dir = dst
-            if not cur_dir or not src or not dst or API_TARGETS not in self._request:
+            if not cur_dir or not dst or API_TARGETS not in self._request:
                 self._response[R_ERROR] = "Invalid parameters"
                 return
             files = self._request[API_TARGETS]
@@ -827,14 +826,14 @@ class Connector:
                 if self._request[API_CUT] == "1":
                     cut = True
 
-            if not self._is_allowed(src, "read") or not self._is_allowed(dst, "write"):
+            if not self._is_allowed(dst, "write"):
                 self._response[R_ERROR] = "Access denied"
                 return
 
             added = []
             removed = []
             for fhash in files:
-                fil = self._find(fhash, src)
+                fil = self._find(fhash)
                 if not fil:
                     self._response[R_ERROR] = "File not found"
                     return
