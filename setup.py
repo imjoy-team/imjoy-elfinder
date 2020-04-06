@@ -1,4 +1,4 @@
-"""Set up the jupyter_elfinder package."""
+"""Set up the imjoy_elfinder package."""
 import json
 import os
 
@@ -16,14 +16,14 @@ def read(name):
         return fil.read()
 
 
-with open(os.path.join(HERE, "jupyter_elfinder", "VERSION"), "r") as f:
+with open(os.path.join(HERE, "imjoy_elfinder", "VERSION"), "r") as f:
     VERSION = json.load(f)["version"]
 
 setup(
-    name="jupyter-elfinder",
+    name="imjoy-elfinder",
     version=VERSION,
-    url="https://github.com/oeway/jupyter-elfinder",
-    author="Wei OUYANG",
+    url="https://github.com/oeway/imjoy-elfinder",
+    author="ImJoy-Team",
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
@@ -50,9 +50,9 @@ setup(
     ],
     extras_require={"jupyter": ["jupyter-server-proxy"]},
     entry_points={
-        "console_scripts": ["jupyter-elfinder = jupyter_elfinder.__main__:main"],
+        "console_scripts": ["imjoy-elfinder = imjoy_elfinder.__main__:main"],
         "jupyter_serverproxy_servers": [
-            "elfinder = jupyter_elfinder.__main__:setup_for_jupyter_server_proxy"
+            "elfinder = imjoy_elfinder.__main__:setup_for_jupyter_server_proxy"
         ],
     },
 )

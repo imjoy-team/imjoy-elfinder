@@ -7,8 +7,8 @@ by Alexandr Rakov 08-03-2012
 """
 from pyramid.config import Configurator
 
-JUPYTER_ELFINDER_CONNECTOR = "jupyter_elfinder_connector"
-JUPYTER_ELFINDER_FILEBROWSER = "jupyter_elfinder_filebrowser"
+IMJOY_ELFINDER_CONNECTOR = "imjoy_elfinder_connector"
+IMJOY_ELFINDER_FILEBROWSER = "imjoy_elfinder_filebrowser"
 
 
 def includeme(config: Configurator) -> None:

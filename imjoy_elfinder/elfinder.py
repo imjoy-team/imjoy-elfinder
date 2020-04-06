@@ -3,7 +3,7 @@
 # Connector for elFinder File Manager
 # Original author Troex Nevelin <troex@fury.scancode.ru>
 # Modified by Svintsov Dmitry (https://github.com/uralbash)
-# Further adapted by Wei OUYANG (https://oeway.github.io/)
+# Further adapted by ImJoy Team (https://github.com/imjoy-team)
 # License: 3-clauses BSD license
 """Provide the connector for elFinder File Manager."""
 # pylint: disable=too-many-lines

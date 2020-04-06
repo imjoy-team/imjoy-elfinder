@@ -1,4 +1,4 @@
-# Jupyter elFinder [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/imjoy-team/jupyter-elfinder/master) [![PyPI](https://img.shields.io/pypi/v/jupyter-elfinder.svg?style=popout)](https://pypi.org/project/jupyter-elfinder/) ![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/jupyter-elfinder/master/jupyter_elfinder/VERSION) [![Test](https://github.com/imjoy-team/jupyter-elfinder/workflows/Test/badge.svg)](https://github.com/imjoy-team/jupyter-elfinder/actions)
+# ImJoy elFinder [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master) [![PyPI](https://img.shields.io/pypi/v/imjoy-elfinder.svg?style=popout)](https://pypi.org/project/imjoy-elfinder/) ![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/imjoy-elfinder/master/imjoy_elfinder/VERSION) [![Test](https://github.com/imjoy-team/imjoy-elfinder/workflows/Test/badge.svg)](https://github.com/imjoy-team/imjoy-elfinder/actions)
 
 A web file browser for managing data on remote jupyter servers, specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
 
@@ -15,7 +15,7 @@ elFinder is an open-source file manager for web, written in JavaScript using jQu
 Python 3.5+ is required.
 
 ```sh
-pip install -U jupyter-elfinder
+pip install -U imjoy-elfinder
 ```
 
 ## Basic Usage
@@ -23,7 +23,7 @@ pip install -U jupyter-elfinder
 In your terminal, run the following command:
 
 ```sh
-jupyter-elfinder --thumbnail
+imjoy-elfinder --thumbnail
 ```
 
 (The thumbnail option enables thumbnail for images, it will create a folder named `.tmb` under your current folder, you can also disable that by remove the `--thumbnail` option.)
@@ -31,7 +31,7 @@ jupyter-elfinder --thumbnail
 You will then see the following message:
 
 ```sh
-==========Jupyter elFinder server is running=========
+==========ImJoy elFinder server is running=========
 http://127.0.0.1:8765
 ```
 
@@ -39,7 +39,7 @@ Depending on where you started the command, the file browser will show your curr
 
 In order to browse your own directory, you can manually set the root directory by passing `--root-dir=/PATH/TO/MY/FOLDER`.
 
-![jupyter-elfinder-screenshot](example-data/jupyter-elfinder-screenshot.png)
+![imjoy-elfinder-screenshot](example-data/imjoy-elfinder-screenshot.png)
 
 ## Use it with remote Jupyter notebook server
 
@@ -49,10 +49,10 @@ If you don't have jupyter notebook, run:
 pip install -U jupyter
 ```
 
-Next, install Jupyter elFinder with jupyter server proxy extension:
+Next, install ImJoy elFinder with jupyter server proxy extension:
 
 ```sh
-pip install -U jupyter-elfinder
+pip install -U imjoy-elfinder
 pip install -U http://github.com/oeway/jupyter-server-proxy/tarball/master#egg=jupyter-server-proxy
 ```
 
@@ -66,7 +66,7 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 
 ## Start a demo with MyBinder
 
-1. Start an instance on MyBinder: [https://mybinder.org/v2/gh/imjoy-team/jupyter-elfinder/master](https://mybinder.org/v2/gh/imjoy-team/jupyter-elfinder/master)
+1. Start an instance on MyBinder: [https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master](https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master)
 
 2. Get the generated Jupyter Notebook URL and add `/elfinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elfinder`
 
@@ -74,7 +74,7 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 
 ## Security Considerations
 
-Please be aware that there is potential risk to use Jupyter elFinder locally or remotely over the internet.
+Please be aware that there is potential risk to use ImJoy elFinder locally or remotely over the internet.
 
 Here are some suggestions:
 
@@ -84,7 +84,7 @@ Here are some suggestions:
 
 3. For running it locally, we use allow-origin header (CORS) to protect access from a random website, for that to work, please use a modern browser and keep it updated.
 
-4. Update Jupyter elFinder regularly with 'pip install -U jupyter-elfinder', in case there is security updates.
+4. Update ImJoy elFinder regularly with 'pip install -U imjoy-elfinder', in case there is security updates.
 
 ## License
 

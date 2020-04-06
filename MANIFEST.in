@@ -1,4 +1,4 @@
 include README.md requirements.txt requirements_test.txt
-include jupyter_elfinder/VERSION
-recursive-include jupyter_elfinder/static *
-recursive-include jupyter_elfinder/templates *
+include imjoy_elfinder/VERSION
+recursive-include imjoy_elfinder/static *
+recursive-include imjoy_elfinder/templates *

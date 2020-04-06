@@ -22,7 +22,7 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 coverage:
-	pytest --cov-report term-missing --cov=jupyter_elfinder tests/
+	pytest --cov-report term-missing --cov=imjoy_elfinder tests/
 
 test:
 	pytest tests/
