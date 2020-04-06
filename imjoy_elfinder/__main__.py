@@ -13,19 +13,19 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.router import Router
 
-from jupyter_elfinder import JUPYTER_ELFINDER_FILEBROWSER
+from imjoy_elfinder import IMJOY_ELFINDER_FILEBROWSER
 
 
 def build_app(opt: argparse.Namespace, settings: Dict[str, Optional[str]]) -> Router:
     """Build the app."""
     config = Configurator(settings=settings)
-    config.include("jupyter_elfinder")
+    config.include("imjoy_elfinder")
 
     # serve the folder content as static files under /static
     config.add_static_view(settings["files_url"], settings["root_dir"])
 
     # serve the file browser under /
-    config.add_route(JUPYTER_ELFINDER_FILEBROWSER, "/")
+    config.add_route(IMJOY_ELFINDER_FILEBROWSER, "/")
 
     def add_cors_headers_response_callback(event: Any) -> None:
         def cors_headers(request: Request, response: Response) -> None:
@@ -48,12 +48,12 @@ def build_app(opt: argparse.Namespace, settings: Dict[str, Optional[str]]) -> Ro
 
     def add_global_params(event: Any) -> None:
         """Add global parameters."""
-        event["JUPYTER_ELFINDER_BASE_URL"] = settings["base_url"]
+        event["IMJOY_ELFINDER_BASE_URL"] = settings["base_url"]
         with open(
             os.path.join(os.path.dirname(os.path.realpath(__file__)), "VERSION"), "r"
         ) as fil:
             version = json.load(fil)["version"]
-        event["JUPYTER_ELFINDER_VERSION"] = version
+        event["IMJOY_ELFINDER_VERSION"] = version
 
     config.add_subscriber(add_global_params, BeforeRender)
 
@@ -130,7 +130,7 @@ def main(args: Optional[List[str]] = None) -> None:
     else:
         url = "http://{}:{}".format(opt.host, opt.port)
 
-    print("==========Jupyter elFinder server is running=========\n{}\n".format(url))
+    print("==========ImJoy elFinder server is running=========\n{}\n".format(url))
 
     sys.stdout.flush()
 
@@ -146,7 +146,7 @@ def setup_for_jupyter_server_proxy() -> dict:
 
     return {
         "command": [
-            "jupyter-elfinder",
+            "imjoy-elfinder",
             "--port",
             "{port}",
             "--base-url",
@@ -158,7 +158,7 @@ def setup_for_jupyter_server_proxy() -> dict:
         ],
         "environment": {},
         "launcher_entry": {
-            "title": "Jupyter elFinder",
+            "title": "ImJoy elFinder",
             "icon_path": os.path.join(
                 os.path.dirname(os.path.abspath(__file__)), "static", "img", "icon.png"
             ),

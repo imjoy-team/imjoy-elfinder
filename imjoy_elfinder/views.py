@@ -15,7 +15,7 @@ from pyramid.request import Request
 from pyramid.response import Response, FileIter
 from pyramid.view import view_config
 
-from . import JUPYTER_ELFINDER_CONNECTOR, JUPYTER_ELFINDER_FILEBROWSER, elfinder
+from . import IMJOY_ELFINDER_CONNECTOR, IMJOY_ELFINDER_FILEBROWSER, elfinder
 from .api_const import API_NAME, API_TARGETS, API_UPLOAD
 from .util import get_all, get_one
 
@@ -36,8 +36,8 @@ def make_response(filename: str) -> Response:
 
 @view_config(
     request_method=("GET", "POST", "OPTIONS"),
-    route_name=JUPYTER_ELFINDER_CONNECTOR,
-    permission=JUPYTER_ELFINDER_CONNECTOR,
+    route_name=IMJOY_ELFINDER_CONNECTOR,
+    permission=IMJOY_ELFINDER_CONNECTOR,
 )
 def connector(request: Request) -> Response:
     """Handle the connector request."""
@@ -111,8 +111,8 @@ def connector(request: Request) -> Response:
 
 @view_config(
     request_method="GET",
-    route_name=JUPYTER_ELFINDER_FILEBROWSER,
-    permission=JUPYTER_ELFINDER_FILEBROWSER,
+    route_name=IMJOY_ELFINDER_FILEBROWSER,
+    permission=IMJOY_ELFINDER_FILEBROWSER,
     renderer="templates/elfinder/filebrowser.jinja2",
 )
 def index(request: Request) -> dict:

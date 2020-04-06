@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from jupyter_elfinder.api_const import (
+from imjoy_elfinder.api_const import (
     API_CMD,
     API_CONTENT,
     API_DOWNLOAD,
@@ -27,8 +27,8 @@ from jupyter_elfinder.api_const import (
     R_UPLMAXFILE,
     R_UPLMAXSIZE,
 )
-from jupyter_elfinder.elfinder import make_hash
-from jupyter_elfinder.views import connector
+from imjoy_elfinder.elfinder import make_hash
+from imjoy_elfinder.views import connector
 
 from . import ZIP_FILE, ZIP_FILE_ASCII_CONTENT
 
@@ -143,7 +143,7 @@ def raise_subprocess_after_check_archivers():
             "ping",
             None,
             patch(
-                "jupyter_elfinder.elfinder.Connector._Connector__ping",
+                "imjoy_elfinder.elfinder.Connector._Connector__ping",
                 side_effect=RuntimeError("Boom"),
             ),
         ),  # Action raises uncaught exception
