@@ -1187,7 +1187,7 @@ class Connector:
                 with open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
             self._rm_tmb(cur_file)
-            self._response[R_CHANGED] = self._info(cur_file)
+            self._response[R_CHANGED] = [self._info(cur_file)]
         except OSError:
             self._response[R_ERROR] = "Unable to write to file"
 
