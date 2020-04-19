@@ -1,3 +1,4 @@
+elfinder-client
 pillow
 pyramid
 pyramid_jinja2

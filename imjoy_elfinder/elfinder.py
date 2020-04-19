@@ -2106,7 +2106,7 @@ class Connector:
 
 def _check_name(name: str) -> bool:
     """Check for valid file/dir name."""
-    if secure_filename(name) != name.replace(' ', '_'):  # type: ignore
+    if secure_filename(name) != name.replace(" ", "_"):  # type: ignore
         return False
     return True
 
