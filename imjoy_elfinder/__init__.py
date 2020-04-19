@@ -22,4 +22,3 @@ def includeme(config: Configurator) -> None:
     config.include("pyramid_jinja2")
     config.add_jinja2_search_path("imjoy_elfinder:templates")
     config.add_static_view(name="static", path=get_base_dir())
-
