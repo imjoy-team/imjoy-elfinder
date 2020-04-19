@@ -58,6 +58,7 @@ from .api_const import (
     R_ADDED,
     R_API,
     R_CHANGED,
+    R_CHUNKMERGED,
     R_CWD,
     R_DEBUG,
     R_DIM,
@@ -68,6 +69,7 @@ from .api_const import (
     R_HASHES,
     R_IMAGES,
     R_LIST,
+    R_NAME,
     R_NETDRIVERS,
     R_OPTIONS,
     R_OPTIONS_ARCHIVERS,
@@ -765,48 +767,102 @@ class Connector:
             total = 0
             up_size = 0
             max_size = self._options["upload_max_size"]
-            print("=======>", self._request)
-            for name, data in up_files.items():
-                if name:
-                    name = self._check_utf8(name)
-                    total += 1
-                    name = os.path.basename(name)
+            chunk = self._request.get(API_CHUNK)
+            if chunk:
+                if chunk.endswith(".part"):
+                    start, end, total = [
+                        int(i) for i in self._request["range"].split(",")
+                    ]
+                    name = ".".join(chunk.split(".")[:-2])
+                    chunk_index, total_chunks = [
+                        int(i) for i in chunk.split(".")[-2].split("_")
+                    ]
                     if not _check_name(name):
                         self._set_error_data(name, "Invalid name: " + name)
                     else:
-                        name = os.path.join(cur_dir, name)
-                        replace = os.path.exists(name)
-                        try:
-                            fil = open(name, "wb", self._options["upload_write_chunk"])
+                        record_path = os.path.join(cur_dir, "." + name + ".txt")
+                        file_path = os.path.join(cur_dir, name + ".parts")
+                        if not os.path.exists(file_path) and os.path.exists(
+                            record_path
+                        ):
+                            os.remove(record_path)
+                        with open(
+                            file_path, "rb+" if os.path.exists(file_path) else "wb+"
+                        ) as fil:
+                            fil.seek(start)
+                            _, data = list(up_files.items())[0]
                             for chunk in self._fbuffer(data):
                                 fil.write(chunk)
-                            fil.close()
-                            up_size += os.lstat(name).st_size
-                            if self._is_upload_allow(name):
-                                os.chmod(name, self._options["file_mode"])
-                                if replace:  # update thumbnail
-                                    self._rm_tmb(name)
-                                self._response[R_ADDED].append(self._info(name))
+                        with open(
+                            record_path, "r+" if os.path.exists(record_path) else "w+"
+                        ) as fil:
+                            fil.seek(chunk_index)
+                            fil.write("X")
+                            fil.seek(0)
+                            written = fil.read()
+                            if written == ("X" * (total_chunks + 1)):
+                                self._response[R_ADDED] = []
+                                self._response[R_CHUNKMERGED] = name
+                                self._response[R_NAME] = name
                             else:
-                                self._set_error_data(name, "Not allowed file type")
+                                self._response[R_ADDED] = []
+                        if R_CHUNKMERGED in self._response:
+                            os.remove(record_path)
+                else:
+                    name = chunk
+                    file_path = os.path.join(cur_dir, name)
+                    if os.path.exists(file_path + ".parts"):
+                        os.rename(file_path + ".parts", file_path)
+                        self._response[R_ADDED] = [self._info(file_path)]
+                    else:
+                        self._response[R_ADDED] = []
+            else:
+                for name, data in up_files.items():
+                    if name:
+                        name = self._check_utf8(name)
+                        total += 1
+                        name = os.path.basename(name)
+                        if not _check_name(name):
+                            self._set_error_data(name, "Invalid name: " + name)
+                        else:
+                            name = os.path.join(cur_dir, name)
+                            replace = os.path.exists(name)
+                            try:
+                                fil = open(
+                                    name, "wb", self._options["upload_write_chunk"]
+                                )
+                                for chunk in self._fbuffer(data):
+                                    fil.write(chunk)
+                                fil.close()
+                                up_size += os.lstat(name).st_size
+                                if self._is_upload_allow(name):
+                                    os.chmod(name, self._options["file_mode"])
+                                    if replace:  # update thumbnail
+                                        self._rm_tmb(name)
+                                    self._response[R_ADDED].append(self._info(name))
+                                else:
+                                    self._set_error_data(name, "Not allowed file type")
+                                    try:
+                                        os.unlink(name)
+                                    except OSError:
+                                        pass
+                            except OSError:
+                                self._set_error_data(
+                                    name, "Unable to save uploaded file"
+                                )
+                            if up_size > max_size:
                                 try:
                                     os.unlink(name)
+                                    self._set_error_data(
+                                        name,
+                                        "File exceeds the maximum allowed filesize",
+                                    )
                                 except OSError:
-                                    pass
-                        except OSError:
-                            self._set_error_data(name, "Unable to save uploaded file")
-                        if up_size > max_size:
-                            try:
-                                os.unlink(name)
-                                self._set_error_data(
-                                    name, "File exceeds the maximum allowed filesize"
-                                )
-                            except OSError:
-                                # TODO ?  # pylint: disable=fixme
-                                self._set_error_data(
-                                    name, "File was only partially uploaded"
-                                )
-                            break
+                                    # TODO ?  # pylint: disable=fixme
+                                    self._set_error_data(
+                                        name, "File was only partially uploaded"
+                                    )
+                                break
 
             if self._error_data:
                 if len(self._error_data) == total:
