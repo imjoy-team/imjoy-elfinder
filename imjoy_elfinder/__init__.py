@@ -15,11 +15,11 @@ IMJOY_ELFINDER_FILEBROWSER = "imjoy_elfinder_filebrowser"
 def includeme(config: Configurator) -> None:
     """Include routes and assets."""
     # routes
+    config.add_route(IMJOY_ELFINDER_FILEBROWSER, "/")
     config.add_route(IMJOY_ELFINDER_CONNECTOR, "/connector/")
     config.scan(".views")
     # assets
     config.include("pyramid_jinja2")
     config.add_jinja2_search_path("imjoy_elfinder:templates")
     config.add_static_view(name="static", path=get_base_dir())
-    # serve the file browser under /
-    config.add_route(IMJOY_ELFINDER_FILEBROWSER, "/")
+
