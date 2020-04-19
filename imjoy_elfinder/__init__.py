@@ -1,7 +1,7 @@
 """
 A pyramid connector elfinder, specifically for working with jupyter server proxy.
-original file
 
+original file
 https://github.com/Studio-42/elfinder-python/blob/master/connector.py changed
 by Alexandr Rakov 08-03-2012
 """
