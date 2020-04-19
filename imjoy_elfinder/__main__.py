@@ -13,19 +13,13 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.router import Router
 
-from imjoy_elfinder import IMJOY_ELFINDER_FILEBROWSER
-
 
 def build_app(opt: argparse.Namespace, settings: Dict[str, Optional[str]]) -> Router:
     """Build the app."""
     config = Configurator(settings=settings)
     config.include("imjoy_elfinder")
-
-    # serve the folder content as static files under /static
-    config.add_static_view(settings["files_url"], settings["root_dir"])
-
-    # serve the file browser under /
-    config.add_route(IMJOY_ELFINDER_FILEBROWSER, "/")
+    # serve the folder content with a route path defined with `files_url`
+    config.add_static_view(name=settings["files_url"], path=settings["root_dir"])
 
     def add_cors_headers_response_callback(event: Any) -> None:
         def cors_headers(request: Request, response: Response) -> None:
