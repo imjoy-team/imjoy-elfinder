@@ -32,6 +32,8 @@ from .api_const import (
     API_CONTENT,
     API_CURRENT,
     API_CUT,
+    API_CHUNK,
+    API_CID,
     API_DIRS,
     API_DOWNLOAD,
     API_DST,
@@ -49,6 +51,7 @@ from .api_const import (
     API_TYPE,
     API_UPLOAD,
     API_WIDTH,
+    API_RANGE,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
@@ -269,6 +272,8 @@ class Connector:
 
     # public variables
     http_allowed_parameters = (
+        API_CHUNK,
+        API_CID,
         API_CMD,
         API_CONTENT,
         API_CURRENT,
@@ -280,6 +285,7 @@ class Connector:
         API_MAKEDIR,
         API_NAME,
         API_Q,
+        API_RANGE,
         API_SRC,
         API_TARGET,
         API_TARGETS,
@@ -759,6 +765,7 @@ class Connector:
             total = 0
             up_size = 0
             max_size = self._options["upload_max_size"]
+            print("=======>", self._request)
             for name, data in up_files.items():
                 if name:
                     name = self._check_utf8(name)
