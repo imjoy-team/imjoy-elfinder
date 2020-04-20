@@ -9,7 +9,6 @@
 """Provide views for elfinder."""
 import json
 import os
-from cgi import FieldStorage
 
 from pyramid.request import Request
 from pyramid.response import Response, FileIter
