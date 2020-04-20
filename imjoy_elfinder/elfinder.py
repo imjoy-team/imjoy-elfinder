@@ -729,7 +729,7 @@ class Connector:
 
         self._response[R_REMOVED] = removed
 
-    def __upload(self) -> None:
+    def __upload(self) -> None:  # pylint: disable=too-many-branches
         """Upload files."""
         try:  # Windows needs stdio set for binary mode.
             import msvcrt  # pylint: disable=import-outside-toplevel
@@ -774,48 +774,82 @@ class Connector:
                         int(i) for i in self._request["range"].split(",")
                     ]
                     name = ".".join(chunk.split(".")[:-2])
-                    chunk_index, total_chunks = [
-                        int(i) for i in chunk.split(".")[-2].split("_")
-                    ]
-                    if not _check_name(name):
-                        self._set_error_data(name, "Invalid name: " + name)
+                    if not self._is_upload_allow(name):
+                        self._set_error_data(name, "Not allowed file type")
+                    elif total > max_size:
+                        self._set_error_data(
+                            name, "File exceeds the maximum allowed filesize",
+                        )
                     else:
-                        record_path = os.path.join(cur_dir, "." + name + ".txt")
-                        file_path = os.path.join(cur_dir, name + ".parts")
-                        if not os.path.exists(file_path) and os.path.exists(
-                            record_path
-                        ):
-                            os.remove(record_path)
-                        with open(
-                            file_path, "rb+" if os.path.exists(file_path) else "wb+"
-                        ) as fil:
-                            fil.seek(start)
-                            _, data = list(up_files.items())[0]
-                            for chunk in self._fbuffer(data):
-                                fil.write(chunk)
-                        with open(
-                            record_path, "r+" if os.path.exists(record_path) else "w+"
-                        ) as fil:
-                            fil.seek(chunk_index)
-                            fil.write("X")
-                            fil.seek(0)
-                            written = fil.read()
-                            if written == ("X" * (total_chunks + 1)):
-                                self._response[R_ADDED] = []
-                                self._response[R_CHUNKMERGED] = name
-                                self._response[R_NAME] = name
-                            else:
-                                self._response[R_ADDED] = []
-                        if R_CHUNKMERGED in self._response:
-                            os.remove(record_path)
+                        chunk_index, total_chunks = [
+                            int(i) for i in chunk.split(".")[-2].split("_")
+                        ]
+                        if not _check_name(name):
+                            self._set_error_data(name, "Invalid name: " + name)
+                        else:
+                            record_path = os.path.join(cur_dir, "." + name + ".txt")
+                            file_path = os.path.join(cur_dir, name + ".parts")
+                            if not os.path.exists(file_path) and os.path.exists(
+                                record_path
+                            ):
+                                os.remove(record_path)
+                            with open(
+                                file_path, "rb+" if os.path.exists(file_path) else "wb+"
+                            ) as fil:
+                                fil.seek(start)
+                                _, data = list(up_files.items())[0]
+                                written_size = 0
+                                for chunk in self._fbuffer(data):
+                                    fil.write(chunk)
+                                    written_size += len(chunk)
+                                    if written_size >= end - start:
+                                        self._set_error_data(name, "Invalid file size")
+                                        break
+
+                            with open(
+                                record_path,
+                                "r+" if os.path.exists(record_path) else "w+",
+                            ) as fil:
+                                fil.seek(chunk_index)
+                                fil.write("X")
+                                fil.seek(0)
+                                written = fil.read()
+                                if written == ("X" * (total_chunks + 1)):
+                                    self._response[R_ADDED] = []
+                                    self._response[R_CHUNKMERGED] = name
+                                    self._response[R_NAME] = name
+                                else:
+                                    self._response[R_ADDED] = []
+                            if R_CHUNKMERGED in self._response:
+                                os.remove(record_path)
                 else:
                     name = chunk
                     file_path = os.path.join(cur_dir, name)
                     if os.path.exists(file_path + ".parts"):
-                        os.rename(file_path + ".parts", file_path)
-                        self._response[R_ADDED] = [self._info(file_path)]
-                    else:
-                        self._response[R_ADDED] = []
+                        up_size = os.lstat(file_path + ".parts").st_size
+                        if up_size > max_size:
+                            try:
+                                os.unlink(file_path + ".parts")
+                                self._set_error_data(
+                                    name, "File exceeds the maximum allowed filesize",
+                                )
+                            except OSError:
+                                # TODO ?  # pylint: disable=fixme
+                                self._set_error_data(
+                                    name, "File was only partially uploaded",
+                                )
+                        else:
+                            if self._is_upload_allow(name):
+                                os.rename(file_path + ".parts", file_path)
+                                os.chmod(file_path, self._options["file_mode"])
+                                self._response[R_ADDED] = [self._info(file_path)]
+                            else:
+                                self._set_error_data(name, "Not allowed file type")
+                                try:
+                                    os.unlink(file_path + ".parts")
+                                except OSError:
+                                    pass
+
             else:
                 for name, data in up_files.items():
                     if name:
@@ -862,7 +896,6 @@ class Connector:
                                     self._set_error_data(
                                         name, "File was only partially uploaded"
                                     )
-                                break
 
             if self._error_data:
                 if len(self._error_data) == total:
