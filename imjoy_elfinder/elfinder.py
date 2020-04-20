@@ -2213,7 +2213,7 @@ class Connector:
 
 def _check_name(filename: str) -> bool:
     """Check for valid file/dir name."""
-    if sanitize_filename(filename) != filename:  # type: ignore
+    if sanitize_filename(filename) != filename:
         return False
     return True
 
