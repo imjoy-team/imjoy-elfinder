@@ -1254,7 +1254,7 @@ class Connector:
         self._response[R_ADDED] = [self._info(archive_path)]
 
     def __extract(self) -> None:
-        """Uncompress archive."""
+        """Extract archive."""
         target = self._request.get(API_TARGET)
         if not target:
             self._response[R_ERROR] = "Invalid parameters"
