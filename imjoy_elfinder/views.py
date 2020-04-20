@@ -16,7 +16,7 @@ from pyramid.response import Response, FileIter
 from pyramid.view import view_config
 
 from . import IMJOY_ELFINDER_CONNECTOR, IMJOY_ELFINDER_FILEBROWSER, elfinder
-from .api_const import API_NAME, API_TARGETS, API_UPLOAD
+from .api_const import API_NAME, API_TARGETS, API_DIRS, API_UPLOAD, API_UPLOAD_PATH
 from .util import get_all, get_one
 
 
@@ -67,15 +67,15 @@ def connector(request: Request) -> Response:
             elif field == API_TARGETS:
                 http_request[field] = get_all(form, field)
 
+            elif field == API_DIRS:
+                http_request[field] = get_all(form, field)
+
+            elif field == API_UPLOAD_PATH:
+                http_request[field] = get_all(form, field)
+
             # handle CGI upload
             elif field == API_UPLOAD:
-                up_files = {}
-                cgi_upload_files = get_all(form, field)
-                for up_ in cgi_upload_files:
-                    if isinstance(up_, FieldStorage) and up_.filename:
-                        # pack dict(filename: filedescriptor)
-                        up_files[up_.filename.encode("utf-8")] = up_.file
-                http_request[field] = up_files
+                http_request[field] = get_all(form, field)
             else:
                 http_request[field] = get_one(form, field)
 

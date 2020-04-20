@@ -24,7 +24,7 @@ from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
 
-from pathvalidate import sanitize_filename
+from pathvalidate import sanitize_filename, sanitize_filepath
 from typing_extensions import Literal, TypedDict
 
 from .api_const import (
@@ -50,6 +50,7 @@ from .api_const import (
     API_TREE,
     API_TYPE,
     API_UPLOAD,
+    API_UPLOAD_PATH,
     API_WIDTH,
     API_RANGE,
     ARCHIVE_ARGC,
@@ -280,6 +281,7 @@ class Connector:
         API_CONTENT,
         API_CURRENT,
         API_CUT,
+        API_DIRS,
         API_DOWNLOAD,
         API_DST,
         API_HEIGHT,
@@ -294,6 +296,7 @@ class Connector:
         API_TREE,
         API_TYPE,
         API_UPLOAD,
+        API_UPLOAD_PATH,
         API_WIDTH,
     )
 
@@ -632,11 +635,11 @@ class Connector:
         new_dir = None
         name = self._request.get(API_NAME)
         target = self._request.get(API_TARGET)
-        if not target or not name:
+        dirs = self._request.get(API_DIRS)
+
+        if not target or (not name and not dirs):
             self._response[R_ERROR] = "Invalid parameters"
             return
-
-        name = self._check_utf8(name)
         path = self._find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
@@ -644,32 +647,46 @@ class Connector:
         if not self._is_allowed(path, "write"):
             self._response[R_ERROR] = "Access denied"
             return
-        if not _check_name(name):
-            self._response[R_ERROR] = "Invalid name"
-            return
 
-        dirs = self._request.get(API_DIRS) or []
+        if name:
+            name = self._check_utf8(name)
+            if not _check_name(name):
+                self._response[R_ERROR] = "Invalid name"
+                return
+            new_dir = os.path.join(path, name)
+            if os.path.exists(new_dir):
+                self._response[R_ERROR] = (
+                    "File or folder with the same name " + name + " already exists"
+                )
+            else:
+                try:
+                    os.mkdir(new_dir, int(self._options["dir_mode"]))
+                    self._response[R_ADDED] = [self._info(new_dir)]
+                    self._response[R_HASHES] = {}
+                except OSError:
+                    self._response[R_ERROR] = "Unable to create folder"
+        if dirs:
+            self._response[R_ADDED] = []
+            self._response[R_HASHES] = {}
+            for sdir in dirs:
+                subdir = sdir.lstrip("/")
+                if not _check_dir(subdir):
+                    self._response[R_ERROR] = "Invalid dir name: " + subdir
+                    return
 
-        new_dir = os.path.join(path, name)
-
-        if os.path.exists(new_dir):
-            self._response[R_ERROR] = (
-                "File or folder with the same name" + " already exists"
-            )
-        else:
-            try:
-                os.mkdir(new_dir, int(self._options["dir_mode"]))
-                self._response[R_ADDED] = [self._info(new_dir)]
-                self._response[R_HASHES] = []
-                for subdir in dirs:
-                    if not _check_name(subdir):
-                        self._response[R_ERROR] = "Invalid dir name: " + subdir
-                        return
-                    new_subdir = os.path.join(new_dir, subdir)
+                new_subdir = os.path.join(path, subdir)
+                if os.path.exists(subdir):
+                    self._response[R_ERROR] = (
+                        "File or folder with the same name" + subdir + " already exists"
+                    )
+                    return
+                try:
                     os.mkdir(new_subdir, int(self._options["dir_mode"]))
-                    self._response[R_HASHES].append(self._hash(new_subdir))
-            except OSError:
-                self._response[R_ERROR] = "Unable to create folder"
+                    self._response[R_ADDED].append(self._info(new_subdir))
+                    self._response[R_HASHES][sdir] = self._hash(new_subdir)
+                except OSError:
+                    self._response[R_ERROR] = "Unable to create folder"
+                    return
 
     def __mkfile(self) -> None:
         """Create new file."""
@@ -740,26 +757,19 @@ class Connector:
             msvcrt.setmode(1, os.O_BINARY)  # type: ignore
         except ImportError:
             pass
+        upload_paths = self._request.get(API_UPLOAD_PATH)
 
         if API_TARGET in self._request:
             dir_hash = self._request[API_TARGET]
+            up_files = self._request[API_UPLOAD]
             cur_dir = self._find_dir(dir_hash)
+            if upload_paths:
+                upload_paths = [self._find_dir(d) for d in upload_paths]
             if not cur_dir:
                 self._response[R_ERROR] = "Invalid parameters"
                 return
-            if not self._is_allowed(cur_dir, "write"):
-                self._response[R_ERROR] = "Access denied"
-                return
             if API_UPLOAD not in self._request:
                 self._response[R_ERROR] = "No file to upload"
-                return
-
-            up_files = self._request[API_UPLOAD]
-            # invalid format
-            # must be dict('filename1': 'filedescriptor1',
-            #              'filename2': 'filedescriptor2', ...)
-            if not isinstance(up_files, dict):
-                self._response[R_ERROR] = "Invalid parameters"
                 return
 
             self._response[R_ADDED] = []
@@ -769,6 +779,11 @@ class Connector:
             max_size = self._options["upload_max_size"]
             chunk = self._request.get(API_CHUNK)
             if chunk:
+                if upload_paths:
+                    cur_dir = upload_paths[0]
+                if not self._is_allowed(cur_dir, "write"):
+                    self._response[R_WARNING] = "Access denied"
+                    return
                 if chunk.endswith(".part"):
                     start, clength, total = [
                         int(i) for i in self._request["range"].split(",")
@@ -784,6 +799,7 @@ class Connector:
                         chunk_index, total_chunks = [
                             int(i) for i in chunk.split(".")[-2].split("_")
                         ]
+
                         if not _check_name(name):
                             self._set_error_data(name, "Invalid name: " + name)
                         else:
@@ -797,9 +813,9 @@ class Connector:
                                 file_path, "rb+" if os.path.exists(file_path) else "wb+"
                             ) as fil:
                                 fil.seek(start)
-                                _, data = list(up_files.items())[0]
+                                data = up_files[0]
                                 written_size = 0
-                                for chunk in self._fbuffer(data):
+                                for chunk in self._fbuffer(data.file):
                                     fil.write(chunk)
                                     written_size += len(chunk)
                                     if written_size > clength:
@@ -854,52 +870,30 @@ class Connector:
                 if len(self._response[R_WARNING]) == 0:
                     del self._response[R_WARNING]
             else:
-                for name, data in up_files.items():
-                    if name:
-                        name = self._check_utf8(name)
-                        total += 1
-                        name = os.path.basename(name)
-                        if not _check_name(name):
-                            self._response[R_WARNING].append("Invalid name: " + name)
-                        else:
-                            name = os.path.join(cur_dir, name)
-                            replace = os.path.exists(name)
-                            try:
-                                fil = open(
-                                    name, "wb", self._options["upload_write_chunk"]
-                                )
-                                for chunk in self._fbuffer(data):
-                                    fil.write(chunk)
-                                fil.close()
-                                up_size += os.lstat(name).st_size
-                                if up_size > max_size:
-                                    try:
-                                        os.unlink(name)
-                                        self._response[R_WARNING].append(
-                                            "File exceeds the maximum allowed filesize"
-                                        )
-                                    except OSError:
-                                        self._response[R_WARNING].append(
-                                            "File was only partially uploaded"
-                                        )
-                                elif not self._is_upload_allow(name):
-                                    self._response[R_WARNING].append(
-                                        "Not allowed file type"
-                                    )
-                                    try:
-                                        os.unlink(name)
-                                    except OSError:
-                                        pass
-                                else:
-                                    os.chmod(name, self._options["file_mode"])
-                                    if replace:  # update thumbnail
-                                        self._rm_tmb(name)
-                                    self._response[R_ADDED].append(self._info(name))
-
-                            except OSError:
-                                self._response[R_WARNING].append(
-                                    "Unable to save uploaded file"
-                                )
+                for idx, data in enumerate(up_files):
+                    name = data.filename.encode("utf-8")
+                    if not name:
+                        continue
+                    name = self._check_utf8(name)
+                    total += 1
+                    name = os.path.basename(name)
+                    if not upload_paths:
+                        target_dir = cur_dir
+                    else:
+                        target_dir = upload_paths[idx]
+                    if not _check_name(name):
+                        self._response[R_WARNING].append("Invalid name: " + name)
+                    elif not self._is_allowed(target_dir, "write"):
+                        self._response[R_WARNING] = "Access denied"
+                    else:
+                        name = os.path.join(target_dir, name)
+                        replace = os.path.exists(name)
+                        try:
+                            fil = open(name, "wb", self._options["upload_write_chunk"])
+                            for chunk in self._fbuffer(data.file):
+                                fil.write(chunk)
+                            fil.close()
+                            up_size += os.lstat(name).st_size
                             if up_size > max_size:
                                 try:
                                     os.unlink(name)
@@ -910,6 +904,34 @@ class Connector:
                                     self._response[R_WARNING].append(
                                         "File was only partially uploaded"
                                     )
+                            elif not self._is_upload_allow(name):
+                                self._response[R_WARNING].append(
+                                    "Not allowed file type"
+                                )
+                                try:
+                                    os.unlink(name)
+                                except OSError:
+                                    pass
+                            else:
+                                os.chmod(name, self._options["file_mode"])
+                                if replace:  # update thumbnail
+                                    self._rm_tmb(name)
+                                self._response[R_ADDED].append(self._info(name))
+
+                        except OSError:
+                            self._response[R_WARNING].append(
+                                "Unable to save uploaded file"
+                            )
+                        if up_size > max_size:
+                            try:
+                                os.unlink(name)
+                                self._response[R_WARNING].append(
+                                    "File exceeds the maximum allowed filesize"
+                                )
+                            except OSError:
+                                self._response[R_WARNING].append(
+                                    "File was only partially uploaded"
+                                )
                 if len(self._response[R_WARNING]) == 0:
                     del self._response[R_WARNING]
         else:
@@ -2212,8 +2234,15 @@ class Connector:
 
 
 def _check_name(filename: str) -> bool:
-    """Check for valid file/dir name."""
+    """Check for valid file name."""
     if sanitize_filename(filename) != filename:
+        return False
+    return True
+
+
+def _check_dir(filepath: str) -> bool:
+    """Check for valid dir name."""
+    if sanitize_filepath(filepath) != filepath:
         return False
     return True
 

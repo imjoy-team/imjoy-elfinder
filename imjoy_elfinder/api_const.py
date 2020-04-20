@@ -23,6 +23,7 @@ API_TARGETS = "targets[]"
 API_TREE = "tree"
 API_TYPE = "type"
 API_UPLOAD = "upload[]"
+API_UPLOAD_PATH = "upload_path[]"
 API_WIDTH = "width"
 API_RANGE = "range"
 
