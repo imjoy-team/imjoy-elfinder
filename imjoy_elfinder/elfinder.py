@@ -24,8 +24,8 @@ from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
 
+from pathvalidate import sanitize_filename
 from typing_extensions import Literal, TypedDict
-from werkzeug.utils import secure_filename
 
 from .api_const import (
     API_CMD,
@@ -222,7 +222,6 @@ Options = TypedDict(  # pylint: disable=invalid-name
         "upload_write_chunk": int,
     },
 )
-_filename_ascii_strip_re = re.compile(r"[^A-Za-z0-9_.-]")
 
 
 def exception_to_string(excp: Exception) -> str:
@@ -770,24 +769,23 @@ class Connector:
             max_size = self._options["upload_max_size"]
             chunk = self._request.get(API_CHUNK)
             if chunk:
-                upload_success = False
                 if chunk.endswith(".part"):
                     start, clength, total = [
                         int(i) for i in self._request["range"].split(",")
                     ]
                     name = ".".join(chunk.split(".")[:-2])
                     if not self._is_upload_allow(name):
-                        self._response[R_WARNING].append("Not allowed file type")
+                        self._set_error_data(name, "Not allowed file type")
                     elif total > max_size:
-                        self._response[R_WARNING].append(
-                            "File exceeds the maximum allowed filesize"
+                        self._set_error_data(
+                            name, "File exceeds the maximum allowed filesize"
                         )
                     else:
                         chunk_index, total_chunks = [
                             int(i) for i in chunk.split(".")[-2].split("_")
                         ]
                         if not _check_name(name):
-                            self._response[R_WARNING].append("Invalid name: " + name)
+                            self._set_error_data(name, "Invalid name: " + name)
                         else:
                             record_path = os.path.join(cur_dir, "." + name + ".txt")
                             file_path = os.path.join(cur_dir, name + ".parts")
@@ -805,9 +803,7 @@ class Connector:
                                     fil.write(chunk)
                                     written_size += len(chunk)
                                     if written_size > clength:
-                                        self._response[R_WARNING].append(
-                                            "Invalid file size"
-                                        )
+                                        self._set_error_data(name, "Invalid file size")
                                         break
 
                             with open(
@@ -824,7 +820,6 @@ class Connector:
                                     self._response[R_NAME] = name
                                 else:
                                     self._response[R_ADDED] = []
-                                upload_success = True
                             if R_CHUNKMERGED in self._response:
                                 os.remove(record_path)
                 else:
@@ -857,7 +852,7 @@ class Connector:
                                     os.unlink(file_path + ".parts")
                                 except OSError:
                                     pass
-                if upload_success:
+                if len(self._response[R_WARNING]) == 0:
                     del self._response[R_WARNING]
             else:
                 for name, data in up_files.items():
@@ -2217,12 +2212,33 @@ class Connector:
         return str_name
 
 
+import unicodedata
+import string
+
+valid_filename_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+char_limit = 255
+
+
+def clean_filename(filename, whitelist=valid_filename_chars):
+    # keep only valid ascii chars
+    cleaned_filename = (
+        unicodedata.normalize("NFKD", filename).encode("ASCII", "ignore").decode()
+    )
+
+    # keep only whitelisted chars
+    cleaned_filename = "".join(c for c in cleaned_filename if c in whitelist)
+    if len(cleaned_filename) > char_limit:
+        print(
+            "Warning, filename truncated because it was over {}. Filenames may no longer be unique".format(
+                char_limit
+            )
+        )
+    return cleaned_filename[:char_limit]
+
+
 def _check_name(filename: str) -> bool:
     """Check for valid file/dir name."""
-    _filename = str(_filename_ascii_strip_re.sub("", "_".join(filename.split()))).strip(
-        "._"
-    )
-    if secure_filename(filename) != _filename:  # type: ignore
+    if sanitize_filename(filename) != filename:  # type: ignore
         return False
     return True
 
