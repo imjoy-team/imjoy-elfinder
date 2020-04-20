@@ -843,7 +843,6 @@ class Connector:
                                 os.rename(file_path + ".parts", file_path)
                                 os.chmod(file_path, self._options["file_mode"])
                                 self._response[R_ADDED] = [self._info(file_path)]
-                                upload_success = True
                             else:
                                 self._response[R_WARNING].append(
                                     "Not allowed file type"
@@ -2210,30 +2209,6 @@ class Connector:
             str_name = str(name, "utf-8", "replace")
             self._debug("invalid encoding", str_name)
         return str_name
-
-
-import unicodedata
-import string
-
-valid_filename_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-char_limit = 255
-
-
-def clean_filename(filename, whitelist=valid_filename_chars):
-    # keep only valid ascii chars
-    cleaned_filename = (
-        unicodedata.normalize("NFKD", filename).encode("ASCII", "ignore").decode()
-    )
-
-    # keep only whitelisted chars
-    cleaned_filename = "".join(c for c in cleaned_filename if c in whitelist)
-    if len(cleaned_filename) > char_limit:
-        print(
-            "Warning, filename truncated because it was over {}. Filenames may no longer be unique".format(
-                char_limit
-            )
-        )
-    return cleaned_filename[:char_limit]
 
 
 def _check_name(filename: str) -> bool:
