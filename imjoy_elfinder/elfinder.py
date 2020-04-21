@@ -24,14 +24,16 @@ from types import ModuleType
 from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
 from urllib.parse import quote, urljoin
 
+from pathvalidate import sanitize_filename, sanitize_filepath
 from typing_extensions import Literal, TypedDict
-from werkzeug.utils import secure_filename
 
 from .api_const import (
     API_CMD,
     API_CONTENT,
     API_CURRENT,
     API_CUT,
+    API_CHUNK,
+    API_CID,
     API_DIRS,
     API_DOWNLOAD,
     API_DST,
@@ -48,13 +50,16 @@ from .api_const import (
     API_TREE,
     API_TYPE,
     API_UPLOAD,
+    API_UPLOAD_PATH,
     API_WIDTH,
+    API_RANGE,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
     R_ADDED,
     R_API,
     R_CHANGED,
+    R_CHUNKMERGED,
     R_CWD,
     R_DEBUG,
     R_DIM,
@@ -65,6 +70,7 @@ from .api_const import (
     R_HASHES,
     R_IMAGES,
     R_LIST,
+    R_NAME,
     R_NETDRIVERS,
     R_OPTIONS,
     R_OPTIONS_ARCHIVERS,
@@ -269,10 +275,13 @@ class Connector:
 
     # public variables
     http_allowed_parameters = (
+        API_CHUNK,
+        API_CID,
         API_CMD,
         API_CONTENT,
         API_CURRENT,
         API_CUT,
+        API_DIRS,
         API_DOWNLOAD,
         API_DST,
         API_HEIGHT,
@@ -280,12 +289,14 @@ class Connector:
         API_MAKEDIR,
         API_NAME,
         API_Q,
+        API_RANGE,
         API_SRC,
         API_TARGET,
         API_TARGETS,
         API_TREE,
         API_TYPE,
         API_UPLOAD,
+        API_UPLOAD_PATH,
         API_WIDTH,
     )
 
@@ -398,7 +409,6 @@ class Connector:
                 self._http_header["Content-type"] = "text/html"
             else:
                 self._http_header["Content-type"] = "application/json"
-
         return self._http_status_code, self._http_header, self._response
 
     def __places(self) -> None:
@@ -625,11 +635,11 @@ class Connector:
         new_dir = None
         name = self._request.get(API_NAME)
         target = self._request.get(API_TARGET)
-        if not target or not name:
+        dirs = self._request.get(API_DIRS)
+
+        if not target or (not name and not dirs):
             self._response[R_ERROR] = "Invalid parameters"
             return
-
-        name = self._check_utf8(name)
         path = self._find_dir(target)
         if not path:
             self._response[R_ERROR] = "Invalid parameters"
@@ -637,32 +647,46 @@ class Connector:
         if not self._is_allowed(path, "write"):
             self._response[R_ERROR] = "Access denied"
             return
-        if not _check_name(name):
-            self._response[R_ERROR] = "Invalid name"
-            return
 
-        dirs = self._request.get(API_DIRS) or []
+        if name:
+            name = self._check_utf8(name)
+            if not _check_name(name):
+                self._response[R_ERROR] = "Invalid name"
+                return
+            new_dir = os.path.join(path, name)
+            if os.path.exists(new_dir):
+                self._response[R_ERROR] = (
+                    "File or folder with the same name " + name + " already exists"
+                )
+            else:
+                try:
+                    os.mkdir(new_dir, int(self._options["dir_mode"]))
+                    self._response[R_ADDED] = [self._info(new_dir)]
+                    self._response[R_HASHES] = {}
+                except OSError:
+                    self._response[R_ERROR] = "Unable to create folder"
+        if dirs:
+            self._response[R_ADDED] = []
+            self._response[R_HASHES] = {}
+            for sdir in dirs:
+                subdir = sdir.lstrip("/")
+                if not _check_dir(subdir):
+                    self._response[R_ERROR] = "Invalid dir name: " + subdir
+                    return
 
-        new_dir = os.path.join(path, name)
-
-        if os.path.exists(new_dir):
-            self._response[R_ERROR] = (
-                "File or folder with the same name" + " already exists"
-            )
-        else:
-            try:
-                os.mkdir(new_dir, int(self._options["dir_mode"]))
-                self._response[R_ADDED] = [self._info(new_dir)]
-                self._response[R_HASHES] = []
-                for subdir in dirs:
-                    if not _check_name(subdir):
-                        self._response[R_ERROR] = "Invalid dir name: " + subdir
-                        return
-                    new_subdir = os.path.join(new_dir, subdir)
+                new_subdir = os.path.join(path, subdir)
+                if os.path.exists(subdir):
+                    self._response[R_ERROR] = (
+                        "File or folder with the same name" + subdir + " already exists"
+                    )
+                    return
+                try:
                     os.mkdir(new_subdir, int(self._options["dir_mode"]))
-                    self._response[R_HASHES].append(self._hash(new_subdir))
-            except OSError:
-                self._response[R_ERROR] = "Unable to create folder"
+                    self._response[R_ADDED].append(self._info(new_subdir))
+                    self._response[R_HASHES][sdir] = self._hash(new_subdir)
+                except OSError:
+                    self._response[R_ERROR] = "Unable to create folder"
+                    return
 
     def __mkfile(self) -> None:
         """Create new file."""
@@ -733,81 +757,206 @@ class Connector:
             msvcrt.setmode(1, os.O_BINARY)  # type: ignore
         except ImportError:
             pass
-
         if API_TARGET in self._request:
-            dir_hash = self._request[API_TARGET]
-            cur_dir = self._find_dir(dir_hash)
-            if not cur_dir:
-                self._response[R_ERROR] = "Invalid parameters"
-                return
-            if not self._is_allowed(cur_dir, "write"):
-                self._response[R_ERROR] = "Access denied"
-                return
-            if API_UPLOAD not in self._request:
-                self._response[R_ERROR] = "No file to upload"
-                return
-
-            up_files = self._request[API_UPLOAD]
-            # invalid format
-            # must be dict('filename1': 'filedescriptor1',
-            #              'filename2': 'filedescriptor2', ...)
-            if not isinstance(up_files, dict):
-                self._response[R_ERROR] = "Invalid parameters"
-                return
-
+            chunk = self._request.get(API_CHUNK)
             self._response[R_ADDED] = []
-            total = 0
-            up_size = 0
-            max_size = self._options["upload_max_size"]
-            for name, data in up_files.items():
-                if name:
-                    name = self._check_utf8(name)
-                    total += 1
-                    name = os.path.basename(name)
-                    if not _check_name(name):
-                        self._set_error_data(name, "Invalid name: " + name)
-                    else:
-                        name = os.path.join(cur_dir, name)
-                        replace = os.path.exists(name)
-                        try:
-                            fil = open(name, "wb", self._options["upload_write_chunk"])
-                            for chunk in self._fbuffer(data):
-                                fil.write(chunk)
-                            fil.close()
-                            up_size += os.lstat(name).st_size
-                            if self._is_upload_allow(name):
-                                os.chmod(name, self._options["file_mode"])
-                                if replace:  # update thumbnail
-                                    self._rm_tmb(name)
-                                self._response[R_ADDED].append(self._info(name))
-                            else:
-                                self._set_error_data(name, "Not allowed file type")
-                                try:
-                                    os.unlink(name)
-                                except OSError:
-                                    pass
-                        except OSError:
-                            self._set_error_data(name, "Unable to save uploaded file")
-                        if up_size > max_size:
-                            try:
-                                os.unlink(name)
-                                self._set_error_data(
-                                    name, "File exceeds the maximum allowed filesize"
-                                )
-                            except OSError:
-                                # TODO ?  # pylint: disable=fixme
-                                self._set_error_data(
-                                    name, "File was only partially uploaded"
-                                )
-                            break
-
-            if self._error_data:
-                if len(self._error_data) == total:
-                    self._response[R_WARNING] = "Unable to upload files"
-                else:
-                    self._response[R_WARNING] = "Some files was not uploaded"
+            self._response[R_WARNING] = []
+            if chunk:
+                self.__upload_large_file()
+            else:
+                self.__upload_small_files()
+            if len(self._response[R_WARNING]) == 0:
+                del self._response[R_WARNING]
         else:
+            self._http_status_code = 400
+            self._response[R_WARNING] = ["Invalid parameters"]
+
+    def __upload_large_file(self) -> None:
+        """Upload large files by chunks."""
+        target = self._request.get(API_TARGET)
+        if not target:
             self._response[R_WARNING] = "Invalid parameters"
+            return
+        cur_dir = self._find_dir(target)
+        if not cur_dir:
+            self._response[R_WARNING] = "Invalid parameters"
+            return
+        up_files = self._request.get(API_UPLOAD)
+        if not up_files:
+            self._response[R_WARNING] = "No file to upload"
+            return
+        chunk = self._request.get(API_CHUNK)
+        if not chunk:
+            self._response[R_WARNING] = "No chunk to upload"
+            return
+        max_size = self._options["upload_max_size"]
+        upload_paths = self._request.get(API_UPLOAD_PATH)
+        if upload_paths:
+            upload_paths = [self._find_dir(d) for d in upload_paths]
+        if upload_paths and upload_paths[0]:
+            cur_dir = upload_paths[0]
+        if not cur_dir:
+            self._response[R_WARNING] = "Invalid upload path"
+            return
+        if not self._is_allowed(cur_dir, "write"):
+            self._response[R_WARNING] = "Access denied"
+            return
+        if chunk.endswith(".part"):
+            chunk_range = self._request.get(API_RANGE)
+            if not chunk_range:
+                self._response[R_WARNING] = "No chunk range"
+                return
+            start, clength, total = [int(i) for i in chunk_range.split(",")]
+            name = ".".join(chunk.split(".")[:-2])
+            if not self._is_upload_allow(name):
+                self._set_error_data(name, "Not allowed file type")
+            elif total > max_size:
+                self._set_error_data(name, "File exceeds the maximum allowed filesize")
+            else:
+                chunk_index, total_chunks = [
+                    int(i) for i in chunk.split(".")[-2].split("_")
+                ]
+                if not _check_name(name):
+                    self._set_error_data(name, "Invalid name: " + name)
+                else:
+                    record_path = os.path.join(cur_dir, "." + name + ".txt")
+                    file_path = os.path.join(cur_dir, name + ".parts")
+                    if not os.path.exists(file_path) and os.path.exists(record_path):
+                        os.remove(record_path)
+                    with open(
+                        file_path, "rb+" if os.path.exists(file_path) else "wb+"
+                    ) as fil:
+                        fil.seek(start)
+                        data = up_files[0]
+                        written_size = 0
+                        for chunk in self._fbuffer(data.file):
+                            fil.write(chunk)
+                            written_size += len(chunk)
+                            if written_size > clength:
+                                self._set_error_data(name, "Invalid file size")
+                                break
+
+                    with open(
+                        record_path, "r+" if os.path.exists(record_path) else "w+",
+                    ) as fil:
+                        fil.seek(chunk_index)
+                        fil.write("X")
+                        fil.seek(0)
+                        written = fil.read()
+                        if written == ("X" * (total_chunks + 1)):
+                            self._response[R_ADDED] = []
+                            self._response[R_CHUNKMERGED] = name
+                            self._response[R_NAME] = name
+                        else:
+                            self._response[R_ADDED] = []
+                    if R_CHUNKMERGED in self._response:
+                        os.remove(record_path)
+        else:
+            name = chunk
+            file_path = os.path.join(cur_dir, name)
+            if os.path.exists(file_path + ".parts"):
+                up_size = os.lstat(file_path + ".parts").st_size
+                if up_size > max_size:
+                    try:
+                        os.unlink(file_path + ".parts")
+                        self._response[R_WARNING].append(
+                            "File exceeds the maximum allowed filesize"
+                        )
+                    except OSError:
+                        # TODO ?  # pylint: disable=fixme
+                        self._response[R_WARNING].append(
+                            "File was only partially uploaded"
+                        )
+                else:
+                    if self._is_upload_allow(name):
+                        os.rename(file_path + ".parts", file_path)
+                        os.chmod(file_path, self._options["file_mode"])
+                        self._response[R_ADDED] = [self._info(file_path)]
+                    else:
+                        self._response[R_WARNING].append("Not allowed file type")
+                        try:
+                            os.unlink(file_path + ".parts")
+                        except OSError:
+                            pass
+
+    def __upload_small_files(self) -> None:
+        """Upload small files."""
+        target = self._request.get(API_TARGET)
+        if not target:
+            self._response[R_WARNING] = "Invalid parameters"
+            return
+        cur_dir = self._find_dir(target)
+        if not cur_dir:
+            self._response[R_WARNING] = "Invalid parameters"
+            return
+        up_files = self._request.get(API_UPLOAD)
+        if not up_files:
+            self._response[R_WARNING] = "No file to upload"
+            return
+        up_size = 0
+        max_size = self._options["upload_max_size"]
+        upload_paths = self._request.get(API_UPLOAD_PATH)
+        if upload_paths:
+            upload_paths = [self._find_dir(d) for d in upload_paths]
+        for idx, data in enumerate(up_files):
+            name = data.filename.encode("utf-8")
+            if not name:
+                continue
+            name = self._check_utf8(name)
+            name = os.path.basename(name)
+            if not upload_paths:
+                target_dir = cur_dir
+            else:
+                target_dir = upload_paths[idx]
+            if not target_dir:
+                self._response[R_WARNING].append("Invalid upload path")
+            elif not _check_name(name):
+                self._response[R_WARNING].append("Invalid name: " + name)
+            elif not self._is_allowed(target_dir, "write"):
+                self._response[R_WARNING] = "Access denied"
+            else:
+                name = os.path.join(target_dir, name)
+                replace = os.path.exists(name)
+                try:
+                    fil = open(name, "wb", self._options["upload_write_chunk"])
+                    for chunk in self._fbuffer(data.file):
+                        fil.write(chunk)
+                    fil.close()
+                    up_size += os.lstat(name).st_size
+                    if up_size > max_size:
+                        try:
+                            os.unlink(name)
+                            self._response[R_WARNING].append(
+                                "File exceeds the maximum allowed filesize"
+                            )
+                        except OSError:
+                            self._response[R_WARNING].append(
+                                "File was only partially uploaded"
+                            )
+                    elif not self._is_upload_allow(name):
+                        self._response[R_WARNING].append("Not allowed file type")
+                        try:
+                            os.unlink(name)
+                        except OSError:
+                            pass
+                    else:
+                        os.chmod(name, self._options["file_mode"])
+                        if replace:  # update thumbnail
+                            self._rm_tmb(name)
+                        self._response[R_ADDED].append(self._info(name))
+
+                except OSError:
+                    self._response[R_WARNING].append("Unable to save uploaded file")
+                if up_size > max_size:
+                    try:
+                        os.unlink(name)
+                        self._response[R_WARNING].append(
+                            "File exceeds the maximum allowed filesize"
+                        )
+                    except OSError:
+                        self._response[R_WARNING].append(
+                            "File was only partially uploaded"
+                        )
 
     def __paste(self) -> None:
         """Copy or cut files/directories."""
@@ -2104,9 +2253,16 @@ class Connector:
         return str_name
 
 
-def _check_name(name: str) -> bool:
-    """Check for valid file/dir name."""
-    if secure_filename(name) != name.replace(" ", "_"):  # type: ignore
+def _check_name(filename: str) -> bool:
+    """Check for valid file name."""
+    if sanitize_filename(filename) != filename:
+        return False
+    return True
+
+
+def _check_dir(filepath: str) -> bool:
+    """Check for valid dir name."""
+    if sanitize_filepath(filepath) != filepath:
         return False
     return True
 

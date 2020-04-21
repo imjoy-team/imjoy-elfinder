@@ -1,4 +1,5 @@
 elfinder-client
+pathvalidate
 pillow
 pyramid
 pyramid_jinja2

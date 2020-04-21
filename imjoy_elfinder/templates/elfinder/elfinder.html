@@ -214,7 +214,7 @@
 			var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
 			link.type = 'image/x-icon';
 			link.rel = 'shortcut icon';
-			link.href = window.ELFINDER_CONFIG['static_url'] + '/img/favicon.ico';
+			link.href = serverUrl + '/static/img/favicon.ico';
 			document.getElementsByTagName('head')[0].appendChild(link);
 		</script>
 		<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ IMJOY_ELFINDER_BASE_URL }}/static/themes/Material/css/theme-light.min.css"> -->
