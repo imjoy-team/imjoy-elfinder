@@ -781,6 +781,9 @@ class Connector:
             if chunk:
                 if upload_paths and upload_paths[0]:
                     cur_dir = upload_paths[0]
+                if not cur_dir:
+                    self._response[R_WARNING] = "Invalid upload path"
+                    return
                 if not self._is_allowed(cur_dir, "write"):  # type: ignore
                     self._response[R_WARNING] = "Access denied"
                     return
