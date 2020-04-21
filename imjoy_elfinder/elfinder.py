@@ -784,7 +784,7 @@ class Connector:
                 if not cur_dir:
                     self._response[R_WARNING] = "Invalid upload path"
                     return
-                if not self._is_allowed(cur_dir, "write"):  # type: ignore
+                if not self._is_allowed(cur_dir, "write"):
                     self._response[R_WARNING] = "Access denied"
                     return
                 if chunk.endswith(".part"):
@@ -806,12 +806,8 @@ class Connector:
                         if not _check_name(name):
                             self._set_error_data(name, "Invalid name: " + name)
                         else:
-                            record_path = os.path.join(
-                                cur_dir, "." + name + ".txt"  # type: ignore
-                            )
-                            file_path = os.path.join(
-                                cur_dir, name + ".parts"  # type: ignore
-                            )
+                            record_path = os.path.join(cur_dir, "." + name + ".txt")
+                            file_path = os.path.join(cur_dir, name + ".parts")
                             if not os.path.exists(file_path) and os.path.exists(
                                 record_path
                             ):
@@ -847,7 +843,7 @@ class Connector:
                                 os.remove(record_path)
                 else:
                     name = chunk
-                    file_path = os.path.join(cur_dir, name)  # type: ignore
+                    file_path = os.path.join(cur_dir, name)
                     if os.path.exists(file_path + ".parts"):
                         up_size = os.lstat(file_path + ".parts").st_size
                         if up_size > max_size:
