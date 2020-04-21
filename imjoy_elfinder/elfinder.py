@@ -779,7 +779,7 @@ class Connector:
             max_size = self._options["upload_max_size"]
             chunk = self._request.get(API_CHUNK)
             if chunk:
-                if upload_paths:
+                if upload_paths and upload_paths[0]:
                     cur_dir = upload_paths[0]
                 if not self._is_allowed(cur_dir, "write"):  # type: ignore
                     self._response[R_WARNING] = "Access denied"
@@ -885,7 +885,9 @@ class Connector:
                         target_dir = cur_dir
                     else:
                         target_dir = upload_paths[idx]
-                    if not _check_name(name):
+                    if not target_dir:
+                        self._response[R_WARNING].append("Invalid upload path")
+                    elif not _check_name(name):
                         self._response[R_WARNING].append("Invalid name: " + name)
                     elif not self._is_allowed(target_dir, "write"):
                         self._response[R_WARNING] = "Access denied"
