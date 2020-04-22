@@ -1,4 +1,4 @@
-# ImJoy elFinder [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master) [![PyPI](https://img.shields.io/pypi/v/imjoy-elfinder.svg?style=popout)](https://pypi.org/project/imjoy-elfinder/) ![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/imjoy-elfinder/master/imjoy_elfinder/VERSION) [![Test](https://github.com/imjoy-team/imjoy-elfinder/workflows/Test/badge.svg)](https://github.com/imjoy-team/imjoy-elfinder/actions)
+# ImJoy elFinder [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master?urlpath=elfinder) [![PyPI](https://img.shields.io/pypi/v/imjoy-elfinder.svg?style=popout)](https://pypi.org/project/imjoy-elfinder/) ![Version](https://img.shields.io/badge/dynamic/json.svg?color=success&label=latest&prefix=v&query=version&url=https://raw.githubusercontent.com/imjoy-team/imjoy-elfinder/master/imjoy_elfinder/VERSION) [![Test](https://github.com/imjoy-team/imjoy-elfinder/workflows/Test/badge.svg)](https://github.com/imjoy-team/imjoy-elfinder/actions)
 
 A web file browser for managing data on remote jupyter servers, specifically built for the [ImJoy](https://imjoy.io) project, an open source platform for deploying computational tools to the end user.
 
@@ -66,11 +66,9 @@ You will get a web file browser at `http://YOUR_NOTEBOOK_URL/elfinder` (dependin
 
 ## Start a demo with MyBinder
 
-1. Start an instance on MyBinder: [https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master](https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master)
+1. Start an instance on MyBinder: [https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master?urlpath=elfinder](https://mybinder.org/v2/gh/imjoy-team/imjoy-elfinder/master?urlpath=elfinder)
 
-2. Get the generated Jupyter Notebook URL and add `/elfinder` after, make sure you have something like `https://hub.gke.mybinder.org/user/oeway-pyramid_elfinder-q2q1dhbn/elfinder`
-
-3. You should be able to see a file browser.
+2. You should be able to see a file browser.
 
 ## Security Considerations
 
