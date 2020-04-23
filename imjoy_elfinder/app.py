@@ -1,4 +1,4 @@
-"""Provide a main module."""
+"""Provide the app module."""
 import argparse
 import json
 import os

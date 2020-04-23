@@ -617,7 +617,7 @@ class Connector:
 
         if os.path.exists(new_name):
             self._response[R_ERROR] = (
-                "File or folder with the same name" + "already exists"
+                "File or folder with the same name " + new_name + " already exists"
             )
             return
 
@@ -675,9 +675,11 @@ class Connector:
                     return
 
                 new_subdir = os.path.join(path, subdir)
-                if os.path.exists(subdir):
+                if os.path.exists(new_subdir):
                     self._response[R_ERROR] = (
-                        "File or folder with the same name" + subdir + " already exists"
+                        "File or folder with the same name "
+                        + subdir
+                        + " already exists"
                     )
                     return
                 try:
@@ -998,7 +1000,9 @@ class Connector:
                         return
                     # TODO thumbs  # pylint: disable=fixme
                     if os.path.exists(new_dst):
-                        self._response[R_ERROR] = "Unable to move files"
+                        self._response[
+                            R_ERROR
+                        ] = "File or folder with the same name already exists"
                         self._set_error_data(
                             fil, "File or folder with the same name already exists"
                         )
