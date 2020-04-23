@@ -207,3 +207,15 @@ link.type = 'image/x-icon';
 link.rel = 'shortcut icon';
 link.href = serverUrl + '/static/img/favicon.ico';
 document.getElementsByTagName('head')[0].appendChild(link);
+
+loadImJoyPluginAPI().then((api)=>{
+    function setup(){
+        api.alert('ImJoy plugin initialized.')
+    }
+    // define your plugin api which can be called by other plugins in ImJoy
+    function my_api_func(){
+
+    }
+    // Importantly, you need to call `api.export(...)` in order to expose the api for your web application
+    api.export({'setup': setup, 'my_api_func': my_api_func});
+})

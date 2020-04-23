@@ -50,9 +50,9 @@ setup(
     ],
     extras_require={"jupyter": ["jupyter-server-proxy"]},
     entry_points={
-        "console_scripts": ["imjoy-elfinder = imjoy_elfinder.__main__:main"],
+        "console_scripts": ["imjoy-elfinder = imjoy_elfinder.app:main"],
         "jupyter_serverproxy_servers": [
-            "elfinder = imjoy_elfinder.__main__:setup_for_jupyter_server_proxy"
+            "elfinder = imjoy_elfinder.app:setup_for_jupyter_server_proxy"
         ],
     },
 )
