@@ -84,6 +84,15 @@ Here are some suggestions:
 
 4. Update ImJoy elFinder regularly with 'pip install -U imjoy-elfinder', in case there is security updates.
 
+## Development
+For developers, you can enable hot reloading by using `hupper`:
+
+```bash
+hupper -m imjoy_elfinder
+```
+
+You can also watch additional files by add `-w` (e.g.: `hupper -m imjoy_elfinder -w imjoy_elfinder/templates/elfinder/main.js`)
+
 ## License
 
 MIT

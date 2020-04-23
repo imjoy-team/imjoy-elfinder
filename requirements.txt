@@ -4,4 +4,5 @@ pillow
 pyramid
 pyramid_jinja2
 typing_extensions
+waitress
 werkzeug
