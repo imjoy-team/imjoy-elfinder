@@ -1,0 +1,17 @@
+.elfinder-quicklook-titlebar-icon .ui-icon {
+    margin-top: -2px!important;
+}
+.ui-dialog-buttonset {
+    order: 4;
+    margin-left: 5px;
+    margin-right: 5px;
+    min-width: 100px;
+}
+.dialog-btn{
+    height: 20px;
+    font-size: 0.6rem!important;
+    width: 35px;
+    padding-top: 0px!important;
+    padding-bottom: 2px!important;
+    padding-left: 5px!important;
+}

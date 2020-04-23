@@ -37,7 +37,7 @@
     // Start elFinder (REQUIRED)
     var start = function(elFinder, editors, config) {
         // load jQueryUI CSS
-        elFinder.prototype.loadCss('//cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
+        elFinder.prototype.loadCss('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/'+uiver+'/themes/smoothness/jquery-ui.css');
         // config.defaultOpts.transport = new window.elFinderSupportVer1(null, connectorQuery]);
         if(config.extraQuery){
             config.defaultOpts.urlUpload = config.defaultOpts.url;
@@ -201,6 +201,41 @@
         connector_url: serverUrl + '/connector',
         connector_query: null,
         file_base_url: '',
+        on_ready(fm){
+            loadImJoyPluginAPI().then((api)=>{
+                function setup(){
+                    api.log('elFinder plugin initialized.')
+                }
+                function getSelections(config){
+                    return new Promise((resolve)=>{
+                        const rootNode = fm.getUI().get(0)
+                        fm.toggleFullscreen(rootNode)
+                        const button_set = $('<div class="ui-dialog-buttonset"></div>')
+                        const ok_button = $('<button class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">OK</button>')
+                        ok_button.on('click', ()=>{
+                            const selected = fm.selectedFiles()
+                            resolve(selected);
+                            api.close()
+                        })
+                        ok_button.hide()
+                        fm.select(()=>{
+                            ok_button.show()
+                        })
+                        const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
+                        cancel_button.on('click', ()=>{
+                            resolve([])
+                            api.close()
+                        })
+                        button_set.append(ok_button).append(cancel_button)
+                        button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
+                    })
+                }
+                function run(){
+        
+                }
+                api.export({setup, run, getSelections});
+            })
+        }
     })			
     // set app icon
     const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -208,15 +243,4 @@
     link.rel = 'shortcut icon';
     link.href = serverUrl + '/static/img/favicon.ico';
     document.getElementsByTagName('head')[0].appendChild(link);
-    
-    loadImJoyPluginAPI().then((api)=>{
-        function setup(){
-            api.log('elFinder plugin initialized.')
-        }
-        
-        function run(){
-
-        }
-        api.export({setup, run});
-    })
 })()
