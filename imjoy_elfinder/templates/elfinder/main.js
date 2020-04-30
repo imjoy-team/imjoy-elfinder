@@ -214,42 +214,40 @@
         connector_url: serverUrl + '/connector',
         connector_query: null,
         file_base_url: '',
-        on_ready(fm){
-            loadImJoyPluginAPI().then((api)=>{
-                function setup(){
-                    api.log('elFinder plugin initialized.')
-                }
-                function getSelections(config){
-                    return new Promise((resolve)=>{
-                        const rootNode = fm.getUI().get(0)
-                        fm.toggleFullscreen(rootNode)
-                        const button_set = $('<div class="ui-dialog-buttonset"></div>')
-                        const ok_button = $('<button class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">OK</button>')
-                        ok_button.on('click', ()=>{
-                            const selected = fm.selectedFiles()
-                            resolve(selected);
-                            api.close()
-                        })
-                        ok_button.hide()
-                        fm.select(()=>{
-                            ok_button.show()
-                        })
-                        const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
-                        cancel_button.on('click', ()=>{
-                            resolve([])
-                            api.close()
-                        })
-                        button_set.append(ok_button).append(cancel_button)
-                        button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
+        async on_ready(fm){
+            const imjoyRPC = await window.loadImJoyRPC()
+            const api = await imjoyRPC.setupRPC()
+            function setup(){
+                api.log('elFinder plugin initialized.')
+            }
+            function getSelections(config){
+                return new Promise((resolve)=>{
+                    const rootNode = fm.getUI().get(0)
+                    fm.toggleFullscreen(rootNode)
+                    const button_set = $('<div class="ui-dialog-buttonset"></div>')
+                    const ok_button = $('<button class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">OK</button>')
+                    ok_button.on('click', ()=>{
+                        const selected = fm.selectedFiles()
+                        resolve(selected);
+                        api.close()
                     })
-                }
-                function run(){
-        
-                }
-                api.export({setup, run, getSelections});
-            }).catch(()=>{
-                console.warn("ImJoy API is not available.")
-            })
+                    ok_button.hide()
+                    fm.select(()=>{
+                        ok_button.show()
+                    })
+                    const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
+                    cancel_button.on('click', ()=>{
+                        resolve([])
+                        api.close()
+                    })
+                    button_set.append(ok_button).append(cancel_button)
+                    button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
+                })
+            }
+            function run(){
+    
+            }
+            api.export({setup, run, getSelections});
         }
     })			
     // set app icon
