@@ -255,6 +255,10 @@
                                 button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
                                 // adjust the window size
                                 window.dispatchEvent(new Event('resize'))
+
+                                api.on("close", ()=>{
+                                    resolve([])
+                                })
                             })
                         }
 
