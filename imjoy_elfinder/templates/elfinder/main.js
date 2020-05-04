@@ -219,28 +219,34 @@
         file_base_url: '',
         async on_ready(fm) {
             // inside iframe
-            if(window.self !== window.top){
+            if (window.self !== window.top) {
                 const rootNode = fm.getUI().get(0)
-                fm.toggleFullscreen(rootNode)                
+                fm.toggleFullscreen(rootNode)
             }
             require(["imjoyLoader"], function (imjoyLoder) {
                 // inside iframe
-                if(window.self !== window.top){
+                if (window.self !== window.top) {
                     imjoyLoder.loadImJoyRPC().then(async (imjoyRPC) => {
                         const api = await imjoyRPC.setupRPC()
+
                         function setup() {
                             api.log('elFinder plugin initialized.')
+                        }
+                        async function close() {
+                            await api.close()
+                        }
+                        async function hide() {
+                            await api.hide()
                         }
 
                         function getSelections(config) {
                             return new Promise((resolve) => {
-                                
+
                                 const button_set = $('<div class="ui-dialog-buttonset"></div>')
                                 const ok_button = $('<button class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">OK</button>')
                                 ok_button.on('click', () => {
                                     const selected = fm.selectedFiles()
                                     resolve(selected);
-                                    api.close()
                                 })
                                 ok_button.hide()
                                 fm.select(() => {
@@ -249,14 +255,13 @@
                                 const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
                                 cancel_button.on('click', () => {
                                     resolve([])
-                                    api.close()
                                 })
                                 button_set.append(ok_button).append(cancel_button)
                                 button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
                                 // adjust the window size
                                 window.dispatchEvent(new Event('resize'))
 
-                                api.on("close", ()=>{
+                                api.on("close", () => {
                                     resolve([])
                                 })
                             })
@@ -268,16 +273,19 @@
                         api.export({
                             setup,
                             run,
+                            close,
+                            hide,
                             getSelections
                         });
                     })
-                }
-                else{
-                    loadImJoyCore().then((imjoyCore)=>{
+                } else {
+                    loadImJoyCore().then((imjoyCore) => {
                         const imjoy = new imjoyCore.ImJoy({
                             imjoy_api: {},
                         })
-                        imjoy.start({workspace: 'default'}).then(()=>{
+                        imjoy.start({
+                            workspace: 'default'
+                        }).then(() => {
                             console.log('ImJoy Core started successfully!')
                         })
                     })
