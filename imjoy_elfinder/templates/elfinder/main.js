@@ -221,7 +221,7 @@
             // inside iframe
             if(window.self !== window.top){
                 const rootNode = fm.getUI().get(0)
-                fm.toggleFullscreen(rootNode)
+                fm.toggleFullscreen(rootNode)                
             }
             require(["imjoyLoader"], function (imjoyLoder) {
                 // inside iframe
@@ -253,6 +253,8 @@
                                 })
                                 button_set.append(ok_button).append(cancel_button)
                                 button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
+                                // adjust the window size
+                                window.dispatchEvent(new Event('resize'))
                             })
                         }
 
