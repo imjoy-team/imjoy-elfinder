@@ -226,8 +226,18 @@
             require(["imjoyLoader"], function (imjoyLoder) {
                 // inside iframe
                 if (window.self !== window.top) {
-                    imjoyLoder.loadImJoyRPC().then(async (imjoyRPC) => {
-                        const api = await imjoyRPC.setupRPC()
+                    imjoyLoder.loadImJoyRPC({
+                        api_version: '0.2.0'
+                    }).then(async (imjoyRPC) => {
+                        const api = await imjoyRPC.setupRPC({
+                            name: 'ImJoy elFinder',
+                            description: 'A web file browser for ImJoy',
+                            type: 'rpc-window',
+                            version: '{{ IMJOY_ELFINDER_VERSION }}',
+                            defaults: {
+                                as_dialog: true
+                            },
+                        })
 
                         function setup() {
                             api.log('elFinder plugin initialized.')
@@ -241,12 +251,12 @@
 
                         function getSelections(config) {
                             return new Promise((resolve) => {
-
                                 const button_set = $('<div class="ui-dialog-buttonset"></div>')
                                 const ok_button = $('<button class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">OK</button>')
                                 ok_button.on('click', () => {
                                     const selected = fm.selectedFiles()
                                     resolve(selected);
+                                    api.hide()
                                 })
                                 ok_button.hide()
                                 fm.select(() => {
@@ -255,6 +265,7 @@
                                 const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
                                 cancel_button.on('click', () => {
                                     resolve([])
+                                    api.hide()
                                 })
                                 button_set.append(ok_button).append(cancel_button)
                                 button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
@@ -263,6 +274,7 @@
 
                                 api.on("close", () => {
                                     resolve([])
+                                    api.hide()
                                 })
                             })
                         }
