@@ -226,13 +226,17 @@
             require(["imjoyLoader"], function (imjoyLoder) {
                 // inside iframe
                 if (window.self !== window.top) {
-                    imjoyLoder.loadImJoyRPC({api_version: '0.2.0'}).then(async (imjoyRPC) => {
+                    imjoyLoder.loadImJoyRPC({
+                        api_version: '0.2.0'
+                    }).then(async (imjoyRPC) => {
                         const api = await imjoyRPC.setupRPC({
                             name: 'ImJoy elFinder',
                             description: 'A web file browser for ImJoy',
                             type: 'rpc-window',
                             version: '{{ IMJOY_ELFINDER_VERSION }}',
-                            defaults: {as_dialog: true},
+                            defaults: {
+                                as_dialog: true
+                            },
                         })
 
                         function setup() {
