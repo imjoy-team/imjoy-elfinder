@@ -227,7 +227,7 @@
                 // inside iframe
                 if (window.self !== window.top) {
                     imjoyLoder.loadImJoyRPC({
-                        api_version: '0.2.2'
+                        api_version: '0.2.3'
                     }).then(async (imjoyRPC) => {
                         const api = await imjoyRPC.setupRPC({
                             name: 'ImJoy elFinder',
