@@ -52,8 +52,7 @@ pip install -U jupyter
 Next, install ImJoy elFinder with jupyter server proxy extension:
 
 ```sh
-pip install -U imjoy-elfinder
-pip install -U http://github.com/oeway/jupyter-server-proxy/tarball/master#egg=jupyter-server-proxy
+pip install -U imjoy-elfinder[jupyter]
 ```
 
 Now start Jupyter notebook as you would do normally, for example:
