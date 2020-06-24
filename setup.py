@@ -48,11 +48,7 @@ setup(
         "Framework :: Pyramid ",
         "Topic :: Internet",
     ],
-    extras_require={
-        "jupyter": [
-            "jupyter-server-proxy @ http://github.com/oeway/jupyter-server-proxy/tarball/master#egg=jupyter-server-proxy"
-        ]
-    },
+    extras_require={"jupyter": ["jupyter-server-proxy-windows"]},
     entry_points={
         "console_scripts": ["imjoy-elfinder = imjoy_elfinder.app:main"],
         "jupyter_serverproxy_servers": [
