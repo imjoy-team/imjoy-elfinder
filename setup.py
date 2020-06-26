@@ -22,7 +22,7 @@ with open(os.path.join(HERE, "imjoy_elfinder", "VERSION"), "r") as f:
 setup(
     name="imjoy-elfinder",
     version=VERSION,
-    url="https://github.com/oeway/imjoy-elfinder",
+    url="https://github.com/imjoy-team/imjoy-elfinder",
     author="ImJoy-Team",
     packages=find_packages(),
     include_package_data=True,
