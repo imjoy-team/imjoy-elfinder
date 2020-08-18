@@ -274,7 +274,6 @@
 
                                 api.on("close", () => {
                                     resolve(null)
-                                    api.close()
                                 })
                             })
                         }
