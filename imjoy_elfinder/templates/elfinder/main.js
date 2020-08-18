@@ -256,7 +256,7 @@
                                 ok_button.on('click', () => {
                                     const selected = fm.selectedFiles()
                                     resolve(selected);
-                                    api.hide()
+                                    api.close()
                                 })
                                 ok_button.hide()
                                 fm.select(() => {
@@ -265,7 +265,7 @@
                                 const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
                                 cancel_button.on('click', () => {
                                     resolve([])
-                                    api.hide()
+                                    api.close()
                                 })
                                 button_set.append(ok_button).append(cancel_button)
                                 button_set.insertAfter(fm.getUI('statusbar').children('.elfinder-stat-size'));
@@ -274,7 +274,7 @@
 
                                 api.on("close", () => {
                                     resolve([])
-                                    api.hide()
+                                    api.close()
                                 })
                             })
                         }
