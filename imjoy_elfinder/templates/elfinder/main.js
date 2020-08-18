@@ -264,7 +264,7 @@
                                 })
                                 const cancel_button = $('<button style="margin-left: 5px;" class="dialog-btn ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only elfinder-btncnt-2 elfinder-tabstop">Cancel</button>')
                                 cancel_button.on('click', () => {
-                                    resolve([])
+                                    resolve(null)
                                     api.close()
                                 })
                                 button_set.append(ok_button).append(cancel_button)
@@ -273,7 +273,7 @@
                                 window.dispatchEvent(new Event('resize'))
 
                                 api.on("close", () => {
-                                    resolve([])
+                                    resolve(null)
                                     api.close()
                                 })
                             })
