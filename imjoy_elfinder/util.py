@@ -14,7 +14,7 @@ def get_one(multi_dict: MultiDict, key: str) -> Any:
     return next(iter(matched), None)
 
 
-def get_all(multi_dict: IMultiDict, key: str) -> List[Any]:
+def get_all(multi_dict: MultiDict, key: str) -> List[Any]:
     """Return a list with all values matching the key in the dict.
 
     May return an empty list.
