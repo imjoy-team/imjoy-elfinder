@@ -2,27 +2,8 @@
 import shutil
 
 import pytest
-from pyramid import testing
 
 from . import ROOT_PATH, TEST_CONTENT, ZIP_FILE
-
-
-@pytest.fixture(name="p_config", autouse=True)
-def config_fixture(settings):
-    """Provide a mock pyramid Configurator instance.
-
-    This also sets up and tearsdown the context before and after the test.
-    """
-    with testing.testConfig() as config:
-        config.add_settings(settings)
-        yield config
-
-
-@pytest.fixture(name="p_request")
-def request_fixture():
-    """Provide a mock pyramid Request instance."""
-    request = testing.DummyRequest()
-    return request
 
 
 @pytest.fixture(name="settings")

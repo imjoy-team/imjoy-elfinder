@@ -1,10 +1,9 @@
 """Provide utils."""
-from typing import Any, List
+from typing import Any, List, Union
+from starlette.datastructures import MultiDict
 
-from pyramid.interfaces import IMultiDict
 
-
-def get_one(multi_dict: IMultiDict, key: str) -> Any:
+def get_one(multi_dict: MultiDict, key: str) -> Any:
     """Return one value matching the key in the dict.
 
     Raise KeyError if multiple values were found.

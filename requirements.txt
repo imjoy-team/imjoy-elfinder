@@ -1,8 +1,9 @@
+aiofiles==0.6.0
 elfinder-client==2.1.55a6
+jinja2==2.11.3
 pathvalidate==2.3.2
 pillow==8.1.0
-pyramid==1.10.7
-pyramid_jinja2==2.8
+python-dotenv==0.15.0
+python-multipart==0.0.5
 typing_extensions==3.7.4.3
-waitress==1.4.4
-werkzeug==1.0.1
+uvicorn[standard]==0.13.4
