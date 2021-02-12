@@ -839,8 +839,7 @@ class Connector:
                                 break
 
                     with open(
-                        record_path,
-                        "r+" if os.path.exists(record_path) else "w+",
+                        record_path, "r+" if os.path.exists(record_path) else "w+",
                     ) as record_fil:
                         record_fil.seek(chunk_index)
                         record_fil.write("X")
@@ -1937,9 +1936,7 @@ class Connector:
         cur_dir = path
         length = len(self._options["root"])
         url = multi_urljoin(
-            self._options["base_url"],
-            self._options["files_url"],
-            cur_dir[length:],
+            self._options["base_url"], self._options["files_url"], cur_dir[length:],
         )
         url = self._check_utf8(url).replace(os.sep, "/")
         url = quote(url, safe="/")
@@ -2393,10 +2390,5 @@ def make_hash(to_hash: str) -> str:
 def multi_urljoin(*parts: str) -> str:
     """Join multiple url parts into a valid url."""
     if parts[0].startswith("http"):
-        return str(
-            urljoin(
-                parts[0],
-                "/".join(part.strip("/") for part in parts[1:]),
-            )
-        )
+        return str(urljoin(parts[0], "/".join(part.strip("/") for part in parts[1:]),))
     return "/" + "/".join(part.strip("/") for part in parts if part)

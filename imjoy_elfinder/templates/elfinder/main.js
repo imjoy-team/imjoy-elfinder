@@ -127,9 +127,9 @@
     function loadElFinder(elConfig) {
         elConfig = elConfig || {};
         elConfig['static_url'] = elConfig['static_url'] || '/static'
-        elConfig['connector_url'] = elConfig['connector_url'] || '/connector/'
+        elConfig['connector_url'] = elConfig['connector_url'] || '/connector'
         elConfig['connector_query'] = elConfig['connector_query'] || null
-        if (!elConfig['connector_url'].endsWith('/')) elConfig['connector_url'] = elConfig['connector_url'] + '/';
+        // if (!elConfig['connector_url'].endsWith('/')) elConfig['connector_url'] = elConfig['connector_url'] + '/';
 
         // config of RequireJS (REQUIRED)
         require.config({
