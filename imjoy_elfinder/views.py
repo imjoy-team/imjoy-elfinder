@@ -104,7 +104,8 @@ async def connector(request: Request):
     return result
 
 
-@router.get("/imjoy_elfinder_filebrowser", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
+@router.get("/filebrowser", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse(
         "elfinder/filebrowser.jinja2", {"request": request}
