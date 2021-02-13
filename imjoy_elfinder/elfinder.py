@@ -279,7 +279,6 @@ def listdirname(path):
     """
     a dummy function for getting files or directories contained in a directory
     """
-    print("======listdir=>", path)
     return [f["name"].split("/")[-1] for f in fs.listdir(path)]
 
 
@@ -461,7 +460,6 @@ class Connector:
                 cmd = self._commands[self._request[API_CMD]]
                 # A missing command method should blow up here.
                 func = getattr(self, "_" + self.__class__.__name__ + cmd)
-                print("============running cmd=======>", cmd)
                 try:
                     func()
                 except Exception as exc:  # pylint: disable=broad-except
