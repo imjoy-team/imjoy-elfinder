@@ -41,7 +41,7 @@ def connector(
     settings = request.app.state.settings
     root = settings.root_dir
     options = {
-        "root": os.path.abspath(root),
+        "root": "/",  # TODO: Fix this: os.path.abspath(root),
         "url": settings.files_url,
         "base_url": settings.base_url,
         "upload_max_size": 100 * 1024 * 1024 * 1024,  # 100GB

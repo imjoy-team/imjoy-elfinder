@@ -26,6 +26,8 @@ from urllib.parse import quote, urljoin
 
 from pathvalidate import sanitize_filename, sanitize_filepath
 from typing_extensions import Literal, TypedDict
+import fsspec
+from fsspec.implementations.local import LocalFileSystem
 
 from .api_const import (
     API_CMD,
@@ -224,6 +226,86 @@ Options = TypedDict(  # pylint: disable=invalid-name
     },
 )
 
+fs = LocalFileSystem()
+
+
+def islink(_):
+    """
+    A dummy function for checking whether a path/directory is a link
+    """
+    return False
+
+
+def getcwd():
+    """
+    a dummy function for getting the current directory
+    """
+    return "/"
+
+
+def stat(path):
+    """
+    a dummy function for getting info about a file
+    """
+    # os.stat_result(st_mode=1, st_ino=0, st_dev=0, st_nlink=0, st_uid=0, st_gid=0, st_size=0, st_atime=0, st_mtime=0, st_ctime=0)
+    if fs.exists(path):
+        info = fs.info(path)
+    else:
+        info = {}
+    return os.stat_result(
+        (
+            info.get("mode", 0),
+            0,
+            0,
+            0,
+            info.get("uid", 0),
+            info.get("gid", 0),
+            info.get("size", 0),
+            0,
+            info.get("mtime", 0),
+            info.get("mtime", 0),
+        )
+    )
+
+
+def chmod(path):
+    """
+    a dummy function for change the file/directory mode
+    """
+    return
+
+
+def listdirname(path):
+    """
+    a dummy function for getting files or directories contained in a directory
+    """
+    print("======listdir=>", path)
+    return [f["name"].split("/")[-1] for f in fs.listdir(path)]
+
+
+def access(path, type):
+    """
+    a dummy function for checking access to files or directories
+    """
+    if type == os.F_OK:
+        return fs.exists(path)
+    if type == os.R_OK:
+        return True
+    if type == os.W_OK:
+        return True
+    if type == os.X_OK:
+        return False
+
+
+# monkey patch functions
+fs.islink = islink
+fs.getcwd = getcwd
+fs.stat = stat
+fs.lstat = stat
+fs.chmod = chmod
+fs.listdirname = listdirname
+fs.access = access
+
 
 def exception_to_string(excp: Exception) -> str:
     """Convert exception to string."""
@@ -346,8 +428,8 @@ class Connector:
         if tmb_dir:
             thumbs_dir = os.path.join(self._options["root"], tmb_dir)
             try:
-                if not os.path.exists(thumbs_dir):
-                    os.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
+                if not fs.exists(thumbs_dir):
+                    fs.makedirs(thumbs_dir)  # self._options['tmbDir'] = False
                 self._options["tmb_dir"] = thumbs_dir
             except PermissionError:
                 self._options["tmb_dir"] = None
@@ -363,7 +445,7 @@ class Connector:
         """Run main function."""
         start_time = time.time()
         root_ok = True
-        if not os.path.exists(self._options["root"]):
+        if not fs.exists(self._options["root"]):
             root_ok = False
             self._response[R_ERROR] = "Invalid backend configuration"
         elif not self._is_allowed(self._options["root"], "read"):
@@ -379,7 +461,7 @@ class Connector:
                 cmd = self._commands[self._request[API_CMD]]
                 # A missing command method should blow up here.
                 func = getattr(self, "_" + self.__class__.__name__ + cmd)
-
+                print("============running cmd=======>", cmd)
                 try:
                     func()
                 except Exception as exc:  # pylint: disable=broad-except
@@ -454,7 +536,7 @@ class Connector:
         self._cwd(path)
 
         try:
-            items = os.listdir(path)
+            items = fs.listdirname(path)
         except PermissionError:
             self._response[R_ERROR] = "Access denied"
             return
@@ -489,7 +571,7 @@ class Connector:
             thumbs_url = ""
         self._response[R_OPTIONS] = {
             R_OPTIONS_PATH: path,
-            R_OPTIONS_SEPARATOR: os.path.sep,
+            R_OPTIONS_SEPARATOR: fs.sep,
             R_OPTIONS_URL: url,
             R_OPTIONS_DISABLED: self._options["disabled"],
             R_OPTIONS_TMB_URL: thumbs_url,
@@ -549,7 +631,7 @@ class Connector:
         download = self._request.get(API_DOWNLOAD)
         cur_file = self._find(target)
 
-        if not cur_file or not os.path.exists(cur_file) or os.path.isdir(cur_file):
+        if not cur_file or not fs.exists(cur_file) or fs.isdir(cur_file):
             self._http_status_code = 404
             self._response["__text"] = "File not found"
             return
@@ -559,7 +641,7 @@ class Connector:
             self._response["__text"] = "Access denied"
             return
 
-        if os.path.islink(cur_file):
+        if fs.islink(cur_file):
             cur_file = self._read_link(cur_file)
             if (
                 not cur_file
@@ -582,7 +664,7 @@ class Connector:
 
         self._http_status_code = 200
         self._http_header["Content-type"] = mime
-        self._http_header["Content-Length"] = str(os.lstat(cur_file).st_size)
+        self._http_header["Content-Length"] = str(fs.lstat(cur_file).st_size)
         self._http_header["Content-Disposition"] = disp + ";"
         self._response["__send_file"] = cur_file
 
@@ -615,7 +697,7 @@ class Connector:
 
         new_name = os.path.join(cur_dir, name)
 
-        if os.path.exists(new_name):
+        if fs.exists(new_name):
             self._response[R_ERROR] = (
                 "File or folder with the same name " + new_name + " already exists"
             )
@@ -623,7 +705,7 @@ class Connector:
 
         self._rm_tmb(cur_name)
         try:
-            os.rename(cur_name, new_name)
+            fs.rename(cur_name, new_name)
             self._response[R_ADDED] = [self._info(new_name)]
             self._response[R_REMOVED] = [target]
         except OSError:
@@ -654,13 +736,13 @@ class Connector:
                 self._response[R_ERROR] = "Invalid name"
                 return
             new_dir = os.path.join(path, name)
-            if os.path.exists(new_dir):
+            if fs.exists(new_dir):
                 self._response[R_ERROR] = (
                     "File or folder with the same name " + name + " already exists"
                 )
             else:
                 try:
-                    os.mkdir(new_dir, int(self._options["dir_mode"]))
+                    fs.mkdir(new_dir, int(self._options["dir_mode"]))
                     self._response[R_ADDED] = [self._info(new_dir)]
                     self._response[R_HASHES] = {}
                 except OSError:
@@ -675,7 +757,7 @@ class Connector:
                     return
 
                 new_subdir = os.path.join(path, subdir)
-                if os.path.exists(new_subdir):
+                if fs.exists(new_subdir):
                     self._response[R_ERROR] = (
                         "File or folder with the same name "
                         + subdir
@@ -683,7 +765,7 @@ class Connector:
                     )
                     return
                 try:
-                    os.mkdir(new_subdir, int(self._options["dir_mode"]))
+                    fs.mkdir(new_subdir, int(self._options["dir_mode"]))
                     self._response[R_ADDED].append(self._info(new_subdir))
                     self._response[R_HASHES][sdir] = self._hash(new_subdir)
                 except OSError:
@@ -712,11 +794,11 @@ class Connector:
 
         new_file = os.path.join(cur_dir, name)
 
-        if os.path.exists(new_file):
+        if fs.exists(new_file):
             self._response[R_ERROR] = "File or folder with the same name already exists"
         else:
             try:
-                open(new_file, "w").close()
+                fs.open(new_file, "w").close()
                 self._response[R_ADDED] = [self._info(new_file)]
             except OSError:
                 self._response[R_ERROR] = "Unable to create file"
@@ -823,10 +905,10 @@ class Connector:
                 else:
                     record_path = os.path.join(cur_dir, "." + name + ".txt")
                     file_path = os.path.join(cur_dir, name + ".parts")
-                    if not os.path.exists(file_path) and os.path.exists(record_path):
-                        os.remove(record_path)
-                    with open(
-                        file_path, "rb+" if os.path.exists(file_path) else "wb+"
+                    if not fs.exists(file_path) and fs.exists(record_path):
+                        fs.rm(record_path)
+                    with fs.open(
+                        file_path, "rb+" if fs.exists(file_path) else "wb+"
                     ) as fil:
                         fil.seek(start)
                         data = up_files[0]
@@ -853,15 +935,15 @@ class Connector:
                         else:
                             self._response[R_ADDED] = []
                     if R_CHUNKMERGED in self._response:
-                        os.remove(record_path)
+                        fs.rm(record_path)
         else:
             name = chunk
             file_path = os.path.join(cur_dir, name)
-            if os.path.exists(file_path + ".parts"):
-                up_size = os.lstat(file_path + ".parts").st_size
+            if fs.exists(file_path + ".parts"):
+                up_size = fs.lstat(file_path + ".parts").st_size
                 if up_size > max_size:
                     try:
-                        os.unlink(file_path + ".parts")
+                        fs.rm(file_path + ".parts")
                         self._response[R_WARNING].append(
                             "File exceeds the maximum allowed filesize"
                         )
@@ -872,13 +954,13 @@ class Connector:
                         )
                 else:
                     if self._is_upload_allow(name):
-                        os.rename(file_path + ".parts", file_path)
-                        os.chmod(file_path, self._options["file_mode"])
+                        fs.rename(file_path + ".parts", file_path)
+                        fs.chmod(file_path, self._options["file_mode"])
                         self._response[R_ADDED] = [self._info(file_path)]
                     else:
                         self._response[R_WARNING].append("Not allowed file type")
                         try:
-                            os.unlink(file_path + ".parts")
+                            fs.rm(file_path + ".parts")
                         except OSError:
                             pass
 
@@ -919,16 +1001,16 @@ class Connector:
                 self._response[R_WARNING] = "Access denied"
             else:
                 name = os.path.join(target_dir, name)
-                replace = os.path.exists(name)
+                replace = fs.exists(name)
                 try:
-                    fil = open(name, "wb", self._options["upload_write_chunk"])
+                    fil = fs.open(name, "wb", self._options["upload_write_chunk"])
                     for chunk in self._fbuffer(data.file):
                         fil.write(chunk)
                     fil.close()
-                    up_size += os.lstat(name).st_size
+                    up_size += fs.lstat(name).st_size
                     if up_size > max_size:
                         try:
-                            os.unlink(name)
+                            fs.rm(name)
                             self._response[R_WARNING].append(
                                 "File exceeds the maximum allowed filesize"
                             )
@@ -939,11 +1021,11 @@ class Connector:
                     elif not self._is_upload_allow(name):
                         self._response[R_WARNING].append("Not allowed file type")
                         try:
-                            os.unlink(name)
+                            fs.rm(name)
                         except OSError:
                             pass
                     else:
-                        os.chmod(name, self._options["file_mode"])
+                        fs.chmod(name, self._options["file_mode"])
                         if replace:  # update thumbnail
                             self._rm_tmb(name)
                         self._response[R_ADDED].append(self._info(name))
@@ -952,7 +1034,7 @@ class Connector:
                     self._response[R_WARNING].append("Unable to save uploaded file")
                 if up_size > max_size:
                     try:
-                        os.unlink(name)
+                        fs.rm(name)
                         self._response[R_WARNING].append(
                             "File exceeds the maximum allowed filesize"
                         )
@@ -1000,7 +1082,7 @@ class Connector:
                         self._set_error_data(fil, "Access denied")
                         return
                     # TODO thumbs  # pylint: disable=fixme
-                    if os.path.exists(new_dst):
+                    if fs.exists(new_dst):
                         self._response[
                             R_ERROR
                         ] = "File or folder with the same name already exists"
@@ -1009,7 +1091,7 @@ class Connector:
                         )
                         return
                     try:
-                        os.rename(fil, new_dst)
+                        fs.rename(fil, new_dst)
                         self._rm_tmb(fil)
                         added.append(self._info(new_dst))
                         removed.append(fhash)
@@ -1089,7 +1171,7 @@ class Connector:
             return
 
         try:
-            img = self._img.open(cur_file)  # type: ignore
+            img = self._img.open(fs.open(cur_file))  # type: ignore
             img_resized = img.resize(
                 (width, height), self._img.ANTIALIAS  # type: ignore
             )
@@ -1127,7 +1209,7 @@ class Connector:
                 continue
             if self._can_create_tmb(path) and self._is_allowed(path, "read"):
                 tmb = os.path.join(thumbs_dir, fhash + ".png")
-                if not os.path.exists(tmb):
+                if not fs.exists(tmb):
                     if self._tmb(path, tmb):
                         self._response[R_IMAGES].update({fhash: self._path2url(tmb)})
                         i += 1
@@ -1154,22 +1236,14 @@ class Connector:
             total_size = 0
             file_count = 0
             dir_count = 0
-            if os.path.isdir(path):
-                for root, dirs, files in os.walk(path, topdown=True):
-                    for folder in dirs:
-                        folder_path = os.path.join(root, folder)
-                        size = self._dir_size(folder_path)
-                        sizes.append({})
-                        dir_count += 1
-                        total_size += size
-                    for fil in files:
-                        file_path = os.path.join(root, fil)
-                        size = os.stat(file_path).st_size
-                        total_size += size
-                        file_count += 1
-                    break
+            if fs.isdir(path):
+                for fil in fs.listdirname(path):
+                    file_path = os.path.join(path, fil)
+                    size = fs.stat(file_path).st_size
+                    total_size += size
+                    file_count += 1
             else:
-                size = os.stat(file_path).st_size
+                size = fs.stat(file_path).st_size
                 total_size += size
                 file_count += 1
             sizes.append(
@@ -1193,11 +1267,11 @@ class Connector:
         intersect = self._request.get(API_INTERSECT)
 
         path = self._find(target)
-        if path is None or not os.path.isdir(path):
+        if path is None or not fs.isdir(path):
             self._response[R_ERROR] = "Target directory not found"
             return
 
-        if os.path.islink(path):
+        if fs.islink(path):
             path = self._read_link(path)
             if path is None:
                 self._response[R_ERROR] = "Directory (link) not found"
@@ -1208,7 +1282,7 @@ class Connector:
             return
 
         try:
-            file_names = os.listdir(path)
+            file_names = fs.listdirname(path)
         except PermissionError:
             self._response[R_ERROR] = "Access denied"
             return
@@ -1231,11 +1305,11 @@ class Connector:
             return
         path = self._find_dir(target)
 
-        if path is None or not os.path.isdir(path):
+        if path is None or not fs.isdir(path):
             self._response[R_ERROR] = "Directory not found"
             return
 
-        if os.path.islink(path):
+        if fs.islink(path):
             path = self._read_link(path)
             if path is None:
                 self._response[R_ERROR] = "Directory (link) not found"
@@ -1246,17 +1320,17 @@ class Connector:
             return
 
         try:
-            directories = os.listdir(path)
+            directories = fs.listdirname(path)
         except PermissionError:
             self._response[R_ERROR] = "Access denied"
             return
 
         tree = []
-        for directory in sorted(directories):
+        for directory in directories:
             dir_path = os.path.join(path, directory)
             if (
-                os.path.isdir(dir_path)
-                and not os.path.islink(dir_path)
+                fs.isdir(dir_path)
+                and not fs.islink(dir_path)
                 and self._is_accepted(directory)
             ):
                 tree.append(self._info(dir_path))
@@ -1279,10 +1353,10 @@ class Connector:
             return
 
         try:
-            with open(cur_file, "r") as text_fil:
+            with fs.open(cur_file, "r") as text_fil:
                 self._response[API_CONTENT] = text_fil.read()
         except UnicodeDecodeError:
-            with open(cur_file, "rb") as bin_fil:
+            with fs.open(cur_file, "rb") as bin_fil:
                 self._response[API_CONTENT] = base64.b64encode(bin_fil.read()).decode(
                     "ascii"
                 )
@@ -1335,10 +1409,10 @@ class Connector:
             ):
                 img_data = self._request[API_CONTENT].split(";base64,")[1]
                 img_data = base64.b64decode(img_data)
-                with open(cur_file, "wb") as bin_fil:
+                with fs.open(cur_file, "wb") as bin_fil:
                     bin_fil.write(img_data)
             else:
-                with open(cur_file, "w+") as text_fil:
+                with fs.open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
             self._rm_tmb(cur_file)
             self._response[R_CHANGED] = [self._info(cur_file)]
@@ -1416,7 +1490,7 @@ class Connector:
 
         makedir = self._request.get(API_MAKEDIR)
         cur_file = self._find(target)
-        if cur_file is None or os.path.isdir(cur_file):
+        if cur_file is None or fs.isdir(cur_file):
             self._response[R_ERROR] = "File not found"
             return
 
@@ -1446,7 +1520,7 @@ class Connector:
             target_dir = os.path.join(target_dir, base_name)
             target_dir = _unique_name(target_dir, copy="")
             try:
-                os.mkdir(target_dir, int(self._options["dir_mode"]))
+                fs.mkdir(target_dir, int(self._options["dir_mode"]))
             except OSError:
                 self._response[R_ERROR] = "Unable to create folder: " + base_name
                 return
@@ -1455,7 +1529,7 @@ class Connector:
 
         if added is None:
             try:
-                existing_files = os.listdir(cur_dir)
+                existing_files = fs.listdirname(cur_dir)
             except PermissionError:
                 # FIXME: This will likely never happen.
                 # The find helper will already have failed
@@ -1474,7 +1548,7 @@ class Connector:
         if added is None:
             added = [
                 self._info(os.path.join(cur_dir, dname))
-                for dname in os.listdir(cur_dir)
+                for dname in fs.listdirname(cur_dir)
                 if dname not in existing_files
             ]
 
@@ -1507,7 +1581,7 @@ class Connector:
 
         result = []
         query = self._request[API_Q]
-        for root, dirs, files in os.walk(search_path):
+        for root, dirs, files in fs.walk(search_path):
             for fil in files:
                 if query.lower() in fil.lower():
                     file_path = os.path.join(root, fil)
@@ -1545,7 +1619,7 @@ class Connector:
             "mime": "directory",
             "rel": self._check_utf8(rel),
             "size": 0,
-            "date": datetime.fromtimestamp(os.stat(path).st_mtime).strftime(
+            "date": datetime.fromtimestamp(fs.stat(path).st_mtime).strftime(
                 "%d %b %Y %H:%M"
             ),
             "read": 1,
@@ -1556,7 +1630,7 @@ class Connector:
         }
 
         try:
-            info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
+            info["dirs"] = 1 if any(next(fs.walk(path))[1]) else 0
         except StopIteration:
             info["dirs"] = 0
 
@@ -1567,12 +1641,12 @@ class Connector:
         filetype = "file"
         if os.path.isfile(path):
             filetype = "file"
-        elif os.path.isdir(path):
+        elif fs.isdir(path):
             filetype = "dir"
-        elif os.path.islink(path):
+        elif fs.islink(path):
             filetype = "link"
 
-        stat = os.lstat(path)
+        stat = fs.lstat(path)
         readable = self._is_allowed(path, "read")
         writable = self._is_allowed(path, "write")
         deletable = self._is_allowed(path, "rm")
@@ -1593,7 +1667,7 @@ class Connector:
         if filetype == "dir":
             info["volumeid"] = self.volumeid
             try:
-                info["dirs"] = 1 if any(next(os.walk(path))[1]) else 0
+                info["dirs"] = 1 if any(next(fs.walk(path))[1]) else 0
             except StopIteration:
                 info["dirs"] = 0
 
@@ -1606,7 +1680,7 @@ class Connector:
                 info["mime"] = "symlink-broken"
                 return info
 
-            if os.path.isdir(lpath):
+            if fs.isdir(lpath):
                 info["mime"] = "directory"
             else:
                 info["mime"] = _mimetype(lpath)
@@ -1657,7 +1731,7 @@ class Connector:
 
                     tmb = os.path.join(thumbs_dir, info["hash"] + ".png")
 
-                    if os.path.exists(tmb):
+                    if fs.exists(tmb):
                         tmb_url = self._path2url(tmb)
                         info["tmb"] = tmb_url
                     else:
@@ -1674,9 +1748,9 @@ class Connector:
         if not self._is_allowed(target, "rm"):
             self._set_error_data(target, "Access denied")
 
-        if not os.path.isdir(target):
+        if not fs.isdir(target):
             try:
-                os.unlink(target)
+                fs.rm(target)
                 self._rm_tmb(target)
                 return True
             except OSError:
@@ -1684,7 +1758,7 @@ class Connector:
                 return False
         else:
             try:
-                targets = os.listdir(target)
+                targets = fs.listdirname(target)
             except PermissionError:
                 self._set_error_data(target, "Access denied")
                 return False
@@ -1705,13 +1779,13 @@ class Connector:
         if not (self._is_allowed(src, "read") and self._is_allowed(dst_dir, "write")):
             self._set_error_data(src, "Access denied")
             return False
-        if os.path.exists(dst):
+        if fs.exists(dst):
             self._set_error_data(
                 dst, "File or folder with the same name already exists"
             )
             return False
 
-        if not os.path.isdir(src):
+        if not fs.isdir(src):
             try:
                 shutil.copyfile(src, dst)
                 shutil.copymode(src, dst)
@@ -1721,14 +1795,14 @@ class Connector:
                 return False
         else:
             try:
-                os.mkdir(dst, int(self._options["dir_mode"]))
+                fs.mkdir(dst, int(self._options["dir_mode"]))
                 shutil.copymode(src, dst)
             except (shutil.SameFileError, OSError):
                 self._set_error_data(src, "Unable to copy files")
                 return False
 
             try:
-                srcs = os.listdir(src)
+                srcs = fs.listdirname(src)
             except PermissionError:
                 self._set_error_data(src, "Access denied")
                 return False
@@ -1755,14 +1829,14 @@ class Connector:
             if fhash == self._hash(path):
                 return path
 
-        if not os.path.isdir(path):
+        if not fs.isdir(path):
             return None
 
-        for root, dirs, _ in os.walk(path, topdown=True):
-            for folder in dirs:
-                folder_path = os.path.join(root, folder)
-                if not os.path.islink(folder_path) and fhash == self._hash(folder_path):
-                    return folder_path
+        # for root, dirs, _ in fs.walk(path, topdown=True):
+        #     for folder in dirs:
+        #         folder_path = os.path.join(root, folder)
+        #         if not fs.islink(folder_path) and fhash == self._hash(folder_path):
+        #             return folder_path
         return None
 
     def _find(self, fhash: str, parent: Optional[str] = None) -> Optional[str]:
@@ -1771,25 +1845,25 @@ class Connector:
         cached_path = self._cached_path.get(fhash)
         if cached_path:
             return cached_path
-        if not parent:
-            parent = self._options["root"]
-        if os.path.isdir(parent):
-            for root, dirs, files in os.walk(parent, topdown=True):
-                for folder in dirs:
-                    folder_path = os.path.join(root, folder)
-                    if fhash == self._hash(folder_path):
-                        return folder_path
-                for fil in files:
-                    file_path = os.path.join(root, fil)
-                    if fhash == self._hash(file_path):
-                        return file_path
+        # if not parent:
+        #     parent = self._options["root"]
+        # if fs.isdir(parent):
+        #     for root, dirs, files in fs.walk(parent, topdown=True):
+        #         for folder in dirs:
+        #             folder_path = os.path.join(root, folder)
+        #             if fhash == self._hash(folder_path):
+        #                 return folder_path
+        #         for fil in files:
+        #             file_path = os.path.join(root, fil)
+        #             if fhash == self._hash(file_path):
+        #                 return file_path
 
         return None
 
     def _tmb(self, path: str, tmb_path: str) -> bool:
         """Provide internal thumbnail create procedure."""
         try:
-            img = self._img.open(path).copy()  # type: ignore
+            img = self._img.open(fs.open(path)).copy()  # type: ignore
             size = self._options["tmb_size"], self._options["tmb_size"]
             box = _crop_tuple(img.size)
             if box:
@@ -1805,9 +1879,9 @@ class Connector:
     def _rm_tmb(self, path: str) -> None:
         tmb = self._tmb_path(path)
         if tmb:
-            if os.path.exists(tmb):
+            if fs.exists(tmb):
                 try:
-                    os.unlink(tmb)
+                    fs.rm(tmb)
                 except OSError:
                     pass
 
@@ -1817,7 +1891,7 @@ class Connector:
         if not target[0] == "/":
             target = os.path.join(os.path.dirname(path), target)
         target = os.path.normpath(target)
-        if os.path.exists(target):
+        if fs.exists(target):
             if not target.find(self._options["root"]) == -1:
                 return target
         return None
@@ -1825,13 +1899,11 @@ class Connector:
     def _dir_size(self, path: str) -> int:
         total_size = 0
         if self._options["dir_size"]:
-            for dirpath, _, filenames in os.walk(path):
-                for fil in filenames:
-                    file_path = os.path.join(dirpath, fil)
-                    if os.path.exists(file_path):
-                        total_size += os.stat(file_path).st_size
+            for fil in fs.listdirname(path):
+                file_path = os.path.join(path, fil)
+                total_size += fs.stat(file_path).st_size
         else:
-            total_size = os.lstat(path).st_size
+            total_size = fs.lstat(path).st_size
         return total_size
 
     def _fbuffer(
@@ -1899,19 +1971,19 @@ class Connector:
         return True
 
     def _is_allowed(self, path: str, access: str) -> bool:
-        if not os.path.exists(path):
+        if not fs.exists(path):
             return False
 
         if access == "read":
-            if not os.access(path, os.R_OK):
+            if not fs.access(path, os.R_OK):
                 self._set_error_data(path, access)
                 return False
         elif access == "write":
-            if not os.access(path, os.W_OK):
+            if not fs.access(path, os.W_OK):
                 self._set_error_data(path, access)
                 return False
         elif access == "rm":
-            if not os.access(os.path.dirname(path), os.W_OK):
+            if not fs.access(os.path.dirname(path), os.W_OK):
                 self._set_error_data(path, access)
                 return False
         else:
@@ -1941,7 +2013,7 @@ class Connector:
             self._options["files_url"],
             cur_dir[length:],
         )
-        url = self._check_utf8(url).replace(os.sep, "/")
+        url = self._check_utf8(url).replace(fs.sep, "/")
         url = quote(url, safe="/")
         return url
 
@@ -1972,7 +2044,7 @@ class Connector:
             return None
         if self._can_create_tmb():
             try:
-                img = self._img.open(path)  # type: ignore
+                img = self._img.open(fs.open(path))  # type: ignore
                 return str(img.size[0]) + "x" + str(img.size[1])
             except OSError:  # UnidentifiedImageError requires Pillow 7.0.0
                 print("WARNING: unidentified image or file not found: " + path)
@@ -2304,14 +2376,14 @@ def _unique_name(path: str, copy: str = " copy") -> str:
     last_dot = cur_name.rfind(".")
     ext = new_name = ""
 
-    if not os.path.isdir(path) and re.search(r"\..{3}\.(gz|bz|bz2)$", cur_name):
+    if not fs.isdir(path) and re.search(r"\..{3}\.(gz|bz|bz2)$", cur_name):
         pos = -7
         if cur_name[-1:] == "2":
             pos -= 1
         ext = cur_name[pos:]
         old_name = cur_name[0:pos]
         new_name = old_name + copy
-    elif os.path.isdir(path) or last_dot <= 0:
+    elif fs.isdir(path) or last_dot <= 0:
         old_name = cur_name
         new_name = old_name + copy
     else:
@@ -2328,7 +2400,7 @@ def _unique_name(path: str, copy: str = " copy") -> str:
         new_name = old_name[0:pos]
     else:
         new_path = os.path.join(cur_dir, new_name + ext)
-        if not os.path.exists(new_path):
+        if not fs.exists(new_path):
             return new_path
 
     # if we are here then copy already exists or making copy of copy
@@ -2340,7 +2412,7 @@ def _unique_name(path: str, copy: str = " copy") -> str:
         idx += 1
         new_name_ext = new_name + " " + str(idx) + ext
         new_path = os.path.join(cur_dir, new_name_ext)
-        if not os.path.exists(new_path):
+        if not fs.exists(new_path):
             return new_path
         # if idx >= 1000: break # possible loop
 
