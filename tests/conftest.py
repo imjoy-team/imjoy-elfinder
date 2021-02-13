@@ -96,8 +96,7 @@ def jpeg_file_fixture(tmp_path):
     tmp_dir = tmp_path / "sub"
     tmp_dir.mkdir(exist_ok=True)
     test_fil = tmp_dir / "test.jpeg"
-    # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
-    shutil.copyfile(str(fly_img), str(test_fil))
+    shutil.copyfile(fly_img, test_fil)
     yield test_fil
 
 
@@ -108,6 +107,5 @@ def zip_file_fixture(tmp_path):
     tmp_dir = tmp_path / "sub"
     tmp_dir.mkdir(exist_ok=True)
     test_fil = tmp_dir / ZIP_FILE
-    # Python 3.5 shutil.copyfile needs strings instead of pathlib paths
-    shutil.copyfile(str(foo_zip), str(test_fil))
+    shutil.copyfile(foo_zip, test_fil)
     yield test_fil

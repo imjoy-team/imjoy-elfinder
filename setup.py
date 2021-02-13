@@ -31,7 +31,7 @@ setup(
     description=DESCRIPTION,
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     install_requires=read("requirements.txt"),
     tests_require=read("requirements.txt") + read("requirements_test.txt"),
     classifiers=[
@@ -41,7 +41,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
