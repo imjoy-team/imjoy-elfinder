@@ -16,7 +16,7 @@ from fastapi import Request
 from fastapi.responses import FileResponse
 from fastapi.responses import PlainTextResponse, JSONResponse
 
-from . import elfinder
+from . import elfinder, __version__
 from .api_const import API_NAME, API_TARGETS, API_DIRS, API_UPLOAD, API_UPLOAD_PATH
 from .util import get_all, get_one
 from .settings import get_settings
@@ -108,5 +108,6 @@ async def connector(request: Request):
 @router.get("/filebrowser", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse(
-        "elfinder/filebrowser.jinja2", {"request": request}
+        "elfinder/filebrowser.jinja2",
+        {"request": request, "IMJOY_ELFINDER_VERSION": __version__},
     )
