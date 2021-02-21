@@ -1,15 +1,12 @@
 name: Draft release
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
   update-release-draft:
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@v5.13.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
