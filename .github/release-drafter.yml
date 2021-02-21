@@ -1,7 +1,10 @@
 autolabeler:
-  - label: "ci"
+  - label: "github_actions"
     files:
       - ".github/workflows/*"
+  - label: "ci"
+    files:
+      - ".github/*"
   - label: "documentation"
     files:
       - "*.md"
