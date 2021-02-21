@@ -46,7 +46,9 @@ categories:
   - title: ":rotating_light: Testing"
     label: "testing"
   - title: ":construction_worker: Continuous Integration"
-    label: "ci"
+    labels:
+      - "ci"
+      - "github_actions"
   - title: ":books: Documentation"
     label: "documentation"
   - title: ":hammer: Refactoring"
