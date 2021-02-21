@@ -9,6 +9,17 @@ DESCRIPTION = (
 )
 HERE = os.path.dirname(os.path.realpath(__file__))
 
+REQUIREMENTS = [
+    "elfinder-client",
+    "pathvalidate",
+    "pillow",
+    "pyramid",
+    "pyramid_jinja2",
+    "typing_extensions",
+    "waitress",
+    "werkzeug",
+]
+
 
 def read(name):
     """Read file name contents and return it."""
@@ -32,8 +43,7 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    install_requires=read("requirements.txt"),
-    tests_require=read("requirements.txt") + read("requirements_test.txt"),
+    install_requires=REQUIREMENTS,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
