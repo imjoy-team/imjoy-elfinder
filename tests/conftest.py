@@ -2,8 +2,24 @@
 import shutil
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from . import ROOT_PATH, TEST_CONTENT, ZIP_FILE
+
+
+@pytest.fixture(name="app")
+def app_fixture():
+    """Provide a test app."""
+    app = FastAPI()
+    return app
+
+
+@pytest.fixture(name="client")
+def client_fixture(app):
+    """Provide a test client."""
+    client = TestClient(app)
+    return client
 
 
 @pytest.fixture(name="settings")
