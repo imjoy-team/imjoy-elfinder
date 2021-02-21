@@ -7,19 +7,21 @@
 # Distributed under terms of the MIT license.
 
 """Provide views for elfinder."""
-import json
 import os
-from fastapi.templating import Jinja2Templates
-from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
-from fastapi import Request
-from fastapi.responses import FileResponse
-from fastapi.responses import PlainTextResponse, JSONResponse
 
-from . import elfinder, __version__
-from .api_const import API_NAME, API_TARGETS, API_DIRS, API_UPLOAD, API_UPLOAD_PATH
-from .util import get_all, get_one
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+)
+from fastapi.templating import Jinja2Templates
+
+from . import __version__, elfinder
+from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
 from .settings import get_settings
+from .util import get_all, get_form_body, get_one
 
 router = APIRouter()
 
@@ -31,7 +33,7 @@ settings = get_settings()
 @router.get("/connector")
 @router.post("/connector")
 @router.options("/connector")
-async def connector(request: Request):
+async def connector(request: Request, request_body=Depends(get_form_body)):
     """Handle the connector request."""
     # init connector and pass options
     root = settings.root_dir
@@ -50,7 +52,7 @@ async def connector(request: Request):
     http_request = {}
 
     form = request.query_params
-    request_body = await request.form()
+
     for field in elf.http_allowed_parameters:
         if field in request_body:
             # handle CGI upload
@@ -106,7 +108,7 @@ async def connector(request: Request):
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("/filebrowser", response_class=HTMLResponse)
-async def index(request: Request):
+def index(request: Request):
     return templates.TemplateResponse(
         "elfinder/filebrowser.jinja2",
         {"request": request, "IMJOY_ELFINDER_VERSION": __version__},

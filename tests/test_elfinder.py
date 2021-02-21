@@ -34,6 +34,8 @@ from . import ZIP_FILE, ZIP_FILE_ASCII_CONTENT
 
 # pylint: disable=too-many-arguments
 
+pytestmark = pytest.mark.skip
+
 
 @pytest.fixture(name="all_files")
 def all_files_fixture(

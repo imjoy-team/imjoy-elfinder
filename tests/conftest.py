@@ -2,16 +2,18 @@
 import shutil
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
+from imjoy_elfinder.app import build_app
+from imjoy_elfinder.settings import Settings
 
 from . import ROOT_PATH, TEST_CONTENT, ZIP_FILE
 
 
 @pytest.fixture(name="app")
-def app_fixture():
+def app_fixture(settings):
     """Provide a test app."""
-    app = FastAPI()
+    app = build_app(settings)
     return app
 
 
@@ -25,8 +27,9 @@ def client_fixture(app):
 @pytest.fixture(name="settings")
 def settings_fixture(tmp_path):
     """Provide default settings for the app."""
+    settings = Settings()
     thumbs_dir = ".tmb"
-    settings = {
+    updated_settings = {
         "root_dir": str(tmp_path),
         "files_url": "/files",
         "base_url": "",
@@ -36,6 +39,10 @@ def settings_fixture(tmp_path):
     }
     thumbs_dir = tmp_path / thumbs_dir
     thumbs_dir.mkdir(exist_ok=True)
+
+    for attr, value in updated_settings.items():
+        setattr(settings, attr, value)
+
     return settings
 
 

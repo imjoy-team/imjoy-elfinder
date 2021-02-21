@@ -1,5 +1,7 @@
 """Provide utils."""
-from typing import Any, List, Union
+from typing import Any, List
+
+from fastapi import Request
 from starlette.datastructures import MultiDict
 
 
@@ -21,3 +23,8 @@ def get_all(multi_dict: MultiDict, key: str) -> List[Any]:
     """
     matched = [v for k, v in multi_dict.items() if k == key]
     return matched
+
+
+async def get_form_body(request: Request) -> dict:
+    """Extract the form body from a fastapi Request."""
+    return await request.form()
