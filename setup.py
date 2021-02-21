@@ -13,6 +13,7 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 REQUIREMENTS = [
     "aiofiles",
     "elfinder-client",
+    "fastapi",
     "jinja2",
     "pathvalidate",
     "pillow",
