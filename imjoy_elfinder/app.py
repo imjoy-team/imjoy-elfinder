@@ -13,14 +13,14 @@ from fastapi.staticfiles import StaticFiles
 
 from imjoy_elfinder import __version__, views
 
-from .settings import get_settings
+from .settings import Settings, get_settings
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 
-def build_app(settings) -> FastAPI:
+def build_app(settings: Settings) -> FastAPI:
     """Build app."""
     app = FastAPI(
         title="ImJoy AI Server",

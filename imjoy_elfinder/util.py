@@ -2,10 +2,10 @@
 from typing import Any, List
 
 from fastapi import Request
-from starlette.datastructures import MultiDict
+from starlette.datastructures import FormData, ImmutableMultiDict
 
 
-def get_one(multi_dict: MultiDict, key: str) -> Any:
+def get_one(multi_dict: ImmutableMultiDict, key: str) -> Any:
     """Return one value matching the key in the dict.
 
     Raise KeyError if multiple values were found.
@@ -16,7 +16,7 @@ def get_one(multi_dict: MultiDict, key: str) -> Any:
     return next(iter(matched), None)
 
 
-def get_all(multi_dict: MultiDict, key: str) -> List[Any]:
+def get_all(multi_dict: ImmutableMultiDict, key: str) -> List[Any]:
     """Return a list with all values matching the key in the dict.
 
     May return an empty list.
@@ -25,6 +25,6 @@ def get_all(multi_dict: MultiDict, key: str) -> List[Any]:
     return matched
 
 
-async def get_form_body(request: Request) -> dict:
+async def get_form_body(request: Request) -> FormData:
     """Extract the form body from a fastapi Request."""
     return await request.form()

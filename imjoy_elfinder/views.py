@@ -15,8 +15,10 @@ from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
     PlainTextResponse,
+    Response,
 )
 from fastapi.templating import Jinja2Templates
+from starlette.datastructures import FormData
 
 from . import __version__, elfinder
 from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
@@ -31,7 +33,9 @@ templates = Jinja2Templates(directory=templates_dir)
 @router.get("/connector")
 @router.post("/connector")
 @router.options("/connector")
-async def connector(request: Request, request_body=Depends(get_form_body)):
+async def connector(
+    request: Request, request_body: FormData = Depends(get_form_body)
+) -> Response:
     """Handle the connector request."""
     # init connector and pass options
     settings = request.app.state.settings
@@ -81,33 +85,33 @@ async def connector(request: Request, request_body=Depends(get_form_body)):
         # send file
         file_path = response["__send_file"]
         if os.path.exists(file_path) and not os.path.isdir(file_path):
-            result = FileResponse(file_path, headers=header)
-            return result
+            return FileResponse(file_path, headers=header)
 
-        result = PlainTextResponse(
-            "Unable to find: {}".format(request.path_info), headers=header
+        return PlainTextResponse(
+            "Unable to find: {}".format(request.url), headers=header
         )
-    else:
-        # get connector output and print it out
-        if "__text" in response:
-            # output text
-            result = PlainTextResponse(response["__text"], headers=header)
-        else:
-            # output json
-            result = JSONResponse(response, headers=header)
-        result.status_code = status
-        try:
-            del header["Connection"]
-        except KeyError:
-            pass
 
-        result.charset = "utf8"
+    # get connector output and print it out
+    if "__text" in response:
+        # output text
+        result = PlainTextResponse(response["__text"], headers=header)
+    else:
+        # output json
+        result = JSONResponse(response, headers=header)
+
+    result.status_code = status
+    try:
+        del header["Connection"]
+    except KeyError:
+        pass
+
+    result.charset = "utf8"
     return result
 
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("/filebrowser", response_class=HTMLResponse)
-def index(request: Request):
+def index(request: Request) -> Response:
     """Handle the index request."""
     return templates.TemplateResponse(
         "elfinder/filebrowser.jinja2",
