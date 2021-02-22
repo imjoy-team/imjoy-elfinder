@@ -7,7 +7,33 @@ from fastapi.testclient import TestClient
 from imjoy_elfinder.app import build_app
 from imjoy_elfinder.settings import Settings
 
-from . import ROOT_PATH, TEST_CONTENT, ZIP_FILE
+from . import ROOT_PATH, RequestParams, TEST_CONTENT, ZIP_FILE
+
+
+@pytest.fixture(name="request_params")
+def request_params_fixture():
+    """Return a client request parameters instance."""
+    return RequestParams(headers={}, params={})
+
+
+@pytest.fixture(name="settings")
+def settings_fixture(tmp_path):
+    """Provide default settings for the app."""
+    thumbs_dir = ".tmb"
+    updated_settings = {
+        "root_dir": str(tmp_path),
+        "files_url": "/files",
+        "base_url": "",
+        "expose_real_path": True,
+        "dot_files": False,
+        "thumbnail_dir": thumbs_dir,
+    }
+    thumbs_dir_path = tmp_path / thumbs_dir
+    thumbs_dir_path.mkdir(exist_ok=True)
+
+    settings = Settings(**updated_settings)
+
+    return settings
 
 
 @pytest.fixture(name="app")
@@ -22,28 +48,6 @@ def client_fixture(app):
     """Provide a test client."""
     client = TestClient(app)
     return client
-
-
-@pytest.fixture(name="settings")
-def settings_fixture(tmp_path):
-    """Provide default settings for the app."""
-    settings = Settings()
-    thumbs_dir = ".tmb"
-    updated_settings = {
-        "root_dir": str(tmp_path),
-        "files_url": "/files",
-        "base_url": "",
-        "expose_real_path": True,
-        "dot_files": False,
-        "thumbnail_dir": thumbs_dir,
-    }
-    thumbs_dir = tmp_path / thumbs_dir
-    thumbs_dir.mkdir(exist_ok=True)
-
-    for attr, value in updated_settings.items():
-        setattr(settings, attr, value)
-
-    return settings
 
 
 @pytest.fixture(name="txt_file")

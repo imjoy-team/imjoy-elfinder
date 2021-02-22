@@ -34,8 +34,6 @@ from . import ZIP_FILE, ZIP_FILE_ASCII_CONTENT
 
 # pylint: disable=too-many-arguments
 
-pytestmark = pytest.mark.skip
-
 
 @pytest.fixture(name="all_files")
 def all_files_fixture(
@@ -100,7 +98,9 @@ def update_params(p_request, params, hashed_files):
 def update_settings(settings, updates, files):
     """Return updated settings."""
     updates = {key: str(files.get(val, val)) for key, val in updates.items()}
-    settings.update(updates)
+    for attr, value in updates.items():
+        setattr(settings, attr, value)
+
     return settings
 
 
@@ -160,19 +160,18 @@ def raise_subprocess_after_check_archivers():
     indirect=["access"],
 )
 def test_run(
-    error, root, command, access, context, p_request, p_config, all_files, settings
+    settings, error, root, command, access, context, client, request_params, all_files
 ):
     """Test the run method."""
-    p_request.params[API_CMD] = command
+    request_params.params[API_CMD] = command
     updates = {"root_dir": root, "thumbnail_dir": ""}
     settings = update_settings(settings, updates, all_files)
-    p_config.add_settings(settings)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", data=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
 
 
