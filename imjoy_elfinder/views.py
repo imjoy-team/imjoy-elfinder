@@ -54,30 +54,28 @@ def connector(
     # fetch only needed GET/POST parameters
     http_request = {}
 
-    form = request.query_params
-
     for field in elf.http_allowed_parameters:
-        if field in request_body:
-            # handle CGI upload
-            if field == API_UPLOAD:
-                http_request[field] = get_all(request_body, field)
-            elif field == API_UPLOAD_PATH:
-                http_request[field] = get_all(request_body, field)
-            else:
-                http_request[field] = get_one(request_body, field)
-        elif field in form:
-            # Russian file names hack
-            if field == API_NAME:
-                http_request[field] = get_one(form, field).encode("utf-8")
+        if field not in request_body:
+            continue
+        # handle CGI upload
+        if field == API_UPLOAD:
+            http_request[field] = get_all(request_body, field)
+        elif field == API_UPLOAD_PATH:
+            http_request[field] = get_all(request_body, field)
+        else:
+            http_request[field] = get_one(request_body, field)
+        # Russian file names hack
+        if field == API_NAME:
+            http_request[field] = get_one(request_body, field).encode("utf-8")
 
-            elif field == API_TARGETS:
-                http_request[field] = get_all(form, field)
+        elif field == API_TARGETS:
+            http_request[field] = get_all(request_body, field)
 
-            elif field == API_DIRS:
-                http_request[field] = get_all(form, field)
+        elif field == API_DIRS:
+            http_request[field] = get_all(request_body, field)
 
-            else:
-                http_request[field] = get_one(form, field)
+        else:
+            http_request[field] = get_one(request_body, field)
     # run connector with parameters
     status, header, response = elf.run(http_request)
 
