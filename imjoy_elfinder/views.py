@@ -108,6 +108,7 @@ async def connector(request: Request, request_body=Depends(get_form_body)):
 @router.get("/", response_class=HTMLResponse)
 @router.get("/filebrowser", response_class=HTMLResponse)
 def index(request: Request):
+    """Handle the index request."""
     return templates.TemplateResponse(
         "elfinder/filebrowser.jinja2",
         {"request": request, "IMJOY_ELFINDER_VERSION": __version__},

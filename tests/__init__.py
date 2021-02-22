@@ -1,7 +1,7 @@
 """Provide tests."""
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
 ROOT_PATH = Path(__file__).parent.parent
 TEST_CONTENT = "test content"
