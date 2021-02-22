@@ -27,6 +27,8 @@ def build_app(settings) -> FastAPI:
         description="A backend server for managing files, tasks, models for AI applications",
         version=__version__,
     )
+    # Allow views to access the settings.
+    app.state.settings = settings
 
     app.add_middleware(
         CORSMiddleware,

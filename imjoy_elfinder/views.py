@@ -20,14 +20,12 @@ from fastapi.templating import Jinja2Templates
 
 from . import __version__, elfinder
 from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
-from .settings import get_settings
 from .util import get_all, get_form_body, get_one
 
 router = APIRouter()
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
-settings = get_settings()
 
 
 @router.get("/connector")
@@ -36,6 +34,7 @@ settings = get_settings()
 async def connector(request: Request, request_body=Depends(get_form_body)):
     """Handle the connector request."""
     # init connector and pass options
+    settings = request.app.state.settings
     root = settings.root_dir
     options = {
         "root": os.path.abspath(root),
