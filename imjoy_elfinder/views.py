@@ -33,7 +33,7 @@ templates = Jinja2Templates(directory=templates_dir)
 @router.get("/connector")
 @router.post("/connector")
 @router.options("/connector")
-async def connector(
+def connector(
     request: Request, request_body: FormData = Depends(get_form_body)
 ) -> Response:
     """Handle the connector request."""
