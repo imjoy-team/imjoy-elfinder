@@ -7,33 +7,38 @@
 # Distributed under terms of the MIT license.
 
 """Provide views for elfinder."""
-import json
 import os
-from fastapi.templating import Jinja2Templates
-from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
-from fastapi import Request
-from fastapi.responses import FileResponse
-from fastapi.responses import PlainTextResponse, JSONResponse
 
-from . import elfinder, __version__
-from .api_const import API_NAME, API_TARGETS, API_DIRS, API_UPLOAD, API_UPLOAD_PATH
-from .util import get_all, get_one
-from .settings import get_settings
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    Response,
+)
+from fastapi.templating import Jinja2Templates
+from starlette.datastructures import FormData
+
+from . import __version__, elfinder
+from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
+from .util import get_all, get_form_body, get_one
 
 router = APIRouter()
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
-settings = get_settings()
 
 
 @router.get("/connector")
 @router.post("/connector")
 @router.options("/connector")
-async def connector(request: Request):
+def connector(
+    request: Request, request_body: FormData = Depends(get_form_body)
+) -> Response:
     """Handle the connector request."""
     # init connector and pass options
+    settings = request.app.state.settings
     root = settings.root_dir
     options = {
         "root": os.path.abspath(root),
@@ -49,30 +54,28 @@ async def connector(request: Request):
     # fetch only needed GET/POST parameters
     http_request = {}
 
-    form = request.query_params
-    request_body = await request.form()
     for field in elf.http_allowed_parameters:
-        if field in request_body:
-            # handle CGI upload
-            if field == API_UPLOAD:
-                http_request[field] = get_all(request_body, field)
-            elif field == API_UPLOAD_PATH:
-                http_request[field] = get_all(request_body, field)
-            else:
-                http_request[field] = get_one(request_body, field)
-        elif field in form:
-            # Russian file names hack
-            if field == API_NAME:
-                http_request[field] = get_one(form, field).encode("utf-8")
+        if field not in request_body:
+            continue
+        # handle CGI upload
+        if field == API_UPLOAD:
+            http_request[field] = get_all(request_body, field)
+        elif field == API_UPLOAD_PATH:
+            http_request[field] = get_all(request_body, field)
+        else:
+            http_request[field] = get_one(request_body, field)
+        # Russian file names hack
+        if field == API_NAME:
+            http_request[field] = get_one(request_body, field).encode("utf-8")
 
-            elif field == API_TARGETS:
-                http_request[field] = get_all(form, field)
+        elif field == API_TARGETS:
+            http_request[field] = get_all(request_body, field)
 
-            elif field == API_DIRS:
-                http_request[field] = get_all(form, field)
+        elif field == API_DIRS:
+            http_request[field] = get_all(request_body, field)
 
-            else:
-                http_request[field] = get_one(form, field)
+        else:
+            http_request[field] = get_one(request_body, field)
     # run connector with parameters
     status, header, response = elf.run(http_request)
 
@@ -80,33 +83,34 @@ async def connector(request: Request):
         # send file
         file_path = response["__send_file"]
         if os.path.exists(file_path) and not os.path.isdir(file_path):
-            result = FileResponse(file_path, headers=header)
-            return result
+            return FileResponse(file_path, headers=header)
 
-        result = PlainTextResponse(
-            "Unable to find: {}".format(request.path_info), headers=header
+        return PlainTextResponse(
+            "Unable to find: {}".format(request.url), headers=header
         )
-    else:
-        # get connector output and print it out
-        if "__text" in response:
-            # output text
-            result = PlainTextResponse(response["__text"], headers=header)
-        else:
-            # output json
-            result = JSONResponse(response, headers=header)
-        result.status_code = status
-        try:
-            del header["Connection"]
-        except KeyError:
-            pass
 
-        result.charset = "utf8"
+    # get connector output and print it out
+    if "__text" in response:
+        # output text
+        result = PlainTextResponse(response["__text"], headers=header)
+    else:
+        # output json
+        result = JSONResponse(response, headers=header)
+
+    result.status_code = status
+    try:
+        del header["Connection"]
+    except KeyError:
+        pass
+
+    result.charset = "utf8"
     return result
 
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("/filebrowser", response_class=HTMLResponse)
-async def index(request: Request):
+def index(request: Request) -> Response:
+    """Handle the index request."""
     return templates.TemplateResponse(
         "elfinder/filebrowser.jinja2",
         {"request": request, "IMJOY_ELFINDER_VERSION": __version__},

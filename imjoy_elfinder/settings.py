@@ -1,9 +1,13 @@
+"""Provide app settings."""
 from functools import lru_cache
+from typing import Optional
+
 from pydantic import BaseSettings
-from typing import Any, Dict, List, Optional
 
 
 class Settings(BaseSettings):
+    """Represent app settings."""
+
     root_dir: str = ""
     files_url: str = ""
     base_url: str = "/"
@@ -14,4 +18,5 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
+    """Return app settings lru cached."""
     return Settings()

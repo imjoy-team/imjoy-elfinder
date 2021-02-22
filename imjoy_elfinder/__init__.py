@@ -1,3 +1,4 @@
+"""A fastapi connector for elfinder."""
 from pathlib import Path
 import json
 

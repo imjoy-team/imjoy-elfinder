@@ -1,32 +1,36 @@
 """Provide the app module."""
 import argparse
-from dotenv import load_dotenv, find_dotenv
-import json
 import os
 import sys
+from typing import List, Optional
 
-from typing import Any, Dict, List, Optional
+import uvicorn
+from dotenv import find_dotenv, load_dotenv
+from elfinder_client import get_base_dir
 from fastapi import FastAPI
-from fastapi.logger import logger
-from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import uvicorn
-from imjoy_elfinder import __version__
-from .settings import get_settings
-from imjoy_elfinder import views
+
+from imjoy_elfinder import __version__, views
+
+from .settings import Settings, get_settings
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 
 
-def build_app(settings) -> FastAPI:
+def build_app(settings: Settings) -> FastAPI:
+    """Build app."""
     app = FastAPI(
         title="ImJoy AI Server",
-        description="A backend server for managing files, tasks, models for AI applications",
+        description=(
+            "A backend server for managing files, tasks, models for AI applications"
+        ),
         version=__version__,
     )
+    # Allow views to access the settings.
+    app.state.settings = settings
 
     app.add_middleware(
         CORSMiddleware,
@@ -35,8 +39,6 @@ def build_app(settings) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["Content-Type", "Authorization"],
     )
-
-    from elfinder_client import get_base_dir
 
     app.mount("/static", StaticFiles(directory=get_base_dir()), name="static")
     app.include_router(views.router)
@@ -120,7 +122,6 @@ def main(args: Optional[List[str]] = None) -> None:
 
 def setup_for_jupyter_server_proxy() -> dict:
     """Set up jupyter server proxy."""
-
     return {
         "command": [
             "imjoy-elfinder",
