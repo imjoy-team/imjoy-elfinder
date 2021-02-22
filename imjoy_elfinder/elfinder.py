@@ -841,11 +841,11 @@ class Connector:
                     with open(
                         record_path,
                         "r+" if os.path.exists(record_path) else "w+",
-                    ) as fil:
-                        fil.seek(chunk_index)
-                        fil.write("X")
-                        fil.seek(0)
-                        written = fil.read()
+                    ) as record_fil:
+                        record_fil.seek(chunk_index)
+                        record_fil.write("X")
+                        record_fil.seek(0)
+                        written = record_fil.read()
                         if written == ("X" * (total_chunks + 1)):
                             self._response[R_ADDED] = []
                             self._response[R_CHUNKMERGED] = name
