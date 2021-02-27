@@ -229,23 +229,17 @@ fs = LocalFileSystem()
 
 
 def islink(_: Any) -> bool:
-    """
-    A dummy function for checking whether a path/directory is a link
-    """
+    """Check whether a path/directory is a link."""
     return False
 
 
 def getcwd() -> str:
-    """
-    a dummy function for getting the current directory
-    """
+    """Get the current directory."""
     return "/"
 
 
 def stat(path: str) -> os.stat_result:
-    """
-    a dummy function for getting info about a file
-    """
+    """Get info about a file."""
     # os.stat_result(
     #   st_mode=1,
     #   st_ino=0,
@@ -279,23 +273,17 @@ def stat(path: str) -> os.stat_result:
 
 
 def chmod(path: str) -> None:
-    """
-    a dummy function for change the file/directory mode
-    """
+    """Change the file/directory mode."""
     return
 
 
 def listdirname(path: str) -> List[str]:
-    """
-    a dummy function for getting files or directories contained in a directory
-    """
+    """Get files or directories contained in a directory."""
     return [f["name"].split("/")[-1] for f in fs.listdir(path)]
 
 
 def access(path: str, type_: int) -> bool:
-    """
-    a dummy function for checking access to files or directories
-    """
+    """Check access to files or directories."""
     if type_ == os.F_OK:
         return cast(bool, fs.exists(path))
     if type_ == os.R_OK:

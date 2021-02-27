@@ -39,7 +39,7 @@ def connector(
     """Handle the connector request."""
     # init connector and pass options
     settings = request.app.state.settings
-    root = settings.root_dir
+    # root = settings.root_dir
     options = {
         "root": "/",  # TODO: Fix this: os.path.abspath(root),
         "url": settings.files_url,
