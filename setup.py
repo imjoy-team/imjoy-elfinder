@@ -14,6 +14,7 @@ REQUIREMENTS = [
     "aiofiles",
     "elfinder-client",
     "fastapi",
+    "fsspec",
     "jinja2",
     "pathvalidate",
     "pillow",
