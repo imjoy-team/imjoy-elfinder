@@ -21,21 +21,20 @@ import traceback
 import uuid
 from datetime import datetime
 from types import ModuleType
-from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, Generator, List, Optional, Tuple, Union, cast
 from urllib.parse import quote, urljoin
 
+from fsspec.implementations.local import LocalFileSystem
 from pathvalidate import sanitize_filename, sanitize_filepath
 from typing_extensions import Literal, TypedDict
-import fsspec
-from fsspec.implementations.local import LocalFileSystem
 
 from .api_const import (
+    API_CHUNK,
+    API_CID,
     API_CMD,
     API_CONTENT,
     API_CURRENT,
     API_CUT,
-    API_CHUNK,
-    API_CID,
     API_DIRS,
     API_DOWNLOAD,
     API_DST,
@@ -46,6 +45,7 @@ from .api_const import (
     API_MIMES,
     API_NAME,
     API_Q,
+    API_RANGE,
     API_SRC,
     API_TARGET,
     API_TARGETS,
@@ -54,7 +54,6 @@ from .api_const import (
     API_UPLOAD,
     API_UPLOAD_PATH,
     API_WIDTH,
-    API_RANGE,
     ARCHIVE_ARGC,
     ARCHIVE_CMD,
     ARCHIVE_EXT,
@@ -229,25 +228,36 @@ Options = TypedDict(  # pylint: disable=invalid-name
 fs = LocalFileSystem()
 
 
-def islink(_):
+def islink(_: Any) -> bool:
     """
     A dummy function for checking whether a path/directory is a link
     """
     return False
 
 
-def getcwd():
+def getcwd() -> str:
     """
     a dummy function for getting the current directory
     """
     return "/"
 
 
-def stat(path):
+def stat(path: str) -> os.stat_result:
     """
     a dummy function for getting info about a file
     """
-    # os.stat_result(st_mode=1, st_ino=0, st_dev=0, st_nlink=0, st_uid=0, st_gid=0, st_size=0, st_atime=0, st_mtime=0, st_ctime=0)
+    # os.stat_result(
+    #   st_mode=1,
+    #   st_ino=0,
+    #   st_dev=0,
+    #   st_nlink=0,
+    #   st_uid=0,
+    #   st_gid=0,
+    #   st_size=0,
+    #   st_atime=0,
+    #   st_mtime=0,
+    #   st_ctime=0
+    # )
     if fs.exists(path):
         info = fs.info(path)
     else:
@@ -268,32 +278,33 @@ def stat(path):
     )
 
 
-def chmod(path):
+def chmod(path: str) -> None:
     """
     a dummy function for change the file/directory mode
     """
     return
 
 
-def listdirname(path):
+def listdirname(path: str) -> List[str]:
     """
     a dummy function for getting files or directories contained in a directory
     """
     return [f["name"].split("/")[-1] for f in fs.listdir(path)]
 
 
-def access(path, type):
+def access(path: str, type_: int) -> bool:
     """
     a dummy function for checking access to files or directories
     """
-    if type == os.F_OK:
-        return fs.exists(path)
-    if type == os.R_OK:
+    if type_ == os.F_OK:
+        return cast(bool, fs.exists(path))
+    if type_ == os.R_OK:
         return True
-    if type == os.W_OK:
+    if type_ == os.W_OK:
         return True
-    if type == os.X_OK:
+    if type_ == os.X_OK:
         return False
+    return False
 
 
 # monkey patch functions
@@ -1644,7 +1655,7 @@ class Connector:
         elif fs.islink(path):
             filetype = "link"
 
-        stat = fs.lstat(path)
+        stat_ = fs.lstat(path)
         readable = self._is_allowed(path, "read")
         writable = self._is_allowed(path, "write")
         deletable = self._is_allowed(path, "rm")
@@ -1656,7 +1667,7 @@ class Connector:
             "read": 1 if readable else 0,
             "write": 1 if writable else 0,
             "locked": 1 if not readable and not writable and not deletable else 0,
-            "ts": stat.st_mtime,
+            "ts": stat_.st_mtime,
         }  # type: Info
 
         if self._options["expose_real_path"]:
@@ -1706,7 +1717,7 @@ class Connector:
             info["size"] = 0
         else:
             lpath = None
-            info["size"] = self._dir_size(path) if filetype == "dir" else stat.st_size
+            info["size"] = self._dir_size(path) if filetype == "dir" else stat_.st_size
 
         if not info["mime"] == "directory":
             if self._options["file_url"] and info["read"]:
@@ -1968,21 +1979,21 @@ class Connector:
             return False
         return True
 
-    def _is_allowed(self, path: str, access: str) -> bool:
+    def _is_allowed(self, path: str, access_: str) -> bool:
         if not fs.exists(path):
             return False
 
-        if access == "read":
+        if access_ == "read":
             if not fs.access(path, os.R_OK):
-                self._set_error_data(path, access)
+                self._set_error_data(path, access_)
                 return False
-        elif access == "write":
+        elif access_ == "write":
             if not fs.access(path, os.W_OK):
-                self._set_error_data(path, access)
+                self._set_error_data(path, access_)
                 return False
-        elif access == "rm":
+        elif access_ == "rm":
             if not fs.access(os.path.dirname(path), os.W_OK):
-                self._set_error_data(path, access)
+                self._set_error_data(path, access_)
                 return False
         else:
             return False
@@ -1990,10 +2001,10 @@ class Connector:
         path = path[len(os.path.normpath(self._options["root"])) :]
         for ppath, permissions in self._options["perms"].items():
             regex = r"" + ppath
-            if re.search(regex, path) and access in permissions:
-                return permissions[access]
+            if re.search(regex, path) and access_ in permissions:
+                return permissions[access_]
 
-        return self._options["defaults"][access]
+        return self._options["defaults"][access_]
 
     def _hash(self, path: str) -> str:
         """Hash of the path."""
