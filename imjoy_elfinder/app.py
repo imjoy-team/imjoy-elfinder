@@ -41,6 +41,9 @@ def build_app(settings: Settings) -> FastAPI:
     )
 
     app.mount("/static", StaticFiles(directory=get_base_dir()), name="static")
+    app.mount(
+        settings.files_url, StaticFiles(directory=settings.root_dir), name="files"
+    )
     app.include_router(views.router)
 
     return app
