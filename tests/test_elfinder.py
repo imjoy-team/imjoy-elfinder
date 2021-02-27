@@ -159,7 +159,15 @@ def raise_subprocess_after_check_archivers():
     indirect=["access"],
 )
 def test_run(
-    settings, error, root, command, access, context, client, request_params, all_files,
+    settings,
+    error,
+    root,
+    command,
+    access,
+    context,
+    client,
+    request_params,
+    all_files,
 ):
     """Test the run method."""
     request_params.params[API_CMD] = command
@@ -238,8 +246,24 @@ def test_run(
             None,
             {"file": "txt_file_parent", "mode": 0o100},
         ),  # With no init and no read access to target
-        ("Invalid parameters", None, [], None, None, None, None,),
-        ("File not found", None, [], None, "missing", None, None,),
+        (
+            "Invalid parameters",
+            None,
+            [],
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
+            "File not found",
+            None,
+            [],
+            None,
+            "missing",
+            None,
+            None,
+        ),
     ],
     indirect=["access"],
 )
@@ -508,7 +532,10 @@ def test_duplicate(
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", params=request_params.params,)
+        response = client.post(
+            "/connector",
+            params=request_params.params,
+        )
 
     assert response.status_code == 200
     body = response.json()
