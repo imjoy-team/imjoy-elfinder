@@ -17,5 +17,4 @@ ZIP_FILE_ASCII_CONTENT = (
 class RequestParams(BaseModel):
     """Represent parameters of a client request."""
 
-    headers: dict
     params: dict

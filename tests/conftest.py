@@ -13,7 +13,7 @@ from . import ROOT_PATH, RequestParams, TEST_CONTENT, ZIP_FILE
 @pytest.fixture(name="request_params")
 def request_params_fixture():
     """Return a client request parameters instance."""
-    return RequestParams(headers={}, params={})
+    return RequestParams(params={})
 
 
 @pytest.fixture(name="settings")

@@ -167,7 +167,7 @@ def test_run(
     settings = update_settings(settings, updates, all_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
     body = response.json()
@@ -260,7 +260,7 @@ def test_open(
     params = {API_INIT: init, API_TARGET: target, API_TREE: tree}
     request_params = update_params(request_params, params, hashed_files)
 
-    response = client.post("/connector", data=request_params.params)
+    response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
     body = response.json()
@@ -385,7 +385,7 @@ def test_archive(
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
     body = response.json()
@@ -443,7 +443,7 @@ def test_dim(error, dim, target, access, context, client, request_params, hashed
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
     body = response.json()
@@ -508,7 +508,7 @@ def test_duplicate(
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params,)
 
     assert response.status_code == 200
     body = response.json()
@@ -613,7 +613,7 @@ def test_extract(
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
     body = response.json()
@@ -802,7 +802,7 @@ def test_file(
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == status
     assert response.headers["Content-type"] == content_type
@@ -869,7 +869,7 @@ def test_get(
     request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = client.post("/connector", data=request_params.params)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
     body = response.json()
