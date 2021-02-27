@@ -1,56 +1,52 @@
 """Provide the app module."""
 import argparse
-import json
 import os
 import sys
-from typing import Any, Dict, List, Optional
-from waitress import serve
+from typing import List, Optional
 
-from pyramid.config import Configurator
-from pyramid.events import BeforeRender, NewRequest
-from pyramid.request import Request
-from pyramid.response import Response
-from pyramid.router import Router
+import uvicorn
+from dotenv import find_dotenv, load_dotenv
+from elfinder_client import get_base_dir
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from imjoy_elfinder import __version__, views
+
+from .settings import Settings, get_settings
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
 
 
-def build_app(opt: argparse.Namespace, settings: Dict[str, Optional[str]]) -> Router:
-    """Build the app."""
-    config = Configurator(settings=settings)
-    config.include("imjoy_elfinder")
-    # serve the folder content with a route path defined with `files_url`
-    config.add_static_view(name=settings["files_url"], path=settings["root_dir"])
+def build_app(settings: Settings) -> FastAPI:
+    """Build app."""
+    app = FastAPI(
+        title="ImJoy AI Server",
+        description=(
+            "A backend server for managing files, tasks, models for AI applications"
+        ),
+        version=__version__,
+    )
+    # Allow views to access the settings.
+    app.state.settings = settings
 
-    def add_cors_headers_response_callback(event: Any) -> None:
-        def cors_headers(request: Request, response: Response) -> None:
-            response.headers.update(
-                {
-                    "Access-Control-Allow-Origin": opt.allow_origin,
-                    "Access-Control-Allow-Methods": "POST,GET,DELETE,PUT,OPTIONS",
-                    "Access-Control-Allow-Headers": (
-                        "Origin, Content-Type, Accept, Authorization, x-requested-with"
-                    ),
-                    "Access-Control-Allow-Credentials": "true",
-                    "Access-Control-Max-Age": "1728000",
-                }
-            )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["https://lib.imjoy.io", "https://imjoy.io"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
 
-        event.request.add_response_callback(cors_headers)
+    app.mount("/static", StaticFiles(directory=get_base_dir()), name="static")
+    app.mount(
+        settings.files_url, StaticFiles(directory=settings.root_dir), name="files"
+    )
+    app.include_router(views.router)
 
-    # add cors headers
-    config.add_subscriber(add_cors_headers_response_callback, NewRequest)
-
-    def add_global_params(event: Any) -> None:
-        """Add global parameters."""
-        event["IMJOY_ELFINDER_BASE_URL"] = settings["base_url"]
-        with open(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "VERSION"), "r"
-        ) as fil:
-            version = json.load(fil)["version"]
-        event["IMJOY_ELFINDER_VERSION"] = version
-
-    config.add_subscriber(add_global_params, BeforeRender)
-
-    return config.make_wsgi_app()
+    return app
 
 
 def main(args: Optional[List[str]] = None) -> None:
@@ -102,17 +98,16 @@ def main(args: Optional[List[str]] = None) -> None:
     else:
         opt.base_url = opt.base_url.replace("//", "/")
 
-    settings = {
-        "root_dir": opt.root_dir or os.getcwd(),
-        "files_url": "/files",
-        "base_url": opt.base_url,
-        "expose_real_path": opt.expose_real_path,
-        "thumbnail_dir": ".tmb" if opt.thumbnail else None,
-        "dot_files": opt.dot_files,
-    }  # type: Dict[str, Optional[str]]
+    settings = get_settings()
 
-    app = build_app(opt, settings)
+    settings.root_dir = opt.root_dir or os.getcwd()
+    settings.files_url = "/files"
+    settings.base_url = opt.base_url
+    settings.expose_real_path = opt.expose_real_path
+    settings.thumbnail_dir = ".tmb" if opt.thumbnail else None
+    settings.dot_files = opt.dot_files
 
+    app = build_app(settings)
     if opt.base_url and opt.base_url.startswith("http"):
         url = opt.base_url
     else:
@@ -123,14 +118,13 @@ def main(args: Optional[List[str]] = None) -> None:
     sys.stdout.flush()
 
     try:
-        serve(app, host=opt.host, port=opt.port)
+        uvicorn.run(app, host=opt.host, port=opt.port, log_level="info")
     except KeyboardInterrupt:
         print("\nClosing server")
 
 
 def setup_for_jupyter_server_proxy() -> dict:
     """Set up jupyter server proxy."""
-
     return {
         "command": [
             "imjoy-elfinder",

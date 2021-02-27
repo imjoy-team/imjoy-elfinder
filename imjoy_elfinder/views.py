@@ -7,113 +7,111 @@
 # Distributed under terms of the MIT license.
 
 """Provide views for elfinder."""
-import json
 import os
 
-from pyramid.request import Request
-from pyramid.response import Response, FileIter
-from pyramid.view import view_config
-
-from . import IMJOY_ELFINDER_CONNECTOR, IMJOY_ELFINDER_FILEBROWSER, elfinder
-from .api_const import API_NAME, API_TARGETS, API_DIRS, API_UPLOAD, API_UPLOAD_PATH
-from .util import get_all, get_one
-
-
-def make_response(filename: str) -> Response:
-    """Return a response."""
-    res = Response(conditional_response=True)
-    res.app_iter = FileIter(open(filename, "rb"), block_size=32768)
-    res.content_length = os.path.getsize(filename)
-    res.last_modified = os.path.getmtime(filename)
-    res.etag = "%s-%s-%s" % (
-        os.path.getmtime(filename),
-        os.path.getsize(filename),
-        hash(filename),
-    )
-    return res
-
-
-@view_config(
-    request_method=("GET", "POST", "OPTIONS"),
-    route_name=IMJOY_ELFINDER_CONNECTOR,
-    permission=IMJOY_ELFINDER_CONNECTOR,
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    Response,
 )
-def connector(request: Request) -> Response:
+from fastapi.templating import Jinja2Templates
+from starlette.datastructures import FormData
+
+from . import __version__, elfinder
+from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
+from .util import get_all, get_form_body, get_one
+
+router = APIRouter()
+
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=templates_dir)
+
+
+@router.get("/connector")
+@router.post("/connector")
+@router.options("/connector")
+def connector(
+    request: Request, request_body: FormData = Depends(get_form_body)
+) -> Response:
     """Handle the connector request."""
     # init connector and pass options
-    root = request.registry.settings["root_dir"]
+    settings = request.app.state.settings
+    root = settings.root_dir
     options = {
         "root": os.path.abspath(root),
-        "url": request.registry.settings["files_url"],
-        "base_url": request.registry.settings["base_url"],
+        "url": settings.files_url,
+        "base_url": settings.base_url,
         "upload_max_size": 100 * 1024 * 1024 * 1024,  # 100GB
-        "tmb_dir": request.registry.settings["thumbnail_dir"],
-        "expose_real_path": request.registry.settings["expose_real_path"],
-        "dot_files": request.registry.settings["dot_files"],
+        "tmb_dir": settings.thumbnail_dir,
+        "expose_real_path": settings.expose_real_path,
+        "dot_files": settings.dot_files,
         "debug": True,
     }
     elf = elfinder.Connector(**options)
-
     # fetch only needed GET/POST parameters
     http_request = {}
-    form = request.params
+    query_params = request.query_params
     for field in elf.http_allowed_parameters:
-        if field in form:
+        if field in request_body:
+            # handle CGI upload
+            if field == API_UPLOAD:
+                http_request[field] = get_all(request_body, field)
+            elif field == API_UPLOAD_PATH:
+                http_request[field] = get_all(request_body, field)
+            else:
+                http_request[field] = get_one(request_body, field)
+        elif field in query_params:
             # Russian file names hack
             if field == API_NAME:
-                http_request[field] = get_one(form, field).encode("utf-8")
+                http_request[field] = get_one(query_params, field).encode("utf-8")
 
             elif field == API_TARGETS:
-                http_request[field] = get_all(form, field)
+                http_request[field] = get_all(query_params, field)
 
             elif field == API_DIRS:
-                http_request[field] = get_all(form, field)
+                http_request[field] = get_all(query_params, field)
 
-            elif field == API_UPLOAD_PATH:
-                http_request[field] = get_all(form, field)
-
-            # handle CGI upload
-            elif field == API_UPLOAD:
-                http_request[field] = get_all(form, field)
             else:
-                http_request[field] = get_one(form, field)
+                http_request[field] = get_one(query_params, field)
 
     # run connector with parameters
     status, header, response = elf.run(http_request)
-
     if status == 200 and "__send_file" in response:
         # send file
         file_path = response["__send_file"]
         if os.path.exists(file_path) and not os.path.isdir(file_path):
-            result = make_response(file_path)
-            result.headers.update(header)
-            return result
+            return FileResponse(file_path, headers=header)
 
-        result = Response("Unable to find: {}".format(request.path_info))
+        return PlainTextResponse(
+            "Unable to find: {}".format(request.url), headers=header
+        )
+
+    # get connector output and print it out
+    if "__text" in response:
+        # output text
+        result = PlainTextResponse(response["__text"], headers=header)
     else:
-        # get connector output and print it out
-        result = Response(status=status)
-        try:
-            del header["Connection"]
-        except KeyError:
-            pass
-        result.headers = header
-        result.charset = "utf8"
-        if "__text" in response:
-            # output text
-            result.text = response["__text"]
-        else:
-            # output json
-            result.text = json.dumps(response)
+        # output json
+        result = JSONResponse(response, headers=header)
+
+    result.status_code = status
+    try:
+        del header["Connection"]
+    except KeyError:
+        pass
+
+    result.charset = "utf8"
     return result
 
 
-@view_config(
-    request_method="GET",
-    route_name=IMJOY_ELFINDER_FILEBROWSER,
-    permission=IMJOY_ELFINDER_FILEBROWSER,
-    renderer="templates/elfinder/filebrowser.jinja2",
-)
-def index(request: Request) -> dict:
+@router.get("/", response_class=HTMLResponse)
+@router.get("/filebrowser", response_class=HTMLResponse)
+def index(request: Request) -> Response:
     """Handle the index request."""
-    return {}
+    return templates.TemplateResponse(
+        "elfinder/filebrowser.jinja2",
+        {"request": request, "IMJOY_ELFINDER_VERSION": __version__},
+    )

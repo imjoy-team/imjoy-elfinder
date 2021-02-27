@@ -5,19 +5,22 @@ import os
 from setuptools import find_packages, setup
 
 DESCRIPTION = (
-    "A pyramid connector elfinder, specifically for working with jupyter server proxy."
+    "An elfinder connector built with FastAPI, "
+    "specifically for working with jupyter server proxy."
 )
 HERE = os.path.dirname(os.path.realpath(__file__))
 
 REQUIREMENTS = [
+    "aiofiles",
     "elfinder-client",
+    "fastapi",
+    "jinja2",
     "pathvalidate",
     "pillow",
-    "pyramid",
-    "pyramid_jinja2",
+    "python-dotenv",
+    "python-multipart",
     "typing_extensions",
-    "waitress",
-    "werkzeug",
+    "uvicorn[standard]",
 ]
 
 
@@ -55,7 +58,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "Framework :: Pyramid ",
+        "Framework :: FastAPI ",
         "Topic :: Internet",
     ],
     extras_require={"jupyter": ["jupyter-server-proxy-windows"]},

@@ -28,7 +28,6 @@ from imjoy_elfinder.api_const import (
     R_UPLMAXSIZE,
 )
 from imjoy_elfinder.elfinder import make_hash
-from imjoy_elfinder.views import connector
 
 from . import ZIP_FILE, ZIP_FILE_ASCII_CONTENT
 
@@ -88,17 +87,19 @@ def hashed_files_fixture(
     }
 
 
-def update_params(p_request, params, hashed_files):
+def update_params(request_params, params, hashed_files):
     """Return a mock request with updated params."""
     params = {key: hashed_files.get(val, val) for key, val in params.items() if val}
-    p_request.params.update(params)
-    return p_request
+    request_params.params.update(params)
+    return request_params
 
 
 def update_settings(settings, updates, files):
     """Return updated settings."""
     updates = {key: str(files.get(val, val)) for key, val in updates.items()}
-    settings.update(updates)
+    for attr, value in updates.items():
+        setattr(settings, attr, value)
+
     return settings
 
 
@@ -158,19 +159,26 @@ def raise_subprocess_after_check_archivers():
     indirect=["access"],
 )
 def test_run(
-    error, root, command, access, context, p_request, p_config, all_files, settings
+    settings,
+    error,
+    root,
+    command,
+    access,
+    context,
+    client,
+    request_params,
+    all_files,
 ):
     """Test the run method."""
-    p_request.params[API_CMD] = command
+    request_params.params[API_CMD] = command
     updates = {"root_dir": root, "thumbnail_dir": ""}
     settings = update_settings(settings, updates, all_files)
-    p_config.add_settings(settings)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
 
 
@@ -259,16 +267,27 @@ def test_run(
     ],
     indirect=["access"],
 )
-def test_open(error, api, in_body, init, target, tree, access, p_request, hashed_files):
+def test_open(
+    error,
+    api,
+    in_body,
+    init,
+    target,
+    tree,
+    access,
+    client,
+    request_params,
+    hashed_files,
+):
     """Test the open command."""
-    p_request.params[API_CMD] = "open"
+    request_params.params[API_CMD] = "open"
     params = {API_INIT: init, API_TARGET: target, API_TREE: tree}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
-    response = connector(p_request)
+    response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     for item in in_body:
         assert item in body
     assert body.get(R_ERROR) == error
@@ -373,18 +392,27 @@ def test_open(error, api, in_body, init, target, tree, access, p_request, hashed
     indirect=["access"],
 )
 def test_archive(
-    error, added, type_, target, targets, access, context, p_request, hashed_files
+    error,
+    added,
+    type_,
+    target,
+    targets,
+    access,
+    context,
+    client,
+    request_params,
+    hashed_files,
 ):
     """Test the archive command."""
-    p_request.params[API_CMD] = "archive"
+    request_params.params[API_CMD] = "archive"
     params = {API_TYPE: type_, API_TARGET: target, API_TARGETS: targets}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
     assert (R_ADDED in body) is added
 
@@ -430,19 +458,19 @@ def test_archive(
     ],
     indirect=["access"],
 )
-def test_dim(error, dim, target, access, context, p_request, hashed_files):
+def test_dim(error, dim, target, access, context, client, request_params, hashed_files):
     """Test the dim command."""
     # "substitute" is not supported in our backend yet. It's optional in api 2.1
-    # p_request.params[API_SUBSTITUTE] = "640x480"
-    p_request.params[API_CMD] = "dim"
+    # request_params.params[API_SUBSTITUTE] = "640x480"
+    request_params.params[API_CMD] = "dim"
     params = {API_TARGET: target}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
     assert body.get(R_DIM) == dim
 
@@ -495,17 +523,22 @@ def test_dim(error, dim, target, access, context, p_request, hashed_files):
     ],
     indirect=["access"],
 )
-def test_duplicate(error, added, targets, access, context, p_request, hashed_files):
+def test_duplicate(
+    error, added, targets, access, context, client, request_params, hashed_files
+):
     """Test the duplicate command."""
-    p_request.params[API_CMD] = "duplicate"
+    request_params.params[API_CMD] = "duplicate"
     params = {API_TARGETS: targets}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = connector(p_request)
+        response = client.post(
+            "/connector",
+            params=request_params.params,
+        )
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
     assert (R_ADDED in body) is added
 
@@ -599,18 +632,18 @@ def test_duplicate(error, added, targets, access, context, p_request, hashed_fil
     indirect=["access"],
 )
 def test_extract(
-    error, added, target, makedir, access, context, p_request, hashed_files
+    error, added, target, makedir, access, context, client, request_params, hashed_files
 ):
     """Test the extract command."""
-    p_request.params[API_CMD] = "extract"
+    request_params.params[API_CMD] = "extract"
     params = {API_TARGET: target, API_MAKEDIR: makedir}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
     assert (R_ADDED in body) is added
 
@@ -666,7 +699,7 @@ def test_extract(
         (
             "Invalid parameters",
             200,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "18",
             None,
@@ -677,7 +710,7 @@ def test_extract(
         (
             "Invalid parameters",
             200,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "18",
             None,
@@ -688,7 +721,7 @@ def test_extract(
         (
             "File not found",
             404,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "14",
             "missing",
@@ -699,7 +732,7 @@ def test_extract(
         (
             "File not found",
             404,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "14",
             "bad_link",
@@ -710,7 +743,7 @@ def test_extract(
         (
             "File not found",
             404,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "14",
             "txt_file_parent",
@@ -721,7 +754,7 @@ def test_extract(
         (
             "File not found",
             404,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "14",
             "link_dir",
@@ -732,7 +765,7 @@ def test_extract(
         (
             "Access denied",
             403,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "13",
             "txt_file",
@@ -743,7 +776,7 @@ def test_extract(
         (
             "Access denied",
             403,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "13",
             "link_txt_file",
@@ -754,7 +787,7 @@ def test_extract(
         (
             "File not found",
             404,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "14",
             "txt_file",
@@ -765,7 +798,7 @@ def test_extract(
         (
             "Access denied",
             403,
-            "text/html; charset=utf8",  # content_type
+            "text/html",  # content_type
             None,  # content_disp
             "13",
             "link_txt_file",
@@ -786,16 +819,17 @@ def test_file(
     download,
     access,
     context,
-    p_request,
+    client,
+    request_params,
     hashed_files,
 ):
     """Test the file command."""
-    p_request.params[API_CMD] = "file"
+    request_params.params[API_CMD] = "file"
     params = {API_TARGET: target, API_DOWNLOAD: download}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == status
     assert response.headers["Content-type"] == content_type
@@ -853,16 +887,18 @@ def test_file(
     ],
     indirect=["access"],
 )
-def test_get(error, content, target, access, context, p_request, hashed_files):
+def test_get(
+    error, content, target, access, context, client, request_params, hashed_files
+):
     """Test the get command."""
-    p_request.params[API_CMD] = "get"
+    request_params.params[API_CMD] = "get"
     params = {API_TARGET: target}
-    p_request = update_params(p_request, params, hashed_files)
+    request_params = update_params(request_params, params, hashed_files)
 
     with context:
-        response = connector(p_request)
+        response = client.post("/connector", params=request_params.params)
 
     assert response.status_code == 200
-    body = response.json
+    body = response.json()
     assert body.get(R_ERROR) == error
     assert body.get(API_CONTENT) == content
