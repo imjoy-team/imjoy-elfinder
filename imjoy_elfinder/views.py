@@ -18,7 +18,7 @@ from fastapi.responses import (
     Response,
 )
 from fastapi.templating import Jinja2Templates
-from starlette.datastructures import FormData, QueryParams
+from starlette.datastructures import FormData
 
 from . import __version__, elfinder
 from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
