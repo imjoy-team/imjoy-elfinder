@@ -18,7 +18,7 @@ from fastapi.responses import (
     Response,
 )
 from fastapi.templating import Jinja2Templates
-from starlette.datastructures import FormData
+from starlette.datastructures import FormData, QueryParams
 
 from . import __version__, elfinder
 from .api_const import API_DIRS, API_NAME, API_TARGETS, API_UPLOAD, API_UPLOAD_PATH
@@ -53,32 +53,32 @@ def connector(
     elf = elfinder.Connector(**options)
     # fetch only needed GET/POST parameters
     http_request = {}
-
+    query_params = request.query_params
     for field in elf.http_allowed_parameters:
-        if field not in request_body:
-            continue
-        # handle CGI upload
-        if field == API_UPLOAD:
-            http_request[field] = get_all(request_body, field)
-        elif field == API_UPLOAD_PATH:
-            http_request[field] = get_all(request_body, field)
-        else:
-            http_request[field] = get_one(request_body, field)
-        # Russian file names hack
-        if field == API_NAME:
-            http_request[field] = get_one(request_body, field).encode("utf-8")
+        if field in request_body:
+            # handle CGI upload
+            if field == API_UPLOAD:
+                http_request[field] = get_all(request_body, field)
+            elif field == API_UPLOAD_PATH:
+                http_request[field] = get_all(request_body, field)
+            else:
+                http_request[field] = get_one(request_body, field)
+        elif field in query_params:
+            # Russian file names hack
+            if field == API_NAME:
+                http_request[field] = get_one(query_params, field).encode("utf-8")
 
-        elif field == API_TARGETS:
-            http_request[field] = get_all(request_body, field)
+            elif field == API_TARGETS:
+                http_request[field] = get_all(query_params, field)
 
-        elif field == API_DIRS:
-            http_request[field] = get_all(request_body, field)
+            elif field == API_DIRS:
+                http_request[field] = get_all(query_params, field)
 
-        else:
-            http_request[field] = get_one(request_body, field)
+            else:
+                http_request[field] = get_one(query_params, field)
+
     # run connector with parameters
     status, header, response = elf.run(http_request)
-
     if status == 200 and "__send_file" in response:
         # send file
         file_path = response["__send_file"]
