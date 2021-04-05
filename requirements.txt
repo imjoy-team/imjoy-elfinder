@@ -4,7 +4,7 @@ fastapi==0.63.0
 jinja2==2.11.3
 pathvalidate==2.4.1
 pillow==8.2.0
-python-dotenv==0.16.0
+python-dotenv==0.17.0
 python-multipart==0.0.5
 typing_extensions==3.7.4.3
 uvicorn[standard]==0.13.4
