@@ -2,7 +2,7 @@ aiofiles==0.6.0
 elfinder-client==2.1.55a6
 fastapi==0.63.0
 jinja2==2.11.3
-pathvalidate==2.4.0
+pathvalidate==2.4.1
 pillow==8.2.0
 python-dotenv==0.16.0
 python-multipart==0.0.5
