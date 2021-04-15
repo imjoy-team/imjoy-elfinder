@@ -21,7 +21,8 @@ def get_all(multi_dict: ImmutableMultiDict, key: str) -> List[Any]:
 
     May return an empty list.
     """
-    return multi_dict.getlist(key)
+    result: List[Any] = multi_dict.getlist(key)
+    return result
 
 
 async def get_form_body(request: Request) -> FormData:
