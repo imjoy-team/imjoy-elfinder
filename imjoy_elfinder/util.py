@@ -21,8 +21,8 @@ def get_all(multi_dict: ImmutableMultiDict, key: str) -> List[Any]:
 
     May return an empty list.
     """
-    matched = [v for k, v in multi_dict.items() if k == key]
-    return matched
+    result: List[Any] = multi_dict.getlist(key)
+    return result
 
 
 async def get_form_body(request: Request) -> FormData:
