@@ -921,10 +921,10 @@ class Connector:
                 name = os.path.join(target_dir, name)
                 replace = os.path.exists(name)
                 try:
-                    fil = open(name, "wb", self._options["upload_write_chunk"])
-                    for chunk in self._fbuffer(data.file):
-                        fil.write(chunk)
-                    fil.close()
+                    with open(name, "wb", self._options["upload_write_chunk"]) as fil:
+                        for chunk in self._fbuffer(data.file):
+                            fil.write(chunk)
+
                     up_size += os.lstat(name).st_size
                     if up_size > max_size:
                         try:
