@@ -1,6 +1,6 @@
 """Set up the imjoy_elfinder package."""
 import json
-import os
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
@@ -8,9 +8,13 @@ DESCRIPTION = (
     "An elfinder connector built with FastAPI, "
     "specifically for working with jupyter server proxy."
 )
-HERE = os.path.dirname(os.path.realpath(__file__))
+ROOT_DIR = Path(__file__).parent.resolve()
+README_FILE = ROOT_DIR / "README.md"
+LONG_DESCRIPTION = README_FILE.read_text(encoding="utf-8")
+VERSION_FILE = ROOT_DIR / "imjoy_elfinder" / "VERSION"
+VERSION = json.loads(VERSION_FILE.read_text())["version"]
 
-REQUIREMENTS = [
+REQUIRES = [
     "aiofiles",
     "elfinder-client",
     "fastapi",
@@ -24,15 +28,6 @@ REQUIREMENTS = [
 ]
 
 
-def read(name):
-    """Read file name contents and return it."""
-    with open(os.path.join(HERE, name)) as fil:
-        return fil.read()
-
-
-with open(os.path.join(HERE, "imjoy_elfinder", "VERSION"), "r") as f:
-    VERSION = json.load(f)["version"]
-
 setup(
     name="imjoy-elfinder",
     version=VERSION,
@@ -43,10 +38,10 @@ setup(
     zip_safe=False,
     license="MIT",
     description=DESCRIPTION,
-    long_description=read("README.md"),
+    long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    install_requires=REQUIREMENTS,
+    install_requires=REQUIRES,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
