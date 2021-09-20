@@ -231,13 +231,14 @@ def exception_to_string(excp: Exception) -> str:
         excp.__traceback__
     )  # add limit=??
     pretty = traceback.format_list(stack)
-    return "".join(pretty) + "\n  {} {}".format(excp.__class__, excp)
+    return "".join(pretty) + f"\n  {excp.__class__} {excp}"
 
 
 class Connector:
     """Connector for elFinder."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
+    # pylint: disable=unused-private-member
 
     # The options need to be persistent between connector instances.
     _options = {
@@ -383,15 +384,13 @@ class Connector:
                 try:
                     func()
                 except Exception as exc:  # pylint: disable=broad-except
-                    self._response[R_ERROR] = "Command Failed: {}, Error: \n{}".format(
-                        self._request[API_CMD], exc
-                    )
+                    self._response[
+                        R_ERROR
+                    ] = f"Command Failed: {self._request[API_CMD]}, Error: \n{exc}"
                     traceback.print_exc()
                     self._debug("exception", exception_to_string(exc))
             else:
-                self._response[R_ERROR] = "Unknown command: {}".format(
-                    self._request[API_CMD]
-                )
+                self._response[R_ERROR] = f"Unknown command: {self._request[API_CMD]}"
 
         if self._error_data:
             self._debug("errorData", self._error_data)
@@ -716,10 +715,12 @@ class Connector:
             self._response[R_ERROR] = "File or folder with the same name already exists"
         else:
             try:
-                open(new_file, "w").close()
-                self._response[R_ADDED] = [self._info(new_file)]
+                with open(new_file, "w", encoding="utf-8"):
+                    pass
             except OSError:
                 self._response[R_ERROR] = "Unable to create file"
+            else:
+                self._response[R_ADDED] = [self._info(new_file)]
 
     def __rm(self) -> None:
         """Delete files and directories."""
@@ -841,6 +842,7 @@ class Connector:
                     with open(
                         record_path,
                         "r+" if os.path.exists(record_path) else "w+",
+                        encoding="utf-8",
                     ) as record_fil:
                         record_fil.seek(chunk_index)
                         record_fil.write("X")
@@ -1279,7 +1281,7 @@ class Connector:
             return
 
         try:
-            with open(cur_file, "r") as text_fil:
+            with open(cur_file, "r", encoding="utf-8") as text_fil:
                 self._response[API_CONTENT] = text_fil.read()
         except UnicodeDecodeError:
             with open(cur_file, "rb") as bin_fil:
@@ -1338,7 +1340,7 @@ class Connector:
                 with open(cur_file, "wb") as bin_fil:
                     bin_fil.write(img_data)
             else:
-                with open(cur_file, "w+") as text_fil:
+                with open(cur_file, "w+", encoding="utf-8") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
             self._rm_tmb(cur_file)
             self._response[R_CHANGED] = [self._info(cur_file)]
@@ -1636,7 +1638,7 @@ class Connector:
             lpath = None
             info["size"] = self._dir_size(path) if filetype == "dir" else stat.st_size
 
-        if not info["mime"] == "directory":
+        if info["mime"] != "directory":
             if self._options["file_url"] and info["read"]:
                 if lpath:
                     info["url"] = self._path2url(lpath)

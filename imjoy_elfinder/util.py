@@ -12,7 +12,7 @@ def get_one(multi_dict: ImmutableMultiDict, key: str) -> Any:
     """
     matched = [v for k, v in multi_dict.items() if k == key]
     if len(matched) > 1:
-        raise KeyError("{} matched more than one key in {}".format(key, multi_dict))
+        raise KeyError(f"{key} matched more than one key in {multi_dict}")
     return next(iter(matched), None)
 
 

@@ -85,9 +85,7 @@ def connector(
         if os.path.exists(file_path) and not os.path.isdir(file_path):
             return FileResponse(file_path, headers=header)
 
-        return PlainTextResponse(
-            "Unable to find: {}".format(request.url), headers=header
-        )
+        return PlainTextResponse(f"Unable to find: {request.url}", headers=header)
 
     # get connector output and print it out
     if "__text" in response:
