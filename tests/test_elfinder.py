@@ -611,7 +611,7 @@ def test_duplicate(
             default_context(),
         ),  # Access denied when listing parent files
         (
-            "Unable to create folder: {}".format(Path(ZIP_FILE).stem),
+            f"Unable to create folder: {Path(ZIP_FILE).stem}",
             False,
             "zip_file",
             "1",

@@ -111,9 +111,9 @@ def main(args: Optional[List[str]] = None) -> None:
     if opt.base_url and opt.base_url.startswith("http"):
         url = opt.base_url
     else:
-        url = "http://{}:{}".format(opt.host, opt.port)
+        url = f"http://{opt.host}:{opt.port}"
 
-    print("==========ImJoy elFinder server is running=========\n{}\n".format(url))
+    print(f"==========ImJoy elFinder server is running=========\n{url}\n")
 
     sys.stdout.flush()
 
