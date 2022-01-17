@@ -12,7 +12,7 @@ elFinder is an open-source file manager for web, written in JavaScript using jQu
 
 ## Installation
 
-Python 3.6+ is required.
+Python 3.7+ is required.
 
 ```sh
 pip install -U imjoy-elfinder
