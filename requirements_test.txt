@@ -1,5 +1,5 @@
 pytest==6.2.5
 pytest-cov==3.0.0
-pytest-timeout==2.0.2
+pytest-timeout==2.1.0
 # tests require sub-dependencies of starlette
 requests==2.27.1
