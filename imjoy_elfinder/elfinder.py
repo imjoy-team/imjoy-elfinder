@@ -1839,7 +1839,6 @@ class Connector:
     def _fbuffer(
         self, fil: BinaryIO, chunk_size: int = _options["upload_write_chunk"]
     ) -> Generator[bytes, None, None]:
-        # pylint: disable=no-self-use
         while True:
             chunk = fil.read(chunk_size)
             if not chunk:
