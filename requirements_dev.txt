@@ -3,6 +3,6 @@
 -r requirements_mypy.txt
 -r requirements_pypi.txt
 -r requirements_test.txt
-tox==3.25.0
+tox==3.25.1
 
 -e .
