@@ -7,4 +7,4 @@ pillow==9.2.0
 python-dotenv==0.20.0
 python-multipart==0.0.5
 typing_extensions==4.3.0
-uvicorn[standard]==0.18.1
+uvicorn[standard]==0.18.2
