@@ -56,7 +56,7 @@ setup(
         "Framework :: FastAPI ",
         "Topic :: Internet",
     ],
-    extras_require={"jupyter": ["jupyter-server-proxy-windows"]},
+    extras_require={"jupyter": ["jupyter-server-proxy"]},
     entry_points={
         "console_scripts": ["imjoy-elfinder = imjoy_elfinder.app:main"],
         "jupyter_serverproxy_servers": [
