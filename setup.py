@@ -25,6 +25,7 @@ REQUIRES = [
     "python-multipart",
     "typing_extensions",
     "uvicorn[standard]",
+    "pydantic<2,>=1.8.2",
 ]
 
 
